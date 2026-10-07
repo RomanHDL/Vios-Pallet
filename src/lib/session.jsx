@@ -1,0 +1,67 @@
+// Sesion del usuario + catalogos (lineas, modelos, marcas, defectos) para toda la app.
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { api } from './api'
+
+const SessionCtx = createContext(null)
+
+export function SessionProvider({ children }) {
+  const [user, setUser] = useState(undefined) // undefined = cargando
+  const [catalogs, setCatalogs] = useState(null)
+
+  const loadCatalogs = useCallback(async () => {
+    try {
+      setCatalogs(await api('/catalogs'))
+    } catch {
+      /* se reintenta al entrar */
+    }
+  }, [])
+
+  useEffect(() => {
+    api('/auth/me')
+      .then((d) => setUser(d.user || null))
+      .catch(() => setUser(null))
+  }, [])
+
+  useEffect(() => {
+    if (user) loadCatalogs()
+  }, [user, loadCatalogs])
+
+  useEffect(() => {
+    const onUnauthorized = () => setUser(null)
+    window.addEventListener('vp:unauthorized', onUnauthorized)
+    return () => window.removeEventListener('vp:unauthorized', onUnauthorized)
+  }, [])
+
+  const login = async (username, password) => {
+    const d = await api('/auth/login', { method: 'POST', body: { username, password } })
+    setUser(d.user)
+  }
+  const logout = async () => {
+    await api('/auth/logout', { method: 'POST' }).catch(() => {})
+    setUser(null)
+  }
+
+  return (
+    <SessionCtx.Provider value={{ user, login, logout, catalogs, reloadCatalogs: loadCatalogs }}>
+      {children}
+    </SessionCtx.Provider>
+  )
+}
+
+export function useSession() {
+  return useContext(SessionCtx)
+}
+
+// Catalogos activos listos para selects.
+export function useCatalogs() {
+  const { catalogs } = useSession()
+  const active = (list) => (list || []).filter((x) => x.active)
+  return {
+    loaded: Boolean(catalogs),
+    lines: active(catalogs?.lines),
+    models: active(catalogs?.models),
+    brands: active(catalogs?.brands),
+    defects: active(catalogs?.defects),
+    all: catalogs,
+  }
+}
