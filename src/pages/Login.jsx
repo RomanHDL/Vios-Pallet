@@ -1,25 +1,20 @@
 import { ArrowRight, ChevronLeft, Lock, UserRound } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Button, ErrorBox } from '@/components/ui'
-import { api } from '@/lib/api'
 import { useSession } from '@/lib/session'
 
 // Entrada (2026-10-07, a peticion explicita del usuario: "que nomas le des clic en entrar y de volada"):
-// boton "Entrar" con la cuenta compartida Planta; el login con usuario queda para el administrador.
+// boton "Entrar" con la cuenta compartida Planta. Despues ("quiero que quites el login... que solo sea un
+// boton de entrar y ya"): la pantalla es solo el boton; el formulario del administrador se abre con /?admin.
+const ADMIN_FORM = new URLSearchParams(window.location.search).has('admin')
+
 export default function Login() {
   const { login, enter } = useSession()
-  const [guest, setGuest] = useState(true)
-  const [withUser, setWithUser] = useState(false)
+  const [withUser, setWithUser] = useState(ADMIN_FORM)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    api('/auth/options')
-      .then((d) => setGuest(d.guest))
-      .catch(() => {})
-  }, [])
 
   async function run(fn) {
     setBusy(true)
@@ -37,8 +32,6 @@ export default function Login() {
     e.preventDefault()
     run(() => login(username.trim(), password.trim()))
   }
-
-  const showForm = withUser || !guest
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
@@ -68,7 +61,7 @@ export default function Login() {
             <span className="text-[20px] font-extrabold">VIOS Pallet</span>
           </div>
 
-          {!showForm ? (
+          {!withUser ? (
             <>
               <h2 className="text-[28px] font-extrabold tracking-tight">Bienvenido</h2>
               <p className="mt-1 text-[14.5px] text-muted-foreground">Control de pallets, producción y calidad VIOS.</p>
@@ -76,32 +69,20 @@ export default function Login() {
                 Entrar <ArrowRight className="h-5 w-5" />
               </Button>
               <ErrorBox error={error} className="mt-4" />
-              <button
-                type="button"
-                onClick={() => {
-                  setWithUser(true)
-                  setError(null)
-                }}
-                className="mt-6 w-full text-center text-[13.5px] font-semibold text-muted-foreground hover:text-foreground"
-              >
-                Entrar con usuario (administrador)
-              </button>
             </>
           ) : (
             <form onSubmit={submit}>
-              {guest && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setWithUser(false)
-                    setError(null)
-                  }}
-                  className="mb-4 inline-flex items-center gap-1 text-[13px] font-semibold text-muted-foreground hover:text-foreground"
-                >
-                  <ChevronLeft className="h-4 w-4" /> Volver
-                </button>
-              )}
-              <h2 className="text-[26px] font-extrabold tracking-tight">Iniciar sesión</h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setWithUser(false)
+                  setError(null)
+                }}
+                className="mb-4 inline-flex items-center gap-1 text-[13px] font-semibold text-muted-foreground hover:text-foreground"
+              >
+                <ChevronLeft className="h-4 w-4" /> Volver
+              </button>
+              <h2 className="text-[26px] font-extrabold tracking-tight">Administrador</h2>
               <p className="mt-1 text-[14px] text-muted-foreground">Entra con tu usuario.</p>
               <div className="mt-7 space-y-4">
                 <label className="block">

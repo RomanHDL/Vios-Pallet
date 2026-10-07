@@ -28,17 +28,13 @@ r.post('/auth/login', async (req, res) => {
 })
 
 // Entrada directa (boton "Entrar", a peticion del usuario: "que nomas le des clic en entrar"):
-// sesion con la cuenta compartida "Planta". Se apaga con GUEST_LOGIN=off.
+// sesion con la cuenta compartida "Planta". Siempre activa: la pantalla de inicio es solo ese boton
+// (2026-10-07, "quiero que quites el login... que solo sea un boton de entrar").
 r.post('/auth/guest', async (_req, res) => {
-  if (process.env.GUEST_LOGIN === 'off') return res.status(403).json({ error: 'La entrada directa está desactivada.' })
   const [u] = await db.select().from(users).where(eq(users.username, GUEST_USERNAME))
   if (!u || !u.active) return res.status(403).json({ error: 'La cuenta Planta está desactivada.' })
   issueSession(res, u)
   res.json({ user: publicUser(u) })
-})
-
-r.get('/auth/options', (_req, res) => {
-  res.json({ guest: process.env.GUEST_LOGIN !== 'off' })
 })
 
 r.post('/auth/logout', (_req, res) => {

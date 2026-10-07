@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.2.0',
+    date: '2026-10-07',
+    title: 'Solo botón Entrar',
+    changed: [
+      'La pantalla de inicio ya no pide usuario ni contraseña: solo el botón "Entrar". El formulario del administrador quedó en /?admin.',
+      'El botón "Entrar" ya no se puede apagar con una variable del servidor (GUEST_LOGIN se ignora).',
+    ],
+  },
+  {
     version: '1.1.0',
     date: '2026-10-07',
     title: 'Entrada con un clic',

@@ -3,6 +3,13 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.2.0] — 2026-10-07
+
+### Changed
+- La pantalla de inicio ya no pide usuario ni contraseña: solo el botón "Entrar". El formulario del administrador
+  quedó en `/?admin`.
+- El botón "Entrar" ya no se puede apagar con una variable del servidor (`GUEST_LOGIN` se ignora).
+
 ## [1.1.0] — 2026-10-07
 
 ### Added

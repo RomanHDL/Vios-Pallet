@@ -25,8 +25,8 @@ const tables = Object.values(schema)
   .map((t) => getTableConfig(t))
 
 const API = [
-  ['POST', '/api/auth/login', 'Inicia sesión (cookie httpOnly firmada, 12 h).'],
-  ['POST', '/api/auth/guest', 'Entrada directa con la cuenta compartida Planta (GUEST_LOGIN=off la apaga).'],
+  ['POST', '/api/auth/login', 'Inicia sesión con usuario (administrador, en /?admin; cookie httpOnly firmada, 12 h).'],
+  ['POST', '/api/auth/guest', 'Entrada directa con la cuenta compartida Planta (botón Entrar).'],
   ['GET', '/api/auth/me', 'Usuario actual.'],
   ['POST', '/api/auth/password', 'Cambiar contraseña propia.'],
   ['GET/POST/PATCH', '/api/users', 'Usuarios (admin).'],
