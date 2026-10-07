@@ -14,4 +14,4 @@ cmds = [
 cmds = ["$(npm prefix -g)/bin/pnpm build"]
 
 [start]
-cmd = "pnpm start"
+cmd = "./node_modules/.bin/pm2-runtime ecosystem.config.cjs"
