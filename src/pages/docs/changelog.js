@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.2.1',
+    date: '2026-10-07',
+    title: 'Parches de seguridad',
+    fixed: [
+      'Dependencias parchadas (shell-quote, basic-ftp, js-yaml): el escaneo de seguridad del servidor detenía la página.',
+    ],
+  },
+  {
     version: '1.2.0',
     date: '2026-10-07',
     title: 'Solo botón Entrar',

@@ -1,0 +1,9 @@
+# Parches de seguridad (2026-10-07): el escaneo de Coolify DETUVO el deploy 59f979b
+# (1 Critical, 4 High, 1 Medium). Son dependencias transitivas (pm2, concurrently); se fuerza la
+# version parchada para todo el arbol. Mismo arreglo que centro-de-trabajo (control-produccion).
+overrides:
+  # CRITICAL (CVE-2026-102422), via concurrently (devDep que va en la imagen).
+  shell-quote@<1.11.0: '>=1.11.0 <2'
+  # HIGH, via pm2 (proxy-agent -> get-uri) y pm2 (js-yaml).
+  basic-ftp@<6.2.1: ^6.2.2
+  js-yaml@<4.3.2: ^4.3.2

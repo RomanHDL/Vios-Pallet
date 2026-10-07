@@ -3,6 +3,12 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.2.1] — 2026-10-07
+
+### Security
+- Dependencias parchadas (shell-quote, basic-ftp, js-yaml) en `pnpm-workspace.yaml`: el escaneo de Coolify
+  detenía el despliegue por un hallazgo Critical.
+
 ## [1.2.0] — 2026-10-07
 
 ### Changed
