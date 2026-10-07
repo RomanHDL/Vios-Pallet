@@ -119,6 +119,15 @@ CREATE TABLE IF NOT EXISTS plans (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (shift_date, shift, line)
 );
+CREATE TABLE IF NOT EXISTS hourly_goals (
+  shift_date text NOT NULL,
+  shift text NOT NULL,
+  scope text NOT NULL,
+  goal integer NOT NULL,
+  updated_by integer,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (shift_date, shift, scope)
+);
 `
 
 export async function migrate() {

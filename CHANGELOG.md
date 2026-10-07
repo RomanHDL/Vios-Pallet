@@ -3,6 +3,13 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.3.0] — 2026-10-07
+
+### Added
+- Módulo Hora por Hora VIOS (`/hora-por-hora`): conteo por hora con el diseño de Centro de Trabajo, plan del turno
+  editable por fecha, turno y línea (tabla `hourly_goals`, vigente hasta que se cambie) y pantalla completa para
+  tablet vertical.
+
 ## [1.2.1] — 2026-10-07
 
 ### Security

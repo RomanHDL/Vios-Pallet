@@ -167,3 +167,19 @@ export const plans = pgTable(
   },
   (t) => [primaryKey({ columns: [t.shiftDate, t.shift, t.line] })],
 )
+
+// Meta del tablero Hora por Hora por turno ('*' = todas las lineas, o el nombre de una linea).
+// Sin registro la meta es el plan del turno (plans o meta de las lineas). La ultima meta capturada
+// sigue vigente los dias siguientes.
+export const hourlyGoals = pgTable(
+  'hourly_goals',
+  {
+    shiftDate: text('shift_date').notNull(),
+    shift: text().notNull(),
+    scope: text().notNull(),
+    goal: integer().notNull(),
+    updatedBy: integer('updated_by'),
+    updatedAt: ts('updated_at').notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.shiftDate, t.shift, t.scope] })],
+)

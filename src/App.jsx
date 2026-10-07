@@ -12,6 +12,7 @@ import Cambios from './pages/docs/Cambios'
 import Desarrollador from './pages/docs/Desarrollador'
 import Manual from './pages/docs/Manual'
 import Home from './pages/Home'
+import HoraPorHora from './pages/horaxhora/HoraPorHora'
 import Login from './pages/Login'
 import Perfil from './pages/Perfil'
 import PalletDetail from './pages/pallets/PalletDetail'
@@ -53,6 +54,8 @@ export default function App() {
         <Route path="produccion/lineas/:line" element={<LineaDetalle />} />
         <Route path="produccion/historial" element={<ProduccionHistorial />} />
         <Route path="produccion/plan" element={<PlanPersonal />} />
+
+        <Route path="hora-por-hora" element={<HoraPorHora />} />
 
         <Route path="calidad" element={<CalidadHome />} />
         <Route path="calidad/nuevo" element={<NuevoRechazo />} />

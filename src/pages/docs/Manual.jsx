@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardCheck, Factory, PackageCheck, Settings, ScanLine } from 'lucide-react'
+import { BarChart3, ClipboardCheck, Clock3, Factory, PackageCheck, Settings, ScanLine } from 'lucide-react'
 import { Card, PageHeader } from '@/components/ui'
 import { BackLink } from './Cambios'
 
@@ -34,6 +34,16 @@ const SECTIONS = [
       'Escanea el serial de la TV y luego el de la caja. Deben ser iguales. Si el serial ya estaba registrado o fue rechazado por Calidad, la app lo bloquea y te dice por qué.',
       'Líneas en vivo: avance de cada línea contra su meta, piezas por hora, minutos desde el último escaneo (amarillo > 10 min, rojo > 30 min) y proyección al cierre del turno.',
       'Plan y personal (supervisor): captura cuántas piezas se pueden hacer por línea según materiales y cuántas personas hay. Si no se captura plan, se usa la meta de la línea.',
+    ],
+  },
+  {
+    icon: Clock3,
+    title: 'Hora por Hora VIOS',
+    steps: [
+      'Conteo de piezas por hora del turno. Verde = cumplió la meta de esa hora, rojo = quedó abajo, azul = hora en curso, gris = todavía no llega. Arriba de cada barra está la diferencia contra la meta.',
+      'Día (07:00 a 17:00): la comida de 11 a 13 cuenta a la mitad. Noche (22:00 a 07:00): de 2 a 3 es descanso y no tiene meta. Las horas de tiempo extra solo aparecen si hubo producción.',
+      'Plan del turno: escribe la meta y toca Guardar (o Enter). La meta por hora se recalcula sola y sigue vigente los días siguientes hasta que la cambies. Sin meta capturada se usa el plan del turno.',
+      'Elige fecha, turno (Día/Noche) y línea. "Pantalla completa" está pensada para una tablet vertical: la gráfica crece a lo alto.',
     ],
   },
   {

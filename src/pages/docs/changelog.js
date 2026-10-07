@@ -2,6 +2,16 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.3.0',
+    date: '2026-10-07',
+    title: 'Hora por Hora VIOS',
+    added: [
+      'Módulo Hora por Hora VIOS: conteo por hora con el diseño de Centro de Trabajo (barras verde/rojo/azul, diferencia contra la meta, tendencia, meta esperada y comida a media meta).',
+      'Plan del turno editable por fecha, turno (Día/Noche) y línea; sigue vigente los días siguientes hasta que se cambie.',
+      'Pantalla completa para tablet vertical: la gráfica crece a lo alto, no a lo ancho.',
+    ],
+  },
+  {
     version: '1.2.1',
     date: '2026-10-07',
     title: 'Parches de seguridad',

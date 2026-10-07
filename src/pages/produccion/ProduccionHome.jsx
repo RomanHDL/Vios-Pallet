@@ -1,4 +1,4 @@
-import { ClipboardList, Gauge, History, MonitorPlay, ScanBarcode, Target, TrendingUp, Users } from 'lucide-react'
+import { ClipboardList, Clock3, Gauge, History, MonitorPlay, ScanBarcode, Target, TrendingUp, Users } from 'lucide-react'
 import { shiftLabel } from '@shared/shift.js'
 import { MenuCard } from '@/components/MenuCard'
 import { Badge, Card, ErrorBox, PageHeader, Stat } from '@/components/ui'
@@ -48,6 +48,7 @@ export default function ProduccionHome() {
           <MenuCard to="/produccion/registro" icon={ScanBarcode} title="Registrar producto terminado" description="Escanea serial de TV y de caja" tone="green" />
         )}
         <MenuCard to="/produccion/lineas" icon={MonitorPlay} title="Líneas en vivo" description="Avance contra meta por línea" tone="blue" />
+        <MenuCard to="/hora-por-hora" icon={Clock3} title="Hora por Hora VIOS" description="Conteo por hora contra la meta del turno" tone="navy" />
         <MenuCard
           to="/produccion/plan"
           icon={canDo(user, ['supervisor']) ? Users : ClipboardList}

@@ -2,6 +2,7 @@
 import {
   BarChart3,
   ClipboardCheck,
+  Clock3,
   Factory,
   CircleHelp,
   Home,
@@ -22,6 +23,7 @@ export const NAV = [
   { to: '/', label: 'Inicio', icon: Home, end: true },
   { to: '/pallets', label: 'Pallets', icon: Package },
   { to: '/produccion', label: 'Producción', icon: Factory },
+  { to: '/hora-por-hora', label: 'Hora x Hora', icon: Clock3 },
   { to: '/calidad', label: 'Calidad', icon: ClipboardCheck },
   { to: '/reportes', label: 'Reportes', icon: BarChart3 },
 ]
@@ -155,7 +157,7 @@ export function Layout() {
       </main>
 
       {/* Celular: navegacion inferior */}
-      <nav className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-card/95 backdrop-blur lg:hidden">
+      <nav className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-card/95 backdrop-blur lg:hidden">
         {NAV.map((n) => (
           <NavLink
             key={n.to}
@@ -163,14 +165,14 @@ export function Layout() {
             end={n.end}
             className={({ isActive }) =>
               cn(
-                'flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold',
+                'flex flex-col items-center gap-1 py-2.5 text-[10.5px] font-semibold',
                 isActive ? 'text-primary' : 'text-muted-foreground',
               )
             }
           >
             {({ isActive }) => (
               <>
-                <span className={cn('grid h-8 w-12 place-items-center rounded-full transition', isActive && 'bg-accent')}>
+                <span className={cn('grid h-8 w-11 place-items-center rounded-full transition', isActive && 'bg-accent')}>
                   <n.icon className="h-5 w-5" />
                 </span>
                 {n.label}
