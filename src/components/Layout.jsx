@@ -75,7 +75,9 @@ export function Layout() {
   const [dark, setDark] = useTheme()
   const { pathname } = useLocation()
   const isAdmin = user?.role === 'admin'
-  useEffect(() => window.scrollTo(0, 0), [pathname])
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [pathname])
 
   const sideLink = ({ isActive }) =>
     cn(

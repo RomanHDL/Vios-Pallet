@@ -24,7 +24,7 @@ function eachDay(from, to) {
 
 /* Plan vs Processed por turno.
    Plan = lo capturado en "Plan del turno" por linea; si no se capturo:
-     - Turno 1 en dia habil: meta de cada linea activa.
+     - Turno 1 en dia habil (desde el primer dia con produccion): meta de cada linea activa.
      - Turno 2 (o fin de semana / feriado): meta solo de las lineas que trabajaron.
    (PalletScan sumaba 400 por cada linea que registro aunque fuera 1 pieza, y ninguna si no registro.)
    Delta = Processed - Plan (negativo = faltante).
@@ -43,6 +43,8 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
     where shift_date between ${prev} and ${to} and ${brandCond(req.query)} group by 1, 2`)
   const planRows = await rows(sql`select shift_date, shift, line, planned from plans where shift_date between ${prev} and ${to}`)
   const staff = await rows(sql`select shift_date, shift, line, people from staffing where shift_date between ${prev} and ${to}`)
+  // La meta automatica solo cuenta desde el primer dia con produccion (antes la app no se usaba).
+  const [{ first }] = await rows(sql`select min(shift_date) as first from production`)
 
   const shifts = []
   for (const d of eachDay(prev, to)) {
@@ -58,7 +60,7 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
           const worked = processed > 0
           let plan = 0
           if (captured !== undefined) plan = captured
-          else if (s === 'T1' && isWorkday(d)) plan = goalBy[line] || 0
+          else if (s === 'T1' && isWorkday(d) && first && d >= first) plan = goalBy[line] || 0
           else if (worked) plan = goalBy[line] || 0
           return {
             line,

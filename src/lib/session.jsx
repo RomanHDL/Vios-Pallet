@@ -1,5 +1,5 @@
 // Sesion del usuario + catalogos (lineas, modelos, marcas, defectos) para toda la app.
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from './api'
 
 const SessionCtx = createContext(null)
@@ -52,16 +52,18 @@ export function useSession() {
   return useContext(SessionCtx)
 }
 
-// Catalogos activos listos para selects.
+// Catalogos activos listos para selects (memorizados: mismos arreglos mientras no cambien los catalogos).
 export function useCatalogs() {
   const { catalogs } = useSession()
-  const active = (list) => (list || []).filter((x) => x.active)
-  return {
-    loaded: Boolean(catalogs),
-    lines: active(catalogs?.lines),
-    models: active(catalogs?.models),
-    brands: active(catalogs?.brands),
-    defects: active(catalogs?.defects),
-    all: catalogs,
-  }
+  return useMemo(() => {
+    const active = (list) => (list || []).filter((x) => x.active)
+    return {
+      loaded: Boolean(catalogs),
+      lines: active(catalogs?.lines),
+      models: active(catalogs?.models),
+      brands: active(catalogs?.brands),
+      defects: active(catalogs?.defects),
+      all: catalogs,
+    }
+  }, [catalogs])
 }

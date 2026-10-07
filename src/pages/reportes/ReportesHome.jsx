@@ -1,5 +1,41 @@
+import { CalendarDays, PackageSearch, Tv, Users } from 'lucide-react'
+import { MenuCard } from '@/components/MenuCard'
 import { PageHeader } from '@/components/ui'
 
 export default function ReportesHome() {
-  return <PageHeader title="ReportesHome" subtitle="En construcción" />
+  return (
+    <div>
+      <PageHeader title="Reportes" subtitle="Plan contra real, avance por modelo, personal y pallets" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <MenuCard
+          to="/reportes/dia"
+          icon={CalendarDays}
+          title="Reporte del día"
+          description="Plan vs Real, Delta y Recovery por turno"
+          tone="blue"
+        />
+        <MenuCard
+          to="/reportes/modelos"
+          icon={Tv}
+          title="Producción por modelo"
+          description="Avance VIOS HY / SILO contra objetivo MTY + Texas"
+          tone="green"
+        />
+        <MenuCard
+          to="/reportes/personal"
+          icon={Users}
+          title="Personal y productividad"
+          description="Personas por línea y piezas por persona"
+          tone="amber"
+        />
+        <MenuCard
+          to="/reportes/pallets"
+          icon={PackageSearch}
+          title="Dashboard de pallets"
+          description="Entrada → salida, faltantes y búsqueda de serial"
+          tone="violet"
+        />
+      </div>
+    </div>
+  )
 }

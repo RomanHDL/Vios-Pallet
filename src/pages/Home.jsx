@@ -52,7 +52,7 @@ export default function Home() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Card className="col-span-2 p-4 sm:p-5">
+            <Card className="col-span-2 flex flex-col justify-center p-4 sm:p-5 lg:row-span-2 lg:p-6">
               <div className="flex items-center justify-between">
                 <span className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">Producción del turno</span>
                 <Target className="h-4 w-4 text-primary" />

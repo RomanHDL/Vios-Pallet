@@ -130,7 +130,7 @@ export function Stat({ label, value, hint, tone = 'default', icon: Icon, classNa
         <span className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
         {Icon && <Icon className={cn('h-4 w-4', STAT_TONE[tone])} />}
       </div>
-      <div className={cn('tabular mt-1.5 text-[28px] font-extrabold leading-none tracking-tight', STAT_TONE[tone])}>
+      <div className={cn('tabular mt-1.5 text-[24px] font-extrabold sm:text-[28px] leading-none tracking-tight', STAT_TONE[tone])}>
         {value}
       </div>
       {hint && <div className="mt-1.5 text-[12.5px] text-muted-foreground">{hint}</div>}
@@ -154,9 +154,9 @@ export function Progress({ value, tone = 'primary', className }) {
 }
 
 // Selector segmentado (Hoy / Semana / Rango, HY / SILO...).
-export function Segmented({ value, onChange, options, className, size = 'md' }) {
+export function Segmented({ value, onChange, options, className, size = 'md', stretch }) {
   return (
-    <div className={cn('inline-flex max-w-full overflow-x-auto rounded-xl bg-muted p-1', className)}>
+    <div className={cn(stretch ? 'flex w-full' : 'inline-flex max-w-full', 'overflow-x-auto rounded-xl bg-muted p-1', className)}>
       {options.map((o) => {
         const v = typeof o === 'object' ? o.value : o
         const l = typeof o === 'object' ? o.label : o
@@ -167,6 +167,7 @@ export function Segmented({ value, onChange, options, className, size = 'md' }) 
             onClick={() => onChange(v)}
             className={cn(
               'whitespace-nowrap rounded-lg font-semibold transition',
+              stretch && 'flex-1',
               size === 'sm' ? 'px-2.5 py-1 text-[12.5px]' : 'px-3.5 py-1.5 text-[13.5px]',
               value === v ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
             )}
