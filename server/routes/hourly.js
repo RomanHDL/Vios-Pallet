@@ -41,7 +41,7 @@ r.get('/hourly', requireAuth(), async (req, res) => {
     perHour,
     total: output.length,
     lastAt: output.at(-1)?.at || null,
-    pace: pace({ shiftDate, shift, count: output.length, goal, now }),
+    pace: pace({ shiftDate, shift, count: output.length, goal, firstAt: output[0]?.at, now }),
   })
 })
 

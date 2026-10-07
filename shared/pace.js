@@ -31,7 +31,7 @@ export function productiveHours(shift) {
   return h
 }
 
-// Horas productivas transcurridas desde el inicio del turno hasta `now`.
+// Horas productivas del inicio del turno hasta `now`.
 function elapsedProductive(shiftDate, shift, now) {
   const { start } = shiftWindow(shiftDate, shift)
   const hours = (now - start) / 3_600_000
@@ -44,19 +44,25 @@ function elapsedProductive(shiftDate, shift, now) {
 
 /**
  * Ritmo del turno:
- *  secPerPiece      tiempo real por pieza (tiempo productivo transcurrido / piezas)
+ *  secPerPiece      tiempo real por pieza: tiempo productivo desde la PRIMERA pieza del turno / piezas
+ *                   (si arrancaron tarde no se cuenta el tiempo sin trabajar)
  *  goalSecPerPiece  tiempo por pieza que pide la meta
  *  projection       piezas al fin del turno si se sigue al mismo ritmo
  */
-export function pace({ shiftDate, shift, count, goal, now = new Date() }) {
+export function pace({ shiftDate, shift, count, goal, firstAt = null, now = new Date() }) {
   const total = productiveHours(shift)
   const elapsed = Math.min(total, elapsedProductive(shiftDate, shift, now))
   const remaining = total - elapsed
-  const rate = elapsed > 0 ? count / elapsed : 0 // piezas por hora productiva
+  const worked = firstAt
+    ? Math.max(0, elapsed - Math.min(total, elapsedProductive(shiftDate, shift, new Date(firstAt))))
+    : elapsed
+  // Con muy poco tiempo trabajado el ritmo no es confiable: minimo 5 minutos.
+  const basis = Math.max(worked, Math.min(elapsed, 5 / 60))
+  const rate = basis > 0 ? count / basis : 0 // piezas por hora productiva
   return {
     elapsedHours: elapsed,
     remainingHours: remaining,
-    secPerPiece: count > 0 && elapsed > 0 ? (elapsed * 3600) / count : null,
+    secPerPiece: count > 0 && basis > 0 ? (basis * 3600) / count : null,
     goalSecPerPiece: goal > 0 ? (total * 3600) / goal : null,
     projection: Math.round(count + rate * remaining),
     expectedNow: goal > 0 ? Math.round((goal * elapsed) / total) : 0,

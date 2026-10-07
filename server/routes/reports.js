@@ -251,7 +251,8 @@ r.get('/reports/pallets', requireAuth(), async (req, res) => {
 r.get('/dashboard', requireAuth(), async (_req, res) => {
   const { shiftDate, shift } = shiftOf()
   // Mismo conteo y meta que Hora por Hora: piezas de salidas + registradas, meta del turno (765 por defecto).
-  const produced = (await shiftOutput(shiftDate, shift)).length
+  const output = await shiftOutput(shiftDate, shift)
+  const produced = output.length
   const { goal } = await shiftGoal(shiftDate, shift)
   const [{ n: rejected }] = await rows(sql`select count(*)::int n from rejections where shift_date = ${shiftDate}`)
   const open = await rows(sql`select type, count(*)::int n from pallets where status = 'abierto' group by 1`)
@@ -270,7 +271,7 @@ r.get('/dashboard', requireAuth(), async (_req, res) => {
     shift,
     produced,
     goal,
-    pace: pace({ shiftDate, shift, count: produced, goal }),
+    pace: pace({ shiftDate, shift, count: produced, goal, firstAt: output[0]?.at }),
     rejected,
     openEntrada: open.find((x) => x.type === 'entrada')?.n || 0,
     openSalida: open.find((x) => x.type === 'salida')?.n || 0,

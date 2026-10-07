@@ -43,7 +43,7 @@ const SECTIONS = [
       'Cuenta como producción cada pieza escaneada en un pallet de SALIDA (a la hora en que se escanea) más lo registrado en Producción → Registrar. Un serial cuenta una sola vez y no se divide por línea.',
       'Verde = cumplió la meta de esa hora, rojo = quedó abajo, azul = hora en curso, gris = todavía no llega. Arriba de cada barra está la diferencia contra la meta.',
       'Meta del día: 765 piezas por defecto. Escribe otra y toca Guardar (o Enter); sigue vigente los días siguientes hasta que la cambies.',
-      'Tiempo por pieza: cada cuánto sale una pieza en el turno (tiempo trabajado ÷ piezas), comparado con lo que pide la meta. Proyección fin de turno: cuántas piezas habrá al terminar si se sigue al mismo ritmo.',
+      'Tiempo por pieza: cada cuánto sale una pieza (tiempo trabajado desde la primera pieza del turno ÷ piezas), comparado con lo que pide la meta. Proyección fin de turno: cuántas piezas habrá al terminar si se sigue al mismo ritmo.',
       'Día (07:00 a 17:00): la comida de 11 a 13 cuenta a la mitad. Noche (22:00 a 07:00): de 2 a 3 es descanso. "Pantalla completa" está pensada para una tablet vertical.',
     ],
   },

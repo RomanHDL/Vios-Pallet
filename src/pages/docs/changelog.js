@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.4.1',
+    date: '2026-10-07',
+    title: 'Tiempo por pieza desde la primera pieza',
+    fixed: ['El tiempo por pieza y la proyección se miden desde la primera pieza del turno: si arrancan tarde ya no sale un tiempo enorme.'],
+  },
+  {
     version: '1.4.0',
     date: '2026-10-07',
     title: 'Producción = salidas de pallet, meta 765, ritmo y proyección',
