@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.3.1',
+    date: '2026-10-07',
+    title: 'Hora por Hora: etiquetas',
+    fixed: ['Con barras muy bajas (0 piezas) las diferencias de arriba ya no se enciman entre horas.'],
+  },
+  {
     version: '1.3.0',
     date: '2026-10-07',
     title: 'Hora por Hora VIOS',

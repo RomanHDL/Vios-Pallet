@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.3.1] — 2026-10-07
+
+### Fixed
+- Hora por Hora: con barras muy bajas las diferencias de arriba ya no se enciman entre horas.
+
 ## [1.3.0] — 2026-10-07
 
 ### Added

@@ -229,7 +229,10 @@ export function HourlyChart({ slots, big, className }) {
                     fontWeight={800}
                     className={diff < 0 ? BAD_TEXT : GOAL_TEXT}
                   >
-                    {two ? signed(diff) : `${signed(diff)} · ${pct}%`}
+                    {/* Sin espacio adentro, el % va junto a la diferencia solo si cabe en el ancho de la hora. */}
+                    {two || (signed(diff).length + String(pct).length + 4) * dfs * 0.6 > band * 0.96
+                      ? signed(diff)
+                      : `${signed(diff)} · ${pct}%`}
                   </text>
                 )}
               </g>
