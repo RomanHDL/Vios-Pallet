@@ -1,0 +1,17 @@
+# Coolify (nixpacks), mismo arreglo que centro-de-trabajo:
+# 1. corepack falla con Node 22 de nixpacks -> se desactiva y se instala pnpm@10 con npm.
+# 2. manage-package-manager-versions=false para que pnpm no intente auto-actualizarse.
+# 3. start = pm2-runtime (servidor Node), no el modo SPA estatico de nixpacks.
+[phases.install]
+cmds = [
+  "corepack disable",
+  "npm install --global pnpm@10",
+  "$(npm prefix -g)/bin/pnpm config set manage-package-manager-versions false --global",
+  "$(npm prefix -g)/bin/pnpm install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = ["$(npm prefix -g)/bin/pnpm build"]
+
+[start]
+cmd = "pnpm start"

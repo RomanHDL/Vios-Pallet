@@ -3,6 +3,7 @@ import {
   BarChart3,
   ClipboardCheck,
   Factory,
+  CircleHelp,
   Home,
   LogOut,
   Moon,
@@ -104,6 +105,10 @@ export function Layout() {
               Administración
             </NavLink>
           )}
+          <NavLink to="/ayuda" className={sideLink}>
+            <CircleHelp className="h-[18px] w-[18px]" />
+            Ayuda
+          </NavLink>
         </nav>
         <div className="mt-auto space-y-2">
           <button type="button" onClick={() => setDark((d) => !d)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-semibold text-white/75 hover:bg-white/10 hover:text-white">
@@ -131,6 +136,9 @@ export function Layout() {
       <header className="no-print sticky top-0 z-30 flex items-center justify-between gap-2 bg-navy px-4 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] lg:hidden">
         <Logo />
         <div className="flex items-center gap-1">
+          <NavLink to="/ayuda" className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Ayuda">
+            <CircleHelp className="h-5 w-5" />
+          </NavLink>
           <button type="button" onClick={() => setDark((d) => !d)} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Cambiar tema">
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>

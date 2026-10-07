@@ -7,6 +7,10 @@ import Catalogos from './pages/admin/Catalogos'
 import AdminHome from './pages/admin/AdminHome'
 import CalidadHome from './pages/calidad/CalidadHome'
 import NuevoRechazo from './pages/calidad/NuevoRechazo'
+import Ayuda from './pages/docs/Ayuda'
+import Cambios from './pages/docs/Cambios'
+import Desarrollador from './pages/docs/Desarrollador'
+import Manual from './pages/docs/Manual'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Perfil from './pages/Perfil'
@@ -62,6 +66,11 @@ export default function App() {
         <Route path="admin" element={<AdminHome />} />
         <Route path="admin/usuarios" element={<Usuarios />} />
         <Route path="admin/catalogos" element={<Catalogos />} />
+
+        <Route path="ayuda" element={<Ayuda />} />
+        <Route path="ayuda/manual" element={<Manual />} />
+        <Route path="ayuda/cambios" element={<Cambios />} />
+        <Route path="ayuda/desarrollador" element={<Desarrollador />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

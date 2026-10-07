@@ -24,11 +24,11 @@ Reemplaza a PalletScan (`palletscan-mi.web.app`) con usuarios, base de datos pro
 
 ## Correr en local
 
-Requisitos: Node 20+.
+Requisitos: Node 20+ y pnpm 10.
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 - Web: http://localhost:5180 (API en http://localhost:3001, Vite hace proxy de `/api`).
@@ -36,8 +36,8 @@ npm run dev
 - La primera vez se crea el usuario `admin` con una contraseña al azar guardada en `data/initial-admin.txt`.
   Cámbiala en *Mi cuenta* después de entrar.
 
-Producción: `npm run build && npm start` (sirve `dist/` y el API en `PORT`, default 3001).
-Variables: `DATABASE_URL`, `SESSION_SECRET`, `PORT`.
+Producción (Coolify): `pnpm build && pnpm start` (PM2, `ecosystem.config.cjs`). Escucha en `0.0.0.0:$PORT`.
+Variables: `DATABASE_URL` (Postgres 16), `SESSION_SECRET` (obligatoria en producción), `PORT`, `ADMIN_INITIAL_PASSWORD` (contraseña del admin en el primer arranque).
 
 ## Stack
 

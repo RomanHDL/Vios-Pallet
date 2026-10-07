@@ -17,6 +17,8 @@ await ensureSeed()
 
 const app = express()
 app.disable('x-powered-by')
+// Detras del proxy HTTPS de Coolify: necesario para cookies `secure`.
+app.set('trust proxy', 1)
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
 
@@ -40,4 +42,5 @@ app.use((err, _req, res, _next) => {
 })
 
 const port = Number(process.env.PORT) || 3001
-app.listen(port, () => console.log(`VIOS Pallet API en http://localhost:${port}`))
+// 0.0.0.0: requisito de Coolify (no solo localhost).
+app.listen(port, '0.0.0.0', () => console.log(`VIOS Pallet en el puerto ${port}`))

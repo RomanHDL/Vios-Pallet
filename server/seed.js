@@ -1,7 +1,8 @@
 // Datos iniciales: catalogos de PalletScan y un administrador.
-// La contrasena inicial del admin se genera al azar y se guarda en data/initial-admin.txt (no se imprime).
+// Contrasena inicial del admin: ADMIN_INITIAL_PASSWORD si existe; si no, al azar. En local se guarda en
+// data/initial-admin.txt; en produccion (sin disco persistente) se escribe una sola vez en el log.
 import { randomBytes } from 'node:crypto'
-import { writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync } from 'node:fs'
 import { sql } from 'drizzle-orm'
 import { hashPassword } from './auth.js'
 import { db } from './db.js'
@@ -39,17 +40,24 @@ export async function ensureSeed() {
   }
   const [{ u }] = (await db.execute(sql`select count(*)::int u from users`)).rows
   if (u === 0) {
-    const password = randomBytes(6).toString('base64url')
+    const password = process.env.ADMIN_INITIAL_PASSWORD || randomBytes(6).toString('base64url')
     await db.insert(users).values({
       username: 'admin',
       name: 'Administrador',
       role: 'admin',
       passwordHash: await hashPassword(password),
     })
-    writeFileSync(
-      'data/initial-admin.txt',
-      `Usuario: admin\nContraseña inicial: ${password}\nCámbiala en Perfil después de entrar.\n`,
-    )
-    console.log('Administrador creado. Credenciales iniciales en data/initial-admin.txt')
+    if (process.env.ADMIN_INITIAL_PASSWORD) {
+      console.log('Administrador "admin" creado con ADMIN_INITIAL_PASSWORD.')
+    } else if (process.env.NODE_ENV === 'production') {
+      console.log(`Administrador "admin" creado. Contraseña inicial: ${password} (cámbiala al entrar).`)
+    } else {
+      mkdirSync('data', { recursive: true })
+      writeFileSync(
+        'data/initial-admin.txt',
+        `Usuario: admin\nContraseña inicial: ${password}\nCámbiala en Mi cuenta después de entrar.\n`,
+      )
+      console.log('Administrador creado. Credenciales iniciales en data/initial-admin.txt')
+    }
   }
 }

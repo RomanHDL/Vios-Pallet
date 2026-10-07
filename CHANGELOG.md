@@ -1,0 +1,25 @@
+# Changelog
+
+Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
+(`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
+
+## [1.0.0] — 2026-10-07
+
+### Added
+- Login con roles (administrador, supervisor, operador, calidad); cada registro guarda quién lo hizo.
+- Pallets: entrada (ID de 6 dígitos + piezas), salida (`ID-S`) con conciliación pieza por pieza y motivo obligatorio
+  por faltante, hoja imprimible con firmas, historial y búsqueda de serial.
+- Producción: registro de producto terminado (serial TV = serial caja) por estación, líneas en vivo, detalle por hora,
+  plan y personal por turno, historial.
+- Calidad: rechazos por serial con defectos del catálogo; un serial rechazado no se puede registrar como producción.
+- Reportes: Plan vs Real con Delta y Recovery por turno, producción por modelo contra objetivos MTY/Texas con
+  proyección, personal y productividad, dashboard de pallets.
+- Administración de usuarios y catálogos (líneas y metas, modelos y prefijos, marcas, defectos).
+- Escaneo con pistola lectora o con la cámara del celular; diseño para PC y celular; modo oscuro.
+- Manual de usuario, manual de desarrollador y página de cambios.
+
+### Fixed (respecto a PalletScan)
+- Plan: plan capturado o meta de las líneas activas, no "400 por cada línea que registró algo".
+- El Turno 2 (22:00–07:00) se cuenta completo en la fecha en que empieza.
+- Serial único en la base de datos: dos escaneos simultáneos no duplican producción.
+- El reporte por modelo separa producido, rechazado y neto.

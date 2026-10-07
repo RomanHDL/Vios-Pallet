@@ -1,6 +1,6 @@
 // Sesion con cookie firmada (HMAC). Sin dependencias extra: token = base64url(json).firma
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import bcrypt from 'bcryptjs'
 import { eq } from 'drizzle-orm'
 import { db } from './db.js'
@@ -11,6 +11,8 @@ const MAX_AGE_MS = 12 * 60 * 60 * 1000 // 12 h (un turno largo)
 
 function loadSecret() {
   if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET
+  if (process.env.NODE_ENV === 'production') throw new Error('Falta la variable SESSION_SECRET.')
+  mkdirSync('data', { recursive: true })
   const file = 'data/session-secret'
   if (existsSync(file)) return readFileSync(file, 'utf8').trim()
   const s = randomBytes(32).toString('hex')
