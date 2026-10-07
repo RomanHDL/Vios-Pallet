@@ -37,7 +37,8 @@ pnpm dev
   Cámbiala en *Mi cuenta* después de entrar.
 
 Producción (Coolify): `pnpm build && pnpm start` (PM2, `ecosystem.config.cjs`). Escucha en `0.0.0.0:$PORT`.
-Variables: `DATABASE_URL` (Postgres 16), `SESSION_SECRET` (obligatoria en producción), `PORT`, `ADMIN_INITIAL_PASSWORD` (contraseña del admin en el primer arranque).
+Variables: `DATABASE_URL` (Postgres 16), `SESSION_SECRET` (obligatoria en producción), `PORT`, `ADMIN_INITIAL_PASSWORD` (contraseña del admin en el primer arranque),
+`GUEST_LOGIN=off` para quitar el botón "Entrar" sin contraseña.
 
 ## Stack
 

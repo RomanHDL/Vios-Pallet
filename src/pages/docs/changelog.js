@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.1.0',
+    date: '2026-10-07',
+    title: 'Entrada con un clic',
+    added: [
+      'Botón "Entrar" sin usuario ni contraseña (cuenta compartida Planta, permisos de supervisor). El administrador entra con "Entrar con usuario". Se puede apagar con GUEST_LOGIN=off.',
+    ],
+  },
+  {
     version: '1.0.0',
     date: '2026-10-07',
     title: 'Primera versión',

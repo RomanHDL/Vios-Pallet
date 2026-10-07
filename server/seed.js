@@ -8,6 +8,8 @@ import { hashPassword } from './auth.js'
 import { db } from './db.js'
 import { brands, defects, lines, models, users } from './schema.js'
 
+export const GUEST_USERNAME = 'planta'
+
 const LINES = ['Línea 1', 'Línea 2', 'Línea 3']
 const MODELS = [
   { code: 'EL-32"', prefix: 'EL', targetMty: 2703, targetTexas: 0 },
@@ -38,7 +40,17 @@ export async function ensureSeed() {
     await db.insert(brands).values(BRANDS.map((code) => ({ code })))
     await db.insert(defects).values(DEFECTS.map((name, i) => ({ name, sort: i })))
   }
-  const [{ u }] = (await db.execute(sql`select count(*)::int u from users`)).rows
+  // Cuenta compartida del boton "Entrar" (sin contrasena usable: solo se entra por /api/auth/guest).
+  await db
+    .insert(users)
+    .values({
+      username: GUEST_USERNAME,
+      name: 'Planta',
+      role: 'supervisor',
+      passwordHash: await hashPassword(randomBytes(24).toString('hex')),
+    })
+    .onConflictDoNothing()
+  const [{ u }] = (await db.execute(sql`select count(*)::int u from users where username <> ${GUEST_USERNAME}`)).rows
   if (u === 0) {
     const password = process.env.ADMIN_INITIAL_PASSWORD || randomBytes(6).toString('base64url')
     await db.insert(users).values({

@@ -8,7 +8,7 @@ const SECTIONS = [
     icon: ScanLine,
     title: 'Antes de empezar',
     steps: [
-      'Entra con tu usuario y contraseña. Tu rol define lo que puedes hacer: Operador (escanear pallets y producción), Calidad (rechazos), Supervisor (además reabrir, borrar registros y capturar plan/personal) y Administrador (todo, incluidos usuarios y catálogos).',
+      'Toca "Entrar" para pasar directo (cuenta compartida Planta, con permisos de supervisor). El administrador entra con "Entrar con usuario". Cada rol define lo que puedes hacer: Operador (escanear pallets y producción), Calidad (rechazos), Supervisor (además reabrir, borrar registros y capturar plan/personal) y Administrador (todo, incluidos usuarios y catálogos).',
       'Los campos de escaneo funcionan con pistola lectora: apunta y dispara, el código se envía solo. En celulares Android con Chrome puedes usar el botón de cámara del campo.',
       'Un sonido corto y verde = correcto. Un sonido grave y rojo = error; lee el mensaje.',
       'El turno se calcula solo: Turno 1 de 07:00 a 22:00 y Turno 2 de 22:00 a 07:00 (cuenta para el día en que empieza).',

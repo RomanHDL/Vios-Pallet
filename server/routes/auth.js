@@ -11,6 +11,7 @@ import {
 } from '../auth.js'
 import { db } from '../db.js'
 import { users } from '../schema.js'
+import { GUEST_USERNAME } from '../seed.js'
 import { bad, clean, conflict, isUniqueViolation, notFound } from '../util.js'
 
 export const ROLES = ['admin', 'supervisor', 'operador', 'calidad']
@@ -24,6 +25,20 @@ r.post('/auth/login', async (req, res) => {
     return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' })
   issueSession(res, u)
   res.json({ user: publicUser(u) })
+})
+
+// Entrada directa (boton "Entrar", a peticion del usuario: "que nomas le des clic en entrar"):
+// sesion con la cuenta compartida "Planta". Se apaga con GUEST_LOGIN=off.
+r.post('/auth/guest', async (_req, res) => {
+  if (process.env.GUEST_LOGIN === 'off') return res.status(403).json({ error: 'La entrada directa está desactivada.' })
+  const [u] = await db.select().from(users).where(eq(users.username, GUEST_USERNAME))
+  if (!u || !u.active) return res.status(403).json({ error: 'La cuenta Planta está desactivada.' })
+  issueSession(res, u)
+  res.json({ user: publicUser(u) })
+})
+
+r.get('/auth/options', (_req, res) => {
+  res.json({ guest: process.env.GUEST_LOGIN !== 'off' })
 })
 
 r.post('/auth/logout', (_req, res) => {

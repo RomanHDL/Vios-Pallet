@@ -36,13 +36,17 @@ export function SessionProvider({ children }) {
     const d = await api('/auth/login', { method: 'POST', body: { username, password } })
     setUser(d.user)
   }
+  const enter = async () => {
+    const d = await api('/auth/guest', { method: 'POST' })
+    setUser(d.user)
+  }
   const logout = async () => {
     await api('/auth/logout', { method: 'POST' }).catch(() => {})
     setUser(null)
   }
 
   return (
-    <SessionCtx.Provider value={{ user, login, logout, catalogs, reloadCatalogs: loadCatalogs }}>
+    <SessionCtx.Provider value={{ user, login, enter, logout, catalogs, reloadCatalogs: loadCatalogs }}>
       {children}
     </SessionCtx.Provider>
   )

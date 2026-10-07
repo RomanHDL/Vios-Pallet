@@ -26,6 +26,7 @@ const tables = Object.values(schema)
 
 const API = [
   ['POST', '/api/auth/login', 'Inicia sesión (cookie httpOnly firmada, 12 h).'],
+  ['POST', '/api/auth/guest', 'Entrada directa con la cuenta compartida Planta (GUEST_LOGIN=off la apaga).'],
   ['GET', '/api/auth/me', 'Usuario actual.'],
   ['POST', '/api/auth/password', 'Cambiar contraseña propia.'],
   ['GET/POST/PATCH', '/api/users', 'Usuarios (admin).'],
