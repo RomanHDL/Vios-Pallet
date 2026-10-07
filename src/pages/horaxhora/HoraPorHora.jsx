@@ -2,15 +2,56 @@
 // Pantalla completa pensada para una tablet vertical: la grafica crece a lo alto, no a lo ancho.
 
 import { shiftOf } from '@shared/shift.js'
-import { Maximize2, Minimize2 } from 'lucide-react'
+import { Gauge, Maximize2, Minimize2, Target, TrendingUp } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Button, Card, ErrorBox, Input, Segmented, Select, Spinner, useToast } from '@/components/ui'
+import { Button, Card, ErrorBox, Input, Segmented, Spinner, useToast } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
-import { useCatalogs, useSession } from '@/lib/session'
-import { canDo, cn, fmtInt, fmtYmd } from '@/lib/utils'
+import { useSession } from '@/lib/session'
+import { canDo, cn, fmtInt, fmtPct, fmtYmd } from '@/lib/utils'
 import { HourlyChart, HourlyLegend } from './HourlyChart'
 import { buildSlots, shiftRange } from './slots'
+
+// 47 -> "47 s", 94 -> "1 min 34 s"
+function fmtSec(s) {
+  if (s === null || s === undefined || !Number.isFinite(s)) return '—'
+  const t = Math.round(s)
+  if (t < 60) return `${t} s`
+  const m = Math.floor(t / 60)
+  const r = t % 60
+  return r ? `${m} min ${r} s` : `${m} min`
+}
+
+const TONE = {
+  green: 'text-emerald-600 dark:text-emerald-400',
+  red: 'text-red-600 dark:text-red-400',
+  blue: 'text-blue-600 dark:text-blue-400',
+}
+
+function PaceCard({ icon: Icon, label, value, hint, tone, big }) {
+  return (
+    <Card className={cn('p-3 sm:p-4', big && 'sm:p-5')}>
+      <div className="flex items-center justify-between">
+        <span className="text-[10.5px] font-semibold uppercase leading-tight tracking-wide text-muted-foreground sm:text-[12px]">
+          {label}
+        </span>
+        <Icon className="hidden h-4 w-4 shrink-0 text-muted-foreground sm:block" />
+      </div>
+      <div
+        className={cn(
+          'tabular mt-1.5 font-extrabold leading-tight tracking-tight',
+          big ? 'text-[24px] sm:text-[34px]' : 'text-[21px] sm:text-[28px]',
+          TONE[tone],
+        )}
+      >
+        {value}
+      </div>
+      <div className="mt-1 text-[11px] font-medium leading-snug text-muted-foreground sm:text-[12.5px]">
+        {hint}
+      </div>
+    </Card>
+  )
+}
 
 const SHIFT_OPTIONS = [
   { value: 'T1', label: 'Día' },
@@ -22,9 +63,9 @@ function GoalControl({ data, editable, onSaved }) {
   const [draft, setDraft] = useState(String(data.goal))
   const [busy, setBusy] = useState(false)
   const dirty = draft !== String(data.goal)
-  const key = `${data.shiftDate}|${data.shift}|${data.line}|${data.goal}`
+  const key = `${data.shiftDate}|${data.shift}|${data.goal}`
 
-  // Al cambiar de turno/linea o al refrescar con otra meta, el campo vuelve al valor guardado.
+  // Al cambiar de turno o al refrescar con otra meta, el campo vuelve al valor guardado.
   useEffect(() => setDraft(String(data.goal)), [key])
 
   async function save() {
@@ -35,7 +76,7 @@ function GoalControl({ data, editable, onSaved }) {
     try {
       await api('/hourly/goal', {
         method: 'PUT',
-        body: { shiftDate: data.shiftDate, shift: data.shift, line: data.line || undefined, goal },
+        body: { shiftDate: data.shiftDate, shift: data.shift, goal },
       })
       toast('Meta guardada')
       await onSaved()
@@ -50,7 +91,7 @@ function GoalControl({ data, editable, onSaved }) {
     <div className="flex flex-col items-start gap-1 sm:items-end">
       <div className="flex items-center gap-2">
         <span className="text-[13.5px] font-semibold text-muted-foreground">
-          Plan del turno ({data.shift === 'T1' ? 'día' : 'noche'}):
+          Meta {data.shift === 'T1' ? 'del día' : 'de la noche'}:
         </span>
         {editable ? (
           <Input
@@ -64,7 +105,7 @@ function GoalControl({ data, editable, onSaved }) {
               if (e.key === 'Escape') setDraft(String(data.goal))
             }}
             className="h-10 w-[104px] text-right font-mono text-[17px] font-bold"
-            aria-label="Plan del turno"
+            aria-label="Meta del turno"
           />
         ) : (
           <span className="rounded-lg bg-muted px-3 py-1.5 font-mono text-[17px] font-bold">
@@ -84,13 +125,11 @@ function GoalControl({ data, editable, onSaved }) {
 
 export default function HoraPorHora() {
   const { user } = useSession()
-  const { lines: activeLines } = useCatalogs()
   const now = shiftOf()
   const [shiftDate, setShiftDate] = useState(now.shiftDate)
   const [shift, setShift] = useState(now.shift)
-  const [line, setLine] = useState('')
   const { data, error, loading, reload } = useApi('/hourly', {
-    query: { shiftDate, shift, line },
+    query: { shiftDate, shift },
     refreshMs: 20000,
   })
 
@@ -150,34 +189,19 @@ export default function HoraPorHora() {
             <div className="mr-auto min-w-0">
               <p className="text-[19px] font-extrabold tracking-tight">Hora por Hora VIOS</p>
               <p className="text-[13px] font-semibold text-muted-foreground">
-                {fmtYmd(shiftDate)} · {shift === 'T1' ? 'Día' : 'Noche'} · {line || 'Todas las líneas'}
+                {fmtYmd(shiftDate)} · {shift === 'T1' ? 'Día' : 'Noche'}
               </p>
             </div>
           )}
           {!full && (
-            <>
-              <Input
-                type="date"
-                value={shiftDate}
-                max={now.shiftDate}
-                onChange={(e) => e.target.value && setShiftDate(e.target.value)}
-                className="h-10 w-[150px]"
-                aria-label="Fecha del turno"
-              />
-              <Select
-                value={line}
-                onChange={(e) => setLine(e.target.value)}
-                className="h-10 w-[160px]"
-                aria-label="Línea"
-              >
-                <option value="">Todas las líneas</option>
-                {activeLines.map((l) => (
-                  <option key={l.id} value={l.name}>
-                    {l.name}
-                  </option>
-                ))}
-              </Select>
-            </>
+            <Input
+              type="date"
+              value={shiftDate}
+              max={now.shiftDate}
+              onChange={(e) => e.target.value && setShiftDate(e.target.value)}
+              className="h-10 w-[150px]"
+              aria-label="Fecha del turno"
+            />
           )}
           <div className="flex items-center gap-2">
             <Segmented value={shift} onChange={setShift} options={SHIFT_OPTIONS} />
@@ -197,23 +221,63 @@ export default function HoraPorHora() {
 
         <ErrorBox error={error} />
 
+        {/* Ritmo: llevan, tiempo por pieza y proyeccion al fin del turno */}
+        {data && (
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            <PaceCard
+              big={full}
+              icon={Target}
+              label="Llevan"
+              value={fmtInt(data.total)}
+              tone={data.total >= data.pace.expectedNow ? 'green' : 'red'}
+              hint={`de ${fmtInt(data.goal)} (${fmtPct(data.goal ? data.total / data.goal : null)}) · deberían llevar ${fmtInt(data.pace.expectedNow)}`}
+            />
+            <PaceCard
+              big={full}
+              icon={Gauge}
+              label="Tiempo por pieza"
+              value={data.pace.secPerPiece === null ? '—' : fmtSec(data.pace.secPerPiece)}
+              tone={
+                data.pace.secPerPiece === null
+                  ? undefined
+                  : data.pace.secPerPiece <= data.pace.goalSecPerPiece
+                    ? 'green'
+                    : 'red'
+              }
+              hint={`La meta pide 1 pz cada ${fmtSec(data.pace.goalSecPerPiece)}`}
+            />
+            <PaceCard
+              big={full}
+              icon={TrendingUp}
+              label="Proyección fin turno"
+              value={fmtInt(data.pace.projection)}
+              tone={data.pace.projection >= data.goal ? 'green' : 'red'}
+              hint={
+                data.pace.remainingHours > 0
+                  ? `${data.pace.projection >= data.goal ? '+' : ''}${fmtInt(data.pace.projection - data.goal)} contra la meta, a este ritmo`
+                  : 'Turno terminado'
+              }
+            />
+          </div>
+        )}
+
         {/* Tarjeta de la grafica */}
         <Card className={cn('overflow-hidden', full && 'flex min-h-0 flex-1 flex-col')}>
           <div className="flex flex-wrap items-start justify-between gap-3 border-b bg-muted/30 px-4 py-4 sm:px-6">
             <div>
               <h2 className="text-[19px] font-extrabold tracking-tight">Conteo por hora</h2>
               <p className="text-[13.5px] text-muted-foreground">
-                Piezas producidas por hora{data ? ` · ${fmtInt(data.total)} en el turno` : ''}
+                Piezas de pallets de salida por hora{data ? ` · ${fmtInt(data.total)} en el turno` : ''}
               </p>
             </div>
             {data && (
               <div className="flex flex-col items-start gap-1 sm:items-end">
                 <GoalControl data={data} editable={editable} onSaved={() => reload(true)} />
                 <p className="text-[11.5px] text-muted-foreground">
-                  ≈ {fmtInt(built.hourly)} pzs por hora.{' '}
+                  ≈ {fmtInt(built.hourly)} pzs por hora · 1 pz cada {fmtSec(data.pace.goalSecPerPiece)}.{' '}
                   {data.manual
-                    ? `Meta capturada desde el ${fmtYmd(data.goalSince, { dow: false })} (plan: ${fmtInt(data.plan)}).`
-                    : 'El planeado cambia automáticamente si se actualiza el plan.'}
+                    ? `Meta capturada desde el ${fmtYmd(data.goalSince, { dow: false })}.`
+                    : 'Meta por defecto.'}
                 </p>
               </div>
             )}

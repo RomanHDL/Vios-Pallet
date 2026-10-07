@@ -3,6 +3,16 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.4.0] — 2026-10-07
+
+### Changed
+- Producción del turno = piezas escaneadas en pallets de salida + registradas en Producción, sin dividir por línea
+  (`server/output.js`), en Inicio y Hora por Hora.
+- Meta del día 765 por defecto, ajustable (`hourly_goals`, scope `total`).
+
+### Added
+- Tiempo por pieza y proyección al fin del turno (`shared/pace.js`).
+
 ## [1.3.1] — 2026-10-07
 
 ### Fixed

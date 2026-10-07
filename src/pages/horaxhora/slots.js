@@ -3,12 +3,8 @@
 //  - Noche (T2): 22:00 a 07:00, 9 bloques; descanso 2-3 sin meta.
 //  - Meta por hora = meta del turno / horas productivas, redondeada hacia arriba en cada bloque.
 // Las horas de tiempo extra del dia (17 a 22) solo aparecen si hubo produccion, sin meta.
+import { SCHEDULE as CONFIG } from '@shared/pace.js'
 import { hourOfShift } from '@shared/shift.js'
-
-const CONFIG = {
-  T1: { start: 7, blocks: 10, extra: 5, factor: { 11: 0.5, 12: 0.5 }, range: '07:00 a 17:00' },
-  T2: { start: 22, blocks: 9, extra: 0, factor: { 2: 0 }, range: '22:00 a 07:00' },
-}
 
 export const shiftRange = (shift) => CONFIG[shift].range
 

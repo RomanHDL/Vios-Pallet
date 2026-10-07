@@ -18,7 +18,7 @@ const TABLE_INFO = {
   rejections: 'Rechazos de Calidad. defects = arreglo JSON. in_production = el serial ya estaba en production.',
   staffing: 'Personas por línea y turno.',
   plans: 'Plan (materiales disponibles) por línea y turno. Sin registro = meta de la línea.',
-  hourly_goals: "Meta del tablero Hora por Hora por turno; scope '*' = todas las líneas. La última captura (shift_date <=) sigue vigente.",
+  hourly_goals: "Meta del turno (scope 'total', 765 por defecto). La última captura (shift_date <=) sigue vigente.",
 }
 
 const tables = Object.values(schema)
@@ -45,8 +45,8 @@ const API = [
   ['GET/POST/DELETE', '/api/rejections', 'Rechazos de Calidad; /lookup/:serial antes de rechazar.'],
   ['GET', '/api/reports/day | models | staffing | pallets', 'Reportes.'],
   ['GET', '/api/dashboard', 'Resumen del inicio.'],
-  ['GET', '/api/hourly', 'Hora por Hora: piezas por hora del turno, plan y meta (shiftDate, shift, line).'],
-  ['PUT', '/api/hourly/goal', 'Guardar la meta del turno para Hora por Hora (supervisor).'],
+  ['GET', '/api/hourly', 'Hora por Hora: piezas por hora (salidas de pallet + registradas, server/output.js), meta, tiempo por pieza y proyección.'],
+  ['PUT', '/api/hourly/goal', 'Guardar la meta del turno (765 por defecto; scope total).'],
 ]
 
 export default function Desarrollador() {

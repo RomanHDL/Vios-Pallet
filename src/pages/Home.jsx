@@ -63,6 +63,20 @@ export default function Home() {
                 <span className="ml-auto pb-1 text-[18px] font-extrabold text-primary">{fmtPct(pct)}</span>
               </div>
               <Progress value={pct} className="mt-3" tone={pct >= 1 ? 'green' : 'primary'} />
+              {data?.pace && (
+                <Link to="/hora-por-hora" className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[13px] font-semibold text-muted-foreground hover:text-foreground">
+                  <span>
+                    Proyección fin de turno:{' '}
+                    <b className={data.pace.projection >= data.goal ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
+                      {fmtInt(data.pace.projection)}
+                    </b>
+                  </span>
+                  <span>
+                    1 pz cada <b className="text-foreground">{data.pace.secPerPiece ? `${Math.round(data.pace.secPerPiece)} s` : '—'}</b> (meta{' '}
+                    {Math.round(data.pace.goalSecPerPiece)} s)
+                  </span>
+                </Link>
+              )}
             </Card>
             <Stat label="Rechazos hoy" value={fmtInt(data?.rejected)} icon={ClipboardCheck} tone={data?.rejected ? 'red' : 'default'} hint="Calidad" />
             <Stat label="Con faltantes" value={fmtInt(data?.withMissing7d)} icon={AlertTriangle} tone={data?.withMissing7d ? 'amber' : 'default'} hint="Salidas, últimos 7 días" />

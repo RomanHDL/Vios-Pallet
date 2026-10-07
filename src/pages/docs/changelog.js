@@ -2,6 +2,16 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.4.0',
+    date: '2026-10-07',
+    title: 'Producción = salidas de pallet, meta 765, ritmo y proyección',
+    changed: [
+      'La producción del turno cuenta las piezas escaneadas en pallets de salida (más lo registrado en Producción); sin dividir por línea. Aplica en Inicio y Hora por Hora.',
+      'Meta del día 765 por defecto, ajustable desde Hora por Hora.',
+    ],
+    added: ['Tiempo por pieza (real contra la meta) y proyección al fin del turno, en Hora por Hora y en Inicio.'],
+  },
+  {
     version: '1.3.1',
     date: '2026-10-07',
     title: 'Hora por Hora: etiquetas',

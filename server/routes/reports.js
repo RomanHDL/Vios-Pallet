@@ -4,6 +4,8 @@ import { addDays, isWorkday, shiftOf, todayPlant } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { lines, models } from '../schema.js'
+import { pace } from '../../shared/pace.js'
+import { shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -248,13 +250,9 @@ r.get('/reports/pallets', requireAuth(), async (req, res) => {
 // Inicio: resumen del turno actual.
 r.get('/dashboard', requireAuth(), async (_req, res) => {
   const { shiftDate, shift } = shiftOf()
-  const activeLines = await db.select().from(lines).where(eq(lines.active, true))
-  const [{ n: produced }] = await rows(
-    sql`select count(*)::int n from production where shift_date = ${shiftDate} and shift = ${shift}`,
-  )
-  const planRows = await rows(sql`select line, planned from plans where shift_date = ${shiftDate} and shift = ${shift}`)
-  const planBy = Object.fromEntries(planRows.map((x) => [x.line, x.planned]))
-  const goal = activeLines.reduce((a, l) => a + (planBy[l.name] ?? l.goal), 0)
+  // Mismo conteo y meta que Hora por Hora: piezas de salidas + registradas, meta del turno (765 por defecto).
+  const produced = (await shiftOutput(shiftDate, shift)).length
+  const { goal } = await shiftGoal(shiftDate, shift)
   const [{ n: rejected }] = await rows(sql`select count(*)::int n from rejections where shift_date = ${shiftDate}`)
   const open = await rows(sql`select type, count(*)::int n from pallets where status = 'abierto' group by 1`)
   const [{ n: withMissing }] = await rows(sql`
@@ -272,6 +270,7 @@ r.get('/dashboard', requireAuth(), async (_req, res) => {
     shift,
     produced,
     goal,
+    pace: pace({ shiftDate, shift, count: produced, goal }),
     rejected,
     openEntrada: open.find((x) => x.type === 'entrada')?.n || 0,
     openSalida: open.find((x) => x.type === 'salida')?.n || 0,

@@ -40,10 +40,11 @@ const SECTIONS = [
     icon: Clock3,
     title: 'Hora por Hora VIOS',
     steps: [
-      'Conteo de piezas por hora del turno. Verde = cumplió la meta de esa hora, rojo = quedó abajo, azul = hora en curso, gris = todavía no llega. Arriba de cada barra está la diferencia contra la meta.',
-      'Día (07:00 a 17:00): la comida de 11 a 13 cuenta a la mitad. Noche (22:00 a 07:00): de 2 a 3 es descanso y no tiene meta. Las horas de tiempo extra solo aparecen si hubo producción.',
-      'Plan del turno: escribe la meta y toca Guardar (o Enter). La meta por hora se recalcula sola y sigue vigente los días siguientes hasta que la cambies. Sin meta capturada se usa el plan del turno.',
-      'Elige fecha, turno (Día/Noche) y línea. "Pantalla completa" está pensada para una tablet vertical: la gráfica crece a lo alto.',
+      'Cuenta como producción cada pieza escaneada en un pallet de SALIDA (a la hora en que se escanea) más lo registrado en Producción → Registrar. Un serial cuenta una sola vez y no se divide por línea.',
+      'Verde = cumplió la meta de esa hora, rojo = quedó abajo, azul = hora en curso, gris = todavía no llega. Arriba de cada barra está la diferencia contra la meta.',
+      'Meta del día: 765 piezas por defecto. Escribe otra y toca Guardar (o Enter); sigue vigente los días siguientes hasta que la cambies.',
+      'Tiempo por pieza: cada cuánto sale una pieza en el turno (tiempo trabajado ÷ piezas), comparado con lo que pide la meta. Proyección fin de turno: cuántas piezas habrá al terminar si se sigue al mismo ritmo.',
+      'Día (07:00 a 17:00): la comida de 11 a 13 cuenta a la mitad. Noche (22:00 a 07:00): de 2 a 3 es descanso. "Pantalla completa" está pensada para una tablet vertical.',
     ],
   },
   {
