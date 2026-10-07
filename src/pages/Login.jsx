@@ -15,7 +15,7 @@ export default function Login() {
     setBusy(true)
     setError(null)
     try {
-      await login(username.trim(), password)
+      await login(username.trim(), password.trim())
     } catch (err) {
       setError(err)
     } finally {
