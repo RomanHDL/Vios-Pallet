@@ -15,7 +15,7 @@ const TABLE_INFO = {
   pallet_items: 'Piezas escaneadas por pallet. PK (pallet_id, code).',
   pallet_missing: 'Motivo de cada pieza faltante al conciliar una salida.',
   production: 'Producto terminado. serial único. shift_date + shift = turno.',
-  rejections: 'Rechazos de Calidad. defects = arreglo JSON. in_production = el serial ya estaba en production.',
+  rejections: 'Rechazos de Calidad. defects = arreglo JSON. in_production = el serial ya se había producido (salida cerrada o registro histórico).',
   staffing: 'Personas por línea y turno.',
   plans: 'Plan (materiales disponibles) por línea y turno. Sin registro = meta de la línea.',
   hourly_goals: "Meta del turno (scope 'total', 765 por defecto). La última captura (shift_date <=) sigue vigente.",

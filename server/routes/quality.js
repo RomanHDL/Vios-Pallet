@@ -3,19 +3,20 @@ import { Router } from 'express'
 import { shiftOf } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
+import { producedInfo } from '../output.js'
 import { rejections } from '../schema.js'
 import { bad, clean, code, isYmd, notFound, rows } from '../util.js'
 
 const r = Router()
 const userName = (col) => sql`(select name from users where users.id = ${col})`
 
-// Datos del serial antes de rechazarlo: pallet de entrada, modelo, marca y si ya esta en produccion.
+// Datos del serial antes de rechazarlo: pallet de entrada, modelo, marca y si ya se produjo (salida cerrada).
 r.get('/rejections/lookup/:serial', requireAuth(), async (req, res) => {
   const s = code(req.params.serial)
   const [pal] = await rows(sql`
     select p.id, p.model, p.brand from pallet_items i join pallets p on p.id = i.pallet_id
     where i.code = ${s} and p.type = 'entrada' order by i.scanned_at desc limit 1`)
-  const [prod] = await rows(sql`select line, model, brand, registered_at from production where serial = ${s}`)
+  const prod = await producedInfo(s)
   const previous = await rows(sql`
     select id, defects, registered_at from rejections where serial = ${s} order by registered_at desc`)
   res.json({
@@ -48,7 +49,7 @@ r.post('/rejections', requireAuth(['supervisor', 'calidad']), async (req, res) =
   const [pal] = await rows(sql`
     select p.id, p.model, p.brand from pallet_items i join pallets p on p.id = i.pallet_id
     where i.code = ${s} and p.type = 'entrada' order by i.scanned_at desc limit 1`)
-  const [prod] = await rows(sql`select model, brand from production where serial = ${s}`)
+  const prod = await producedInfo(s)
   const { shiftDate, shift } = shiftOf()
   const [row] = await db
     .insert(rejections)

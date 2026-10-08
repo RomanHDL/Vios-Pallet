@@ -200,14 +200,15 @@ function SerialInfo({ info, onReset }) {
           {info.production ? (
             <span className="text-right">
               <Badge tone="amber" dot>
-                Ya registrado
+                Ya producido
               </Badge>
               <span className="mt-0.5 block text-[12px] text-muted-foreground">
-                Línea {info.production.line} · {fmtDateTime(info.production.registered_at)}
+                {info.production.source === 'salida' ? `Salida ${info.production.pallet_id}` : `Línea ${info.production.line}`} ·{' '}
+                {fmtDateTime(info.production.at)}
               </span>
             </span>
           ) : (
-            <Badge tone="green">No registrado</Badge>
+            <Badge tone="green">No producido</Badge>
           )}
         </li>
       </ul>

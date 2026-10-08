@@ -3,6 +3,13 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.6.2] — 2026-10-07
+
+### Fixed
+- Producción por modelo con el conteo de salidas cerradas (`closedExitItems`); rechazados = seriales producidos rechazados.
+- Calidad: "ya producido" con salidas cerradas (`producedInfo`), con respaldo en registros históricos.
+- Reporte del día: personas del turno desde `staffing`.
+
 ## [1.6.1] — 2026-10-07
 
 ### Changed

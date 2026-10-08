@@ -89,9 +89,9 @@ export default function ReporteModelos() {
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <Stat label="Producido" value={fmtInt(t.produced)} icon={Factory} tone="blue" hint="Total acumulado" />
-            <Stat label="Rechazados" value={fmtInt(t.rejected)} icon={XCircle} tone={t.rejected ? 'red' : 'default'} hint="En producción" />
+            <Stat label="Rechazados" value={fmtInt(t.rejected)} icon={XCircle} tone={t.rejected ? 'red' : 'default'} hint="Producidos y rechazados" />
             <Stat label="Neto" value={fmtInt(t.net)} icon={PackageCheck} tone="green" hint="Producido − rechazados" />
-            <Stat label="Promedio / día" value={fmtInt(t.avgPerDay)} icon={Gauge} hint={`Capacidad ${fmtInt(t.capacity)}`} />
+            <Stat label="Promedio / día" value={fmtInt(t.avgPerDay)} icon={Gauge} hint={`Meta del día ${fmtInt(t.capacity)}`} />
             <Stat label="Mejor día" value={fmtInt(t.bestDay)} icon={Award} tone="amber" hint="Piezas en un día" />
             <Stat label="Días" value={fmtInt(t.daysWithProduction)} icon={CalendarCheck} hint="Con producción" />
           </div>
@@ -129,7 +129,7 @@ export default function ReporteModelos() {
                   projection={data.projection}
                   showProjection={showProj}
                   today={today}
-                  reference={{ value: t.capacity, label: 'Capacidad' }}
+                  reference={{ value: t.capacity, label: 'Meta del día' }}
                 />
               ) : (
                 <Empty icon={LineChart} title="Todavía no hay producción" />
@@ -140,7 +140,7 @@ export default function ReporteModelos() {
               items={[
                 { label: 'Real', color: 'hsl(var(--primary))' },
                 ...(showProj && data.projection.length ? [{ label: 'Proyección', color: '#d97706', dashed: true }] : []),
-                { label: 'Capacidad (meta de líneas)', color: '#10b981', dashed: true },
+                { label: 'Meta del día', color: '#10b981', dashed: true },
                 { label: 'Hoy', color: '#ef4444', dashed: true },
               ]}
             />
@@ -211,7 +211,7 @@ export default function ReporteModelos() {
                 <p className="flex items-start gap-2 px-4 py-3 text-[12.5px] text-muted-foreground sm:px-5">
                   <Info className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>
-                    La tabla cuenta todo lo <b className="text-foreground">producido</b> ({fmtInt(t.produced)}). Las piezas rechazadas por
+                    La tabla cuenta lo <b className="text-foreground">producido</b> (piezas de salidas cerradas: {fmtInt(t.produced)}). Las piezas rechazadas por
                     Calidad durante producción ({fmtInt(t.rejected)}) se restan aparte para obtener el <b className="text-foreground">neto</b> (
                     {fmtInt(t.net)}), que es lo que cuenta para el objetivo de cada modelo.
                   </span>

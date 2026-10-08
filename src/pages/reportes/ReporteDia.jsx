@@ -155,7 +155,7 @@ export default function ReporteDia() {
             <CardHeader
               icon={CalendarDays}
               title="Por turno"
-              subtitle="Toca un turno para ver el desglose por línea"
+              subtitle="Toca un turno para ver el detalle"
               action={
                 shifts.length > 0 && (
                   <Button variant="ghost" size="sm" className="no-print shrink-0" onClick={toggleAll}>

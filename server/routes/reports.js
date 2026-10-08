@@ -1,11 +1,11 @@
-import { eq, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { Router } from 'express'
 import { addDays, isWorkday, shiftOf, todayPlant } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
-import { lines, models } from '../schema.js'
+import { models } from '../schema.js'
 import { DEFAULT_DAILY_GOAL, pace } from '../../shared/pace.js'
-import { GOAL_SCOPE, outputByShift, shiftGoal, shiftOutput } from '../output.js'
+import { closedExitItems, GOAL_SCOPE, outputByShift, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -38,6 +38,10 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
   const rej = await rows(sql`
     select shift_date, shift, count(*)::int n from rejections
     where shift_date between ${prev} and ${to} and ${brandCond(req.query)} group by 1, 2`)
+  // Personas del turno (Reportes -> Personal del turno), suma de las lineas capturadas.
+  const staff = await rows(sql`
+    select shift_date, shift, sum(people)::int n from staffing
+    where shift_date between ${prev} and ${to} and people > 0 group by 1, 2`)
   const goals = await rows(sql`
     select shift_date, shift, goal from hourly_goals where scope = ${GOAL_SCOPE} and shift_date <= ${to}
     order by shift_date`)
@@ -68,8 +72,16 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
         rejected: rej.find((x) => x.shift_date === d && x.shift === s)?.n || 0,
         delta: processed - plan,
         pct: plan ? processed / plan : null,
-        people: null,
-        lines: [{ line: 'Salidas cerradas', plan, planCaptured: g.captured, processed, people: null }],
+        people: staff.find((x) => x.shift_date === d && x.shift === s)?.n ?? null,
+        lines: [
+          {
+            line: 'Salidas cerradas',
+            plan,
+            planCaptured: g.captured,
+            processed,
+            people: staff.find((x) => x.shift_date === d && x.shift === s)?.n ?? null,
+          },
+        ],
       })
     }
   }
@@ -96,14 +108,30 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
 
 // Produccion por dia y modelo + objetivos MTY/Texas + proyeccion.
 r.get('/reports/models', requireAuth(), async (req, res) => {
+  // Mismo conteo que Produccion / Hora por Hora: piezas de salidas cerradas, por fecha de turno del escaneo y
+  // modelo del pallet. Rechazados = seriales producidos que Calidad rechazo. Referencia = meta del dia.
   const allModels = await db.select().from(models).orderBy(models.sort, models.code)
-  const activeLines = await db.select().from(lines).where(eq(lines.active, true))
-  const capacity = activeLines.reduce((a, l) => a + l.goal, 0) || 400
-  const daily = await rows(sql`
-    select shift_date, model, count(*)::int n from production
-    where ${brandCond(req.query)} group by 1, 2 order by 1`)
-  const rejectedIn = await rows(sql`
-    select model, count(*)::int n from rejections where in_production and ${brandCond(req.query)} group by 1`)
+  const { goal: capacity } = await shiftGoal(todayPlant(), 'T1')
+  const produced = await closedExitItems(req.query.brand ? clean(req.query.brand, 20) : null)
+  const dailyMap = new Map()
+  for (const x of produced) {
+    const k = `${shiftOf(new Date(x.at)).shiftDate}|${x.model}`
+    dailyMap.set(k, (dailyMap.get(k) || 0) + 1)
+  }
+  const daily = [...dailyMap].map(([k, n]) => {
+    const [shift_date, model] = k.split('|')
+    return { shift_date, model, n }
+  })
+  const modelOf = new Map(produced.map((x) => [x.serial, x.model]))
+  const rejectedSerials = await rows(sql`select distinct serial from rejections`)
+  const rejectedIn = []
+  for (const { serial } of rejectedSerials) {
+    const m = modelOf.get(serial)
+    if (!m) continue
+    const row = rejectedIn.find((x) => x.model === m)
+    if (row) row.n++
+    else rejectedIn.push({ model: m, n: 1 })
+  }
   const days = [...new Set(daily.map((x) => x.shift_date))].sort()
   const byDay = days.map((d) => {
     const row = { date: d, total: 0 }
@@ -132,7 +160,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
   })
   const totals = byDay.map((x) => x.total)
   const sum = totals.reduce((a, x) => a + x, 0)
-  // Proyeccion: regresion lineal de los ultimos 10 dias con produccion, topada a la capacidad.
+  // Proyeccion: regresion lineal de los ultimos 10 dias con produccion, topada a 2 turnos de meta.
   const recent = totals.slice(-10)
   let projection = []
   if (recent.length >= 2) {
@@ -149,7 +177,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       d = addDays(d, 1)
       if (!isWorkday(d)) continue
       const y = Math.round(my + slope * (n - 1 - mx + k))
-      projection.push({ date: d, value: Math.max(0, Math.min(capacity, y)) })
+      projection.push({ date: d, value: Math.max(0, Math.min(capacity * 2, y)) })
       k++
     }
   }

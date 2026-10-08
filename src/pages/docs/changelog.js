@@ -2,6 +2,16 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.6.2',
+    date: '2026-10-07',
+    title: 'Reportes sincronizados',
+    fixed: [
+      'Producción por modelo cuenta lo mismo que Producción, Hora x Hora, Inicio y el Reporte del día: piezas de salidas cerradas, con la meta del día como referencia.',
+      'Calidad marca "Ya producido" cuando el serial salió en una salida cerrada; esos rechazos se restan en Producción por modelo.',
+      'Reporte del día muestra las personas capturadas en Personal del turno.',
+    ],
+  },
+  {
     version: '1.6.1',
     date: '2026-10-07',
     title: 'Logo oficial en el reporte de salida',
