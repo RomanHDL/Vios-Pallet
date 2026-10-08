@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.11.3',
+    date: '2026-10-08',
+    title: 'Quitar tele repetida de la entrada',
+    added: [
+      'En Piezas pendientes de la salida, si una tele también está en otro pallet de entrada, un supervisor puede tocar "Quitar de la entrada" y la salida deja de esperarla.',
+    ],
+  },
+  {
     version: '1.11.2',
     date: '2026-10-08',
     title: 'Faltantes: en qué pallet están',

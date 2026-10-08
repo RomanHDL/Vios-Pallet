@@ -329,6 +329,7 @@ r.post('/pallets/:id/reconcile', requireAuth(), async (req, res) => {
       .set({
         status: 'cerrado',
         itemCount: rec.confirmed.length + rec.extras.length,
+        expectedItemCount: rec.expected,
         missingCount: rec.missing.length,
         extrasCount: rec.extras.length,
         closedBy: req.user.id,
@@ -339,6 +340,28 @@ r.post('/pallets/:id/reconcile', requireAuth(), async (req, res) => {
     return row
   })
   res.json({ pallet: out, reconciliation: rec })
+})
+
+// Quitar de una ENTRADA cerrada una tele repetida (2026-10-08): solo si esa tele tambien esta en otro pallet
+// de entrada (se colo antes del bloqueo) y la salida de esta entrada sigue abierta. La salida deja de esperarla.
+r.post('/pallets/:id/remove-duplicate', requireAuth(SUPERVISOR), async (req, res) => {
+  const p = await getPallet(clean(req.params.id, 20))
+  if (!p) throw notFound('Pallet no encontrado.')
+  if (p.type !== 'entrada') throw bad('Solo se quita de un pallet de entrada.')
+  const c = code(req.body?.code)
+  const [own] = await rows(sql`select 1 as ok from pallet_items where pallet_id = ${p.id} and code = ${c}`)
+  if (!own) throw notFound(`${c} no está en el pallet ${p.id}.`)
+  const [other] = await rows(sql`
+    select i.pallet_id from pallet_items i join pallets x on x.id = i.pallet_id
+    where i.code = ${c} and x.type = 'entrada' and i.pallet_id <> ${p.id} limit 1`)
+  if (!other) throw conflict(`${c} no está en otro pallet: no se puede quitar como repetida.`)
+  const [s] = await db.select().from(pallets).where(eq(pallets.linkedPalletId, p.id))
+  if (s && s.status !== 'abierto') throw conflict(`La salida ${s.id} ya está cerrada.`)
+  await db.delete(palletItems).where(and(eq(palletItems.palletId, p.id), eq(palletItems.code, c)))
+  const [{ n }] = await rows(sql`select count(*)::int n from pallet_items where pallet_id = ${p.id}`)
+  await db.update(pallets).set({ itemCount: n }).where(eq(pallets.id, p.id))
+  if (s) await db.update(pallets).set({ expectedItemCount: n }).where(eq(pallets.id, s.id))
+  res.json({ code: c, count: n, belongsTo: other.pallet_id })
 })
 
 r.post('/pallets/:id/reopen', requireAuth(SUPERVISOR), async (req, res) => {

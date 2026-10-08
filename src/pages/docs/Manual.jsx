@@ -23,7 +23,7 @@ const SECTIONS = [
       'Una tele solo puede estar en un pallet: si ya se dio entrada en otro pallet ID, no se acepta y te dice en cuál está.',
       'Si escaneaste una pieza por error, quítala de la lista con el bote de basura. Cuando termines, toca "Cerrar pallet".',
       'Salida: Pallets → Salida. Escanea el ID del pallet de entrada (debe estar cerrado). Escanea las piezas que salen; verás cuántas faltan. Solo entran las teles de SU entrada: si escaneas una de otro pallet, no la acepta y te dice de qué pallet es.',
-      '"Piezas pendientes" (botón amarillo en la salida) abre la lista de las piezas de la entrada que aún no salen, con buscador.',
+      '"Piezas pendientes" (botón amarillo en la salida) abre la lista de las piezas de la entrada que aún no salen, con buscador. Si una pieza está en otro pallet se ve "Está en: …"; si es una tele repetida de otro pallet, un supervisor puede tocar "Quitar de la entrada".',
       'Toca "Conciliar y cerrar". Cada pieza faltante necesita un motivo (Dañada, No llegó, Rechazo de calidad, etc.).',
       'Reporte de salida: cuando la salida ya está cerrada, en su detalle (o en el de su entrada) aparece "Imprimir reporte de salida": hoja vertical con datos de entrada y salida, seriales en 3 columnas, faltantes y firmas de Calidad, Producción y Almacén. Mientras la salida no se registre, el botón dice "Disponible al registrar la salida" y no se puede imprimir. Un supervisor puede reabrir un pallet; solo el administrador puede eliminarlo.',
       '"Buscar serial" te dice en qué pallet está una pieza.',
