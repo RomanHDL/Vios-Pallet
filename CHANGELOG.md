@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.9.1] — 2026-10-08
+
+### Added
+- `production_history`: histórico de PalletScan por día/modelo/marca (2,988 piezas, 38 rechazadas), sumado en `GET /api/reports/models`.
+
 ## [1.9.0] — 2026-10-08
 
 ### Added

@@ -132,6 +132,32 @@ CREATE TABLE IF NOT EXISTS hourly_goals (
 ALTER TABLE pallets ADD COLUMN IF NOT EXISTS line text;
 -- Pieza de otro modelo/prefijo agregada a proposito ("tele diferente"), identificada en listas y reportes.
 ALTER TABLE pallet_items ADD COLUMN IF NOT EXISTS different boolean NOT NULL DEFAULT false;
+-- Historico de PalletScan (antes de VIOS, 2026-09-11 a 2026-10-02), capturado de su reporte "Produccion VIOS-HY / MTY"
+-- (2026-10-08, pedido de Roman). Solo alimenta Reportes -> Produccion por modelo y se suma a lo de VIOS.
+-- rejected = rechazados de Calidad en PalletScan por modelo (se anotan en el ultimo dia de ese modelo).
+CREATE TABLE IF NOT EXISTS production_history (
+  date text NOT NULL,
+  model text NOT NULL,
+  brand text NOT NULL,
+  pieces integer NOT NULL,
+  rejected integer NOT NULL DEFAULT 0,
+  source text NOT NULL DEFAULT 'PalletScan',
+  PRIMARY KEY (date, model, brand)
+);
+INSERT INTO production_history (date, model, brand, pieces, rejected) VALUES
+  ('2026-09-11', 'EL-32"', 'HY', 79, 0),
+  ('2026-09-14', 'EL-32"', 'HY', 100, 0),
+  ('2026-09-15', 'EL-32"', 'HY', 171, 0),
+  ('2026-09-17', 'EL-32"', 'HY', 241, 0),
+  ('2026-09-18', 'EL-32"', 'HY', 313, 0),
+  ('2026-09-21', 'EL-32"', 'HY', 276, 0),
+  ('2026-09-22', 'EL-32"', 'HY', 309, 0),
+  ('2026-09-23', 'EL-32"', 'HY', 401, 0),
+  ('2026-09-24', 'EL-32"', 'HY', 450, 0),
+  ('2026-09-25', 'EL-32"', 'HY', 262, 32),
+  ('2026-10-01', 'EL-43"', 'SILO', 125, 0),
+  ('2026-10-02', 'EL-43"', 'SILO', 261, 6)
+ON CONFLICT DO NOTHING;
 `
 
 export async function migrate() {

@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.9.1',
+    date: '2026-10-08',
+    title: 'Histórico de PalletScan en Producción por modelo',
+    added: [
+      'Producción por modelo suma el histórico de PalletScan (11 Sep – 2 Oct): HY EL-32" 2,602 piezas (32 rechazadas) y SILO EL-43" 386 piezas (6 rechazadas), más lo que se produce en VIOS.',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-10-08',
     title: 'Tele diferente y conteo por línea',

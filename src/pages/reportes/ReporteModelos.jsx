@@ -211,9 +211,17 @@ export default function ReporteModelos() {
                 <p className="flex items-start gap-2 px-4 py-3 text-[12.5px] text-muted-foreground sm:px-5">
                   <Info className="mt-0.5 h-4 w-4 shrink-0" />
                   <span>
-                    La tabla cuenta lo <b className="text-foreground">producido</b> (salidas cerradas + escaneo por línea: {fmtInt(t.produced)}). Las piezas rechazadas por
-                    Calidad durante producción ({fmtInt(t.rejected)}) se restan aparte para obtener el <b className="text-foreground">neto</b> (
-                    {fmtInt(t.net)}), que es lo que cuenta para el objetivo de cada modelo.
+                    La tabla cuenta lo <b className="text-foreground">producido</b> ({fmtInt(t.produced)}): salidas cerradas + escaneo por línea
+                    {data.history?.pieces ? (
+                      <>
+                        {' '}
+                        + <b className="text-foreground">{fmtInt(data.history.pieces)}</b> del histórico de PalletScan (
+                        {fmtYmd(data.history.from, { dow: false })} – {fmtYmd(data.history.to, { dow: false })}, {fmtInt(data.history.rejected)}{' '}
+                        rechazadas)
+                      </>
+                    ) : null}
+                    . Las piezas rechazadas por Calidad ({fmtInt(t.rejected)}) se restan aparte para obtener el{' '}
+                    <b className="text-foreground">neto</b> ({fmtInt(t.net)}), que es lo que cuenta para el objetivo de cada modelo.
                   </span>
                 </p>
               </>

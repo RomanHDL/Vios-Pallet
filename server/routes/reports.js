@@ -120,6 +120,15 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     const k = `${shiftOf(new Date(x.at)).shiftDate}|${x.model}`
     dailyMap.set(k, (dailyMap.get(k) || 0) + 1)
   }
+  // Historico de PalletScan (antes de VIOS): se suma por dia y modelo a lo de VIOS.
+  const brandQ = req.query.brand ? clean(req.query.brand, 20) : null
+  const history = await rows(sql`
+    select date, model, sum(pieces)::int as pieces, sum(rejected)::int as rejected from production_history
+    where ${brandQ ? sql`brand = ${brandQ}` : sql`true`} group by 1, 2`)
+  for (const h of history) {
+    const k = `${h.date}|${h.model}`
+    dailyMap.set(k, (dailyMap.get(k) || 0) + h.pieces)
+  }
   const daily = [...dailyMap].map(([k, n]) => {
     const [shift_date, model] = k.split('|')
     return { shift_date, model, n }
@@ -133,6 +142,12 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     const row = rejectedIn.find((x) => x.model === m)
     if (row) row.n++
     else rejectedIn.push({ model: m, n: 1 })
+  }
+  for (const h of history) {
+    if (!h.rejected) continue
+    const row = rejectedIn.find((x) => x.model === h.model)
+    if (row) row.n += h.rejected
+    else rejectedIn.push({ model: h.model, n: h.rejected })
   }
   const days = [...new Set(daily.map((x) => x.shift_date))].sort()
   const byDay = days.map((d) => {
@@ -196,6 +211,12 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       capacity,
     },
     projection,
+    history: {
+      pieces: history.reduce((a, h) => a + h.pieces, 0),
+      rejected: history.reduce((a, h) => a + h.rejected, 0),
+      from: history.map((h) => h.date).sort()[0] || null,
+      to: history.map((h) => h.date).sort().at(-1) || null,
+    },
   })
 })
 

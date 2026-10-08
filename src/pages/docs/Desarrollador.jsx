@@ -18,6 +18,7 @@ const TABLE_INFO = {
   rejections: 'Rechazos de Calidad. defects = arreglo JSON. in_production = el serial ya se había producido (salida cerrada o registro histórico).',
   staffing: 'Personas por línea y turno.',
   plans: 'Plan (materiales disponibles) por línea y turno. Sin registro = meta de la línea.',
+  production_history: 'Histórico de PalletScan (antes de VIOS) por día, modelo y marca; solo lo usa Producción por modelo.',
   hourly_goals: "Meta del turno (scope 'total', 765 por defecto). La última captura (shift_date <=) sigue vigente.",
 }
 
