@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" role="img" aria-label="MI Technologies">
-  <ellipse cx="34" cy="30" rx="31" ry="21" fill="#1d4f9c"/>
-  <ellipse cx="34" cy="30" rx="31" ry="21" fill="none" stroke="#0b2d63" stroke-width="2"/>
-  <path d="M8 36c14 8 40 9 56-4" fill="none" stroke="#7fb2ee" stroke-width="2.4" stroke-linecap="round"/>
-  <text x="34" y="37" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="700" font-style="italic" fill="#fff">MI</text>
-  <text x="72" y="38" font-family="Arial, Helvetica, sans-serif" font-size="21" fill="#1d4f9c">Technologies</text>
-</svg>

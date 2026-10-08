@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.6.1',
+    date: '2026-10-07',
+    title: 'Logo oficial en el reporte de salida',
+    changed: ['El reporte de salida impreso usa el logo oficial de MI Technologies, Inc.'],
+  },
+  {
     version: '1.6.0',
     date: '2026-10-07',
     title: 'Reporte de salida y nuevo Inicio',

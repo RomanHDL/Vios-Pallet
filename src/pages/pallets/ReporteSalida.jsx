@@ -129,7 +129,7 @@ export default function ReporteSalida() {
       {/* Hoja */}
       <article className="sheet mx-auto w-full max-w-[8.5in] bg-white px-[0.55in] py-[0.5in] text-[9.5pt] text-slate-900 shadow-md print:max-w-none print:p-0 print:shadow-none">
         <header className="flex items-center justify-between border-b-[3px] border-[#0f2a52] pb-3">
-          <img src="/mi-technologies.svg" alt="MI Technologies" className="h-[0.55in] w-auto" />
+          <img src="/mi-technologies.png" alt="MI Technologies, Inc." className="h-[0.6in] w-auto" />
           <div className="text-right leading-tight">
             <p className="text-[12.5pt] font-extrabold tracking-wide text-[#0f2a52]">
               VIOS PALLET <span className="font-semibold text-slate-600">· MI TECHNOLOGIES MTY</span>
