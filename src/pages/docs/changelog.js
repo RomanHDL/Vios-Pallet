@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.11.0',
+    date: '2026-10-08',
+    title: 'Rechazos históricos en Calidad',
+    added: [
+      'Calidad incluye los 31 registros de la hoja "MTY - VIOS/HY" (14 al 24 Sep): fecha, pallet, serial, defecto y comentarios, marcados como "Histórico".',
+      'Rango "Todo" en Calidad para ver todos los rechazos.',
+    ],
+  },
+  {
     version: '1.10.0',
     date: '2026-10-08',
     title: 'Salida solo con piezas de su entrada y piezas pendientes',

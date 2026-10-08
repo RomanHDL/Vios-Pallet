@@ -138,6 +138,7 @@ export const rejections = pgTable(
     shift: text().notNull(),
     registeredBy: integer('registered_by'),
     registeredAt: ts('registered_at').notNull().defaultNow(),
+    source: text().notNull().default('vios'), // 'historico' = capturado de la hoja MTY - VIOS/HY
   },
   (t) => [index('rejections_serial').on(t.serial), index('rejections_shift').on(t.shiftDate)],
 )

@@ -1,8 +1,21 @@
+import { addDays, shiftOf, todayPlant } from '@shared/shift.js'
 import { AlertOctagon, ClipboardCheck, Factory, Plus, Search, Tag, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { addDays, shiftOf, todayPlant } from '@shared/shift.js'
-import { Badge, Button, Card, CardHeader, Dialog, Empty, ErrorBox, PageHeader, Segmented, Spinner, Stat, useToast } from '@/components/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Dialog,
+  Empty,
+  ErrorBox,
+  PageHeader,
+  Segmented,
+  Spinner,
+  Stat,
+  useToast,
+} from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
 import { useSession } from '@/lib/session'
@@ -13,6 +26,7 @@ const RANGES = [
   { value: 1, label: 'Hoy' },
   { value: 7, label: '7 días' },
   { value: 30, label: '30 días' },
+  { value: 0, label: 'Todo' },
 ]
 
 export default function CalidadHome() {
@@ -25,10 +39,14 @@ export default function CalidadHome() {
 
   // Rango por fecha de turno: el Turno 2 despues de medianoche sigue contando como "hoy".
   const to = todayPlant()
-  const from = addDays(days === 1 ? shiftOf().shiftDate : to, days === 1 ? 0 : -(days - 1))
+  const from =
+    days === 0 ? undefined : addDays(days === 1 ? shiftOf().shiftDate : to, days === 1 ? 0 : -(days - 1))
   const { data, error, loading, reload } = useApi('/rejections', { query: { from, to }, refreshMs: 60000 })
 
-  const list = useMemo(() => (data?.rejections || []).map((r) => ({ ...r, defects: defectList(r.defects) })), [data])
+  const list = useMemo(
+    () => (data?.rejections || []).map((r) => ({ ...r, defects: defectList(r.defects) })),
+    [data],
+  )
   const ranking = useMemo(() => {
     const by = {}
     for (const r of list) for (const d of r.defects) by[d] = (by[d] || 0) + 1
@@ -41,7 +59,14 @@ export default function CalidadHome() {
 
   const s = search.trim().toUpperCase()
   const shown = s
-    ? list.filter((r) => r.serial.includes(s) || r.defects.some((d) => d.toUpperCase().includes(s)) || String(r.model || '').toUpperCase().includes(s))
+    ? list.filter(
+        (r) =>
+          r.serial.includes(s) ||
+          r.defects.some((d) => d.toUpperCase().includes(s)) ||
+          String(r.model || '')
+            .toUpperCase()
+            .includes(s),
+      )
     : list
 
   const canAdd = canDo(user, ['calidad', 'supervisor'])
@@ -66,12 +91,21 @@ export default function CalidadHome() {
       <PageHeader
         back={<BackLink to="/">Inicio</BackLink>}
         title="Calidad"
-        subtitle={days === 1 ? `Rechazos de hoy · ${fmtYmd(from)}` : `Rechazos del ${fmtYmd(from)} al ${fmtYmd(to)}`}
+        subtitle={
+          days === 0
+            ? 'Todos los rechazos (incluye el histórico de la hoja MTY - VIOS/HY)'
+            : days === 1
+              ? `Rechazos de hoy · ${fmtYmd(from)}`
+              : `Rechazos del ${fmtYmd(from)} al ${fmtYmd(to)}`
+        }
         actions={
           <>
             <Segmented value={days} onChange={setDays} options={RANGES} />
             {canAdd && (
-              <Link to="/calidad/nuevo" className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-[14.5px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
+              <Link
+                to="/calidad/nuevo"
+                className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-[14.5px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+              >
                 <Plus className="h-[18px] w-[18px]" /> Nuevo rechazo
               </Link>
             )}
@@ -86,13 +120,23 @@ export default function CalidadHome() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-            <Stat label="Rechazos" value={fmtInt(list.length)} icon={ClipboardCheck} tone={list.length ? 'red' : 'default'} hint={`${fmtInt(new Set(list.map((r) => r.serial)).size)} seriales`} />
+            <Stat
+              label="Rechazos"
+              value={fmtInt(list.length)}
+              icon={ClipboardCheck}
+              tone={list.length ? 'red' : 'default'}
+              hint={`${fmtInt(new Set(list.map((r) => r.serial)).size)} seriales`}
+            />
             <Stat
               label="En producción"
               value={fmtInt(inProd)}
               icon={Factory}
               tone={inProd ? 'amber' : 'default'}
-              hint={list.length ? `${fmtPct(inProd / list.length)} ya registrados` : 'Ya registrados como terminados'}
+              hint={
+                list.length
+                  ? `${fmtPct(inProd / list.length)} ya registrados`
+                  : 'Ya registrados como terminados'
+              }
             />
             <Stat
               label="Defecto principal"
@@ -114,11 +158,17 @@ export default function CalidadHome() {
                       <div className="mb-1 flex items-baseline justify-between gap-2 text-[13.5px]">
                         <span className="min-w-0 truncate font-semibold">{d.name}</span>
                         <span className="tabular shrink-0 font-bold">
-                          {fmtInt(d.n)} <span className="font-medium text-muted-foreground">· {fmtPct(d.n / list.length)}</span>
+                          {fmtInt(d.n)}{' '}
+                          <span className="font-medium text-muted-foreground">
+                            · {fmtPct(d.n / list.length)}
+                          </span>
                         </span>
                       </div>
                       <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                        <div className="h-full rounded-full bg-red-500 transition-all duration-500" style={{ width: `${(d.n / ranking[0].n) * 100}%` }} />
+                        <div
+                          className="h-full rounded-full bg-red-500 transition-all duration-500"
+                          style={{ width: `${(d.n / ranking[0].n) * 100}%` }}
+                        />
                       </div>
                     </li>
                   ))}
@@ -148,7 +198,12 @@ export default function CalidadHome() {
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="break-all font-mono text-[14.5px] font-bold">{r.serial}</span>
-                          {r.in_production && <Badge tone="amber" dot>En producción</Badge>}
+                          {r.in_production && (
+                            <Badge tone="amber" dot>
+                              En producción
+                            </Badge>
+                          )}
+                          {r.source === 'historico' && <Badge tone="gray">Histórico</Badge>}
                         </div>
                         <div className="mt-1 flex flex-wrap gap-1.5">
                           {r.defects.map((d) => (
@@ -158,15 +213,27 @@ export default function CalidadHome() {
                           ))}
                         </div>
                         <p className="mt-1.5 text-[12.5px] text-muted-foreground">
-                          {[r.model, r.brand, r.pallet_id && `Pallet ${r.pallet_id}`].filter(Boolean).join(' · ') || 'Sin datos de pallet'}
+                          {[r.model, r.brand, r.pallet_id && `Pallet ${r.pallet_id}`]
+                            .filter(Boolean)
+                            .join(' · ') || 'Sin datos de pallet'}
                         </p>
-                        {r.comments && <p className="mt-1 text-[13px] italic text-foreground/80">“{r.comments}”</p>}
+                        {r.comments && (
+                          <p className="mt-1 text-[13px] italic text-foreground/80">“{r.comments}”</p>
+                        )}
                         <p className="mt-1 text-[12px] text-muted-foreground">
-                          {r.registered_by_name || '—'} · {fmtDateTime(r.registered_at)} · {r.shift}
+                          {r.source === 'historico' ? 'Hoja MTY - VIOS/HY' : r.registered_by_name || '—'} ·{' '}
+                          {r.source === 'historico'
+                            ? fmtYmd(r.shift_date)
+                            : `${fmtDateTime(r.registered_at)} · ${r.shift}`}
                         </p>
                       </div>
                       {canDelete && (
-                        <Button variant="ghost" size="icon" onClick={() => setToDelete(r)} aria-label="Eliminar rechazo">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setToDelete(r)}
+                          aria-label="Eliminar rechazo"
+                        >
                           <Trash2 className="h-[18px] w-[18px] text-red-600" />
                         </Button>
                       )}
@@ -203,7 +270,9 @@ export default function CalidadHome() {
             <p>Se eliminará el rechazo del serial:</p>
             <p className="rounded-xl bg-muted px-3 py-2 font-mono text-[15px] font-bold">{toDelete.serial}</p>
             <p className="text-muted-foreground">{toDelete.defects.join(', ')}</p>
-            <p className="text-[13px] text-muted-foreground">Si no tiene otros rechazos, el serial podrá registrarse en producción.</p>
+            <p className="text-[13px] text-muted-foreground">
+              Si no tiene otros rechazos, el serial podrá registrarse en producción.
+            </p>
           </div>
         )}
       </Dialog>

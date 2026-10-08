@@ -158,6 +158,47 @@ INSERT INTO production_history (date, model, brand, pieces, rejected) VALUES
   ('2026-10-01', 'EL-43"', 'SILO', 125, 0),
   ('2026-10-02', 'EL-43"', 'SILO', 261, 6)
 ON CONFLICT DO NOTHING;
+-- Marcas de cargas unicas de datos (para no repetirlas en cada arranque).
+CREATE TABLE IF NOT EXISTS sync_flags (key text PRIMARY KEY, done_at timestamptz NOT NULL DEFAULT now());
+-- Rechazos historicos de la hoja "MTY - VIOS/HY" (Google Sheets, 14 al 24 Sep 2026), capturados 2026-10-08 a
+-- peticion de Roman. Se insertan una sola vez (source = 'historico'); si se borran a mano no se vuelven a crear.
+ALTER TABLE rejections ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'vios';
+INSERT INTO rejections (serial, pallet_id, model, brand, defects, comments, in_production, shift_date, shift, registered_at, source)
+SELECT * FROM (VALUES
+  ('EL260232TV14387', '505427', 'EL-32"', 'HY', '["Sin Control"]'::jsonb, NULL, false, '2026-09-14', 'T1', '2026-09-14 12:00:00-06'::timestamptz, 'historico'),
+  ('EL260232TV05579', '505427', 'EL-32"', 'HY', '["Sin Control"]'::jsonb, NULL, false, '2026-09-14', 'T1', '2026-09-14 12:01:00-06'::timestamptz, 'historico'),
+  ('EL260232TV09319', '505427', 'EL-32"', 'HY', '["Sin Control", "Sin Bases"]'::jsonb, NULL, false, '2026-09-14', 'T1', '2026-09-14 12:02:00-06'::timestamptz, 'historico'),
+  ('EL260232TV11641', '505427', 'EL-32"', 'HY', '["Pantalla Estrellada", "Sin Bases", "Sin Control"]'::jsonb, NULL, false, '2026-09-14', 'T1', '2026-09-14 12:03:00-06'::timestamptz, 'historico'),
+  ('EL260232TV07903', '505427', 'EL-32"', 'HY', '["Sin Bases", "Sin Control"]'::jsonb, NULL, false, '2026-09-14', 'T1', '2026-09-14 12:04:00-06'::timestamptz, 'historico'),
+  ('N/A', '878987', 'EL-32"', 'HY', '["Faltante una TV"]'::jsonb, 'El sistema marcaba 96 en su pallet ID pero físicamente eran 95 piezas', false, '2026-09-15', 'T1', '2026-09-15 12:05:00-06'::timestamptz, 'historico'),
+  ('N/A', '472757', 'EL-32"', 'HY', '["Marca 72 y trae 76"]'::jsonb, NULL, false, '2026-09-17', 'T1', '2026-09-17 12:06:00-06'::timestamptz, 'historico'),
+  ('EL260232TV08634', '472757', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-17', 'T1', '2026-09-17 12:07:00-06'::timestamptz, 'historico'),
+  ('EL260232TV11447', '677071', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-21', 'T1', '2026-09-21 12:08:00-06'::timestamptz, 'historico'),
+  ('EL260232TV00649', '157533', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-21', 'T1', '2026-09-21 12:09:00-06'::timestamptz, 'historico'),
+  ('EL260232TV03406', '103874', 'EL-32"', 'HY', '["DMT"]'::jsonb, 'TV no enciende', false, '2026-09-21', 'T1', '2026-09-21 12:10:00-06'::timestamptz, 'historico'),
+  ('EL260232TV00697', '527830', 'EL-32"', 'HY', '["DMT"]'::jsonb, 'Chasis con defecto (parte inferior donde está el botón de encendido)', false, '2026-09-22', 'T1', '2026-09-22 12:11:00-06'::timestamptz, 'historico'),
+  ('EL260232TV01460', '527830', 'EL-32"', 'HY', '["DMT"]'::jsonb, 'No enciende', false, '2026-09-22', 'T1', '2026-09-22 12:12:00-06'::timestamptz, 'historico'),
+  ('EL260232TV09634', '527830', 'EL-32"', 'HY', '["DMT"]'::jsonb, 'Fuga de luz', false, '2026-09-22', 'T1', '2026-09-22 12:13:00-06'::timestamptz, 'historico'),
+  ('EL260232TV03406', '527830', 'EL-32"', 'HY', '["DMT"]'::jsonb, 'No enciende', false, '2026-09-22', 'T1', '2026-09-22 12:14:00-06'::timestamptz, 'historico'),
+  ('EL260232TV00021', '431202', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-22', 'T1', '2026-09-22 12:15:00-06'::timestamptz, 'historico'),
+  ('EL260232TV12432', '431202', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-22', 'T1', '2026-09-22 12:16:00-06'::timestamptz, 'historico'),
+  ('EL260232TV11639', '822959', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:17:00-06'::timestamptz, 'historico'),
+  ('EL260232TV20571', '492914', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:18:00-06'::timestamptz, 'historico'),
+  ('EL260232TV20548', '492914', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:19:00-06'::timestamptz, 'historico'),
+  ('EL260232TV13868', '275025', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:20:00-06'::timestamptz, 'historico'),
+  ('EL260232TV00052', '275025', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:21:00-06'::timestamptz, 'historico'),
+  ('EL260232TV13854', '275025', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:22:00-06'::timestamptz, 'historico'),
+  ('EL260232TV13843', '275025', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:23:00-06'::timestamptz, 'historico'),
+  ('EL260232TV13857', '275025', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:24:00-06'::timestamptz, 'historico'),
+  ('EL260232TV13818', '275025', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:25:00-06'::timestamptz, 'historico'),
+  ('EL260232TV07890', '275025', 'EL-32"', 'HY', '["Se Apaga"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:26:00-06'::timestamptz, 'historico'),
+  ('EL260232TV13841', '930575', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:27:00-06'::timestamptz, 'historico'),
+  ('EL260232TV13833', '930575', 'EL-32"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-09-23', 'T1', '2026-09-23 12:28:00-06'::timestamptz, 'historico'),
+  ('EL260232TV11431', '356228', 'EL-32"', 'HY', '["No Enciende"]'::jsonb, NULL, false, '2026-09-24', 'T1', '2026-09-24 12:29:00-06'::timestamptz, 'historico'),
+  ('EL260232TV04171', '893132', 'EL-32"', 'HY', '["DMT"]'::jsonb, 'No enciende', false, '2026-09-24', 'T1', '2026-09-24 12:30:00-06'::timestamptz, 'historico')
+) AS v(serial, pallet_id, model, brand, defects, comments, in_production, shift_date, shift, registered_at, source)
+WHERE NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'rejections_hoja_mty');
+INSERT INTO sync_flags (key) VALUES ('rejections_hoja_mty') ON CONFLICT DO NOTHING;
 `
 
 export async function migrate() {
