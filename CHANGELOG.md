@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.4.3] — 2026-10-07
+
+### Fixed
+- Producción y Reporte del día: mismo conteo (salidas cerradas) y meta del día (765) que Inicio y Hora por Hora.
+
 ## [1.4.2] — 2026-10-07
 
 ### Changed

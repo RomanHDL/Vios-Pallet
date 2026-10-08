@@ -4,8 +4,8 @@ import { addDays, isWorkday, shiftOf, todayPlant } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { lines, models } from '../schema.js'
-import { pace } from '../../shared/pace.js'
-import { shiftGoal, shiftOutput } from '../output.js'
+import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
+import { GOAL_SCOPE, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -24,58 +24,51 @@ function eachDay(from, to) {
   return out
 }
 
-/* Plan vs Processed por turno.
-   Plan = lo capturado en "Plan del turno" por linea; si no se capturo:
-     - Turno 1 en dia habil (desde el primer dia con produccion): meta de cada linea activa.
-     - Turno 2 (o fin de semana / feriado): meta solo de las lineas que trabajaron.
-   (PalletScan sumaba 400 por cada linea que registro aunque fuera 1 pieza, y ninguna si no registro.)
-   Delta = Processed - Plan (negativo = faltante).
+/* Plan vs Real por turno (mismo criterio que Inicio y Hora por Hora, server/output.js):
+   Real = piezas de pallets de SALIDA CERRADOS escaneadas en el turno (sin dividir por linea).
+   Plan = meta del turno (765 por defecto o la capturada en Hora por Hora, vigente hasta que se cambie):
+     - Turno 1 en dia habil, desde el primer dia con salidas cerradas.
+     - Turno 2, fines de semana y feriados: solo si se trabajo.
+   Delta = Real - Plan (negativo = faltante).
    Recovery = Plan + faltante del turno anterior con plan, para recuperar lo pendiente. */
 r.get('/reports/day', requireAuth(), async (req, res) => {
   const { from, to } = range(req.query, 0)
-  const activeLines = await db.select().from(lines).where(eq(lines.active, true))
-  const goalBy = Object.fromEntries(activeLines.map((l) => [l.name, l.goal]))
   const prev = addDays(from, -7)
-  const prod = await rows(sql`
-    select shift_date, shift, line, count(*)::int n from production
-    where shift_date between ${prev} and ${to} and ${brandCond(req.query)}
-    group by 1, 2, 3`)
+  const out = await rows(sql`
+    select i.code, min(i.scanned_at) as at from pallet_items i join pallets p on p.id = i.pallet_id
+    where p.type = 'salida' and p.status = 'cerrado' and ${brandCond(req.query, sql`p.brand`)}
+      and i.scanned_at >= ${shiftWindow(prev, 'T1').start.toISOString()}
+      and i.scanned_at < ${shiftWindow(to, 'T2').end.toISOString()}
+    group by i.code`)
+  const count = {}
+  for (const x of out) {
+    const k = Object.values(shiftOf(new Date(x.at))).join('|')
+    count[k] = (count[k] || 0) + 1
+  }
   const rej = await rows(sql`
     select shift_date, shift, count(*)::int n from rejections
     where shift_date between ${prev} and ${to} and ${brandCond(req.query)} group by 1, 2`)
-  const planRows = await rows(sql`select shift_date, shift, line, planned from plans where shift_date between ${prev} and ${to}`)
-  const staff = await rows(sql`select shift_date, shift, line, people from staffing where shift_date between ${prev} and ${to}`)
-  // La meta automatica solo cuenta desde el primer dia con produccion (antes la app no se usaba).
-  const [{ first }] = await rows(sql`select min(shift_date) as first from production`)
+  const goals = await rows(sql`
+    select shift_date, shift, goal from hourly_goals where scope = ${GOAL_SCOPE} and shift_date <= ${to}
+    order by shift_date`)
+  const goalOf = (d, s) => {
+    const g = goals.filter((x) => x.shift === s && x.shift_date <= d).at(-1)
+    return { goal: g ? g.goal : DEFAULT_DAILY_GOAL, captured: Boolean(g) }
+  }
+  // La meta automatica solo cuenta desde el primer dia con salidas cerradas (antes la app no se usaba).
+  const [{ first }] = await rows(sql`
+    select min(i.scanned_at) as first from pallet_items i join pallets p on p.id = i.pallet_id
+    where p.type = 'salida' and p.status = 'cerrado'`)
+  const firstDay = first ? shiftOf(new Date(first)).shiftDate : null
 
   const shifts = []
   for (const d of eachDay(prev, to)) {
     for (const s of ['T1', 'T2']) {
-      const pr = prod.filter((x) => x.shift_date === d && x.shift === s)
-      const pl = planRows.filter((x) => x.shift_date === d && x.shift === s)
-      const st = staff.filter((x) => x.shift_date === d && x.shift === s)
-      const lineNames = new Set([...Object.keys(goalBy), ...pr.map((x) => x.line)])
-      const byLine = [...lineNames]
-        .map((line) => {
-          const processed = pr.find((x) => x.line === line)?.n || 0
-          const captured = pl.find((x) => x.line === line)?.planned
-          const worked = processed > 0
-          let plan = 0
-          if (captured !== undefined) plan = captured
-          else if (s === 'T1' && isWorkday(d) && first && d >= first) plan = goalBy[line] || 0
-          else if (worked) plan = goalBy[line] || 0
-          return {
-            line,
-            plan,
-            planCaptured: captured !== undefined,
-            processed,
-            people: st.find((x) => x.line === line)?.people ?? null,
-          }
-        })
-        .filter((x) => x.plan || x.processed)
-        .sort((a, b) => a.line.localeCompare(b.line))
-      const plan = byLine.reduce((a, x) => a + x.plan, 0)
-      const processed = byLine.reduce((a, x) => a + x.processed, 0)
+      const processed = count[`${d}|${s}`] || 0
+      const g = goalOf(d, s)
+      let plan = 0
+      if (s === 'T1' && isWorkday(d) && firstDay && d >= firstDay) plan = g.goal
+      else if (processed > 0) plan = g.goal
       if (!plan && !processed) continue
       shifts.push({
         shiftDate: d,
@@ -85,10 +78,8 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
         rejected: rej.find((x) => x.shift_date === d && x.shift === s)?.n || 0,
         delta: processed - plan,
         pct: plan ? processed / plan : null,
-        people: byLine.some((x) => x.people !== null)
-          ? byLine.reduce((a, x) => a + (x.people || 0), 0)
-          : null,
-        lines: byLine,
+        people: null,
+        lines: [{ line: 'Salidas cerradas', plan, planCaptured: g.captured, processed, people: null }],
       })
     }
   }

@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.4.3',
+    date: '2026-10-07',
+    title: 'Producción y Reporte del día con el mismo conteo',
+    fixed: [
+      'La pantalla Producción y el Reporte del día ya usan el mismo conteo que Inicio y Hora por Hora: piezas de salidas cerradas contra la meta del día (765), en vez de lo registrado por línea contra 1,200.',
+    ],
+  },
+  {
     version: '1.4.2',
     date: '2026-10-07',
     title: 'Producción = solo salidas cerradas',

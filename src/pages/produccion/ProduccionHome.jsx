@@ -5,21 +5,21 @@ import { Badge, Card, ErrorBox, PageHeader, Stat } from '@/components/ui'
 import { useApi } from '@/lib/hooks'
 import { useSession } from '@/lib/session'
 import { canDo, fmtInt, fmtYmd } from '@/lib/utils'
-import { BackLink, CountVsGoal, fmtDec, totalsOf } from './common'
+import { BackLink, CountVsGoal } from './common'
 
 export default function ProduccionHome() {
   const { user } = useSession()
-  const { data, error } = useApi('/production/live', { refreshMs: 20000 })
-  const ctx = data && { shiftDate: data.shiftDate, shift: data.shift, now: data.now }
-  const t = data ? totalsOf(data.lines, ctx) : null
-  const running = data?.lines.filter((l) => l.count > 0).length
+  // Mismo conteo y meta que Inicio y Hora por Hora: piezas de salidas cerradas contra la meta del dia (765).
+  const { data, error } = useApi('/hourly', { refreshMs: 20000 })
+  const p = data?.pace
+  const sec = p?.secPerPiece
 
   return (
     <div className="space-y-6">
       <PageHeader
         back={<BackLink to="/">Inicio</BackLink>}
         title="Producción"
-        subtitle="Producto terminado por línea"
+        subtitle="Piezas de pallets de salida cerrados"
         actions={data && <Badge tone="blue" dot>{shiftLabel(data.shift)} · {fmtYmd(data.shiftDate)}</Badge>}
       />
 
@@ -31,15 +31,21 @@ export default function ProduccionHome() {
             <span className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">Total del turno</span>
             <Target className="h-4 w-4 text-primary" />
           </div>
-          <CountVsGoal count={t?.count} goal={t?.goal} pct={t?.pct} size="lg" />
+          <CountVsGoal count={data?.total} goal={data?.goal} pct={data?.goal ? data.total / data.goal : null} size="lg" />
         </Card>
-        <Stat label="Piezas / hora" value={t ? fmtDec(t.uph) : '—'} icon={Gauge} tone="blue" hint={data ? `${running} de ${data.lines.length} líneas con producción` : ' '} />
+        <Stat
+          label="Tiempo por pieza"
+          value={sec ? `${Math.round(sec)} s` : '—'}
+          icon={Gauge}
+          tone="blue"
+          hint={p ? `${sec ? `${Math.round(3600 / sec)} pzs por hora · ` : ''}meta 1 pz cada ${Math.round(p.goalSecPerPiece)} s` : ' '}
+        />
         <Stat
           label="Proyección"
-          value={fmtInt(t?.projection)}
+          value={fmtInt(p?.projection)}
           icon={TrendingUp}
-          tone={t && t.goal && t.projection >= t.goal ? 'green' : 'amber'}
-          hint={t?.people ? `${fmtInt(t.people)} personas en líneas` : 'Al cierre del turno'}
+          tone={data && p.projection >= data.goal ? 'green' : 'amber'}
+          hint="Al cierre del turno, a este ritmo"
         />
       </div>
 

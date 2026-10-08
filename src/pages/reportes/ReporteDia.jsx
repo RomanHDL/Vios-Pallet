@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronDown, HelpCircle, Printer, Target, TrendingUp, Users, XCircle } from 'lucide-react'
+import { CalendarDays, ChevronDown, HelpCircle, Printer, Target, TrendingUp, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { shiftLabel } from '@shared/shift.js'
 import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Progress, Spinner, Stat } from '@/components/ui'
@@ -10,8 +10,8 @@ function planSource(lines) {
   const withPlan = lines.filter((l) => l.plan > 0)
   if (!withPlan.length) return null
   const captured = withPlan.filter((l) => l.planCaptured).length
-  if (captured === withPlan.length) return { label: 'Plan capturado', tone: 'blue' }
-  if (!captured) return { label: 'Meta de líneas', tone: 'gray' }
+  if (captured === withPlan.length) return { label: 'Meta capturada', tone: 'blue' }
+  if (!captured) return { label: 'Meta del día', tone: 'gray' }
   return { label: 'Plan mixto', tone: 'violet' }
 }
 
@@ -62,7 +62,7 @@ function ShiftRow({ s, open, onToggle }) {
         <div className="px-4 pb-4 sm:px-5">
           <div className="overflow-hidden rounded-xl border">
             <div className="grid grid-cols-[1fr_repeat(4,minmax(0,52px))] gap-2 bg-muted/50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground sm:grid-cols-[1fr_repeat(4,90px)]">
-              <span>Línea</span>
+              <span>Origen</span>
               <span className="text-right">Plan</span>
               <span className="text-right">Real</span>
               <span className="text-right">Delta</span>
@@ -72,7 +72,7 @@ function ShiftRow({ s, open, onToggle }) {
               <div key={l.line} className="grid grid-cols-[1fr_repeat(4,minmax(0,52px))] items-center gap-2 border-t px-3 py-2 text-[13.5px] sm:grid-cols-[1fr_repeat(4,90px)]">
                 <span className="min-w-0">
                   <span className="block truncate font-semibold">{l.line}</span>
-                  <span className="block text-[11px] text-muted-foreground">{l.plan ? (l.planCaptured ? 'plan capturado' : 'meta de la línea') : 'sin plan'}</span>
+                  <span className="block text-[11px] text-muted-foreground">{l.plan ? (l.planCaptured ? 'meta capturada' : 'meta del día (765)') : 'sin plan'}</span>
                 </span>
                 <span className="tabular text-right">{fmtInt(l.plan)}</span>
                 <span className="tabular text-right font-semibold">{fmtInt(l.processed)}</span>
@@ -129,7 +129,7 @@ export default function ReporteDia() {
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <Stat label="Plan" value={fmtInt(t.plan)} icon={Target} hint={`${shifts.length} turno${shifts.length === 1 ? '' : 's'}`} />
-            <Stat label="Real" value={fmtInt(t.processed)} icon={TrendingUp} tone="blue" hint="Producto terminado" />
+            <Stat label="Real" value={fmtInt(t.processed)} icon={TrendingUp} tone="blue" hint="Salidas cerradas" />
             <Stat
               label="Delta"
               value={<Delta value={t.delta} className="font-extrabold" />}
@@ -191,12 +191,11 @@ export default function ReporteDia() {
                 <h3 className="text-[15px] font-bold">¿Cómo se calcula?</h3>
                 <ul className="mt-2 space-y-1.5 text-muted-foreground">
                   <li>
-                    <b className="text-foreground">Plan:</b> lo que se capturó en “Plan del turno” para cada línea. Si no se capturó, se usa la
-                    meta de la línea (por ejemplo 400): en Turno 1 de día hábil cuentan todas las líneas activas; en Turno 2, fines de semana
-                    y feriados solo las líneas que sí trabajaron.
+                    <b className="text-foreground">Plan:</b> la meta del turno: 765 piezas o la que se capture en Hora por Hora (sigue
+                    vigente los días siguientes). Cuenta en Turno 1 de día hábil; en Turno 2, fines de semana y feriados solo si se trabajó.
                   </li>
                   <li>
-                    <b className="text-foreground">Real:</b> piezas de producto terminado registradas en el turno.
+                    <b className="text-foreground">Real:</b> piezas de pallets de salida cerrados, en el turno en que se escanearon.
                   </li>
                   <li>
                     <b className="text-foreground">Delta:</b> Real − Plan. Negativo (rojo) es lo que faltó; positivo (verde) es lo que se hizo de más.
@@ -205,9 +204,6 @@ export default function ReporteDia() {
                     <b className="text-foreground">Recovery:</b> Plan + lo que faltó en el turno anterior, para recuperar lo pendiente.
                   </li>
                 </ul>
-                <p className="mt-2 flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
-                  <Users className="h-3.5 w-3.5" /> Personas: capturadas en “Plan y personal” por línea.
-                </p>
               </div>
             </div>
           </Card>
