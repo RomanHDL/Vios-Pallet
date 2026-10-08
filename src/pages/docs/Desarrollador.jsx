@@ -39,6 +39,7 @@ const API = [
   ['POST/DELETE', '/api/pallets/:id/items', 'Escanear / quitar pieza.'],
   ['POST', '/api/pallets/:id/close | reconcile | reopen', 'Cerrar entrada, conciliar salida, reabrir (supervisor).'],
   ['GET', '/api/pallets/find/:code', 'En qué pallets está un serial.'],
+  ['GET', '/api/pallets/:id/report', 'Datos del reporte de salida; 409 si no es una salida cerrada con fecha de cierre (exitReportBlock).'],
   ['POST/GET/DELETE', '/api/production', 'Registro de producto terminado.'],
   ['GET', '/api/production/live', 'Tablero por línea de un turno.'],
   ['GET/PUT', '/api/plans · /api/staffing', 'Plan y personal por línea y turno.'],

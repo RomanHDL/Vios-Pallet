@@ -85,7 +85,7 @@ export function Layout() {
   const sideLink = ({ isActive }) =>
     cn(
       'flex items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-semibold transition',
-      isActive ? 'bg-white text-navy shadow-sm' : 'text-white/75 hover:bg-white/10 hover:text-white',
+      isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-900/30' : 'text-white/75 hover:bg-white/10 hover:text-white',
     )
 
   return (

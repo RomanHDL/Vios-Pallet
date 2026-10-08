@@ -22,7 +22,7 @@ const SECTIONS = [
       'Si escaneaste una pieza por error, quítala de la lista con el bote de basura. Cuando termines, toca "Cerrar pallet".',
       'Salida: Pallets → Salida. Escanea el ID del pallet de entrada (debe estar cerrado). Escanea las piezas que salen; verás cuántas faltan.',
       'Toca "Conciliar y cerrar". Cada pieza faltante necesita un motivo (Dañada, No llegó, Rechazo de calidad, etc.). Las piezas que no venían en la entrada aparecen como extras.',
-      'En el detalle del pallet puedes imprimir la hoja con firmas de Calidad, Producción y Almacén. Un supervisor puede reabrir un pallet; solo el administrador puede eliminarlo.',
+      'Reporte de salida: cuando la salida ya está cerrada, en su detalle (o en el de su entrada) aparece "Imprimir reporte de salida": hoja vertical con datos de entrada y salida, seriales en 3 columnas, faltantes y firmas de Calidad, Producción y Almacén. Mientras la salida no se registre, el botón dice "Disponible al registrar la salida" y no se puede imprimir. Un supervisor puede reabrir un pallet; solo el administrador puede eliminarlo.',
       '"Buscar serial" te dice en qué pallet está una pieza.',
     ],
   },

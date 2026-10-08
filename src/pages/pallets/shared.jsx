@@ -33,6 +33,15 @@ export function normPallet(p) {
 
 export const isOpen = (p) => p?.status === 'abierto'
 
+// El reporte impreso es SOLO de salida: salida cerrada con fecha/hora de cierre valida y su entrada.
+// El servidor valida lo mismo en /api/pallets/:id/report (exitReportBlock).
+export const canPrintExit = (p) =>
+  p?.type === 'salida' &&
+  p.status === 'cerrado' &&
+  Boolean(p.closedAt) &&
+  !Number.isNaN(new Date(p.closedAt).getTime()) &&
+  Boolean(p.linkedPalletId)
+
 // Ruta para seguir escaneando un pallet abierto.
 export const resumePath = (p) =>
   p.type === 'salida' ? `/pallets/salida?id=${p.linkedPalletId || p.id.replace(/-S$/, '')}` : `/pallets/entrada?id=${p.id}`

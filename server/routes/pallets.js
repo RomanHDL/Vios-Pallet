@@ -99,6 +99,36 @@ r.get('/pallets/:id', requireAuth(), async (req, res) => {
   res.json(out)
 })
 
+// Reporte de SALIDA para imprimir. Solo si es una salida cerrada con fecha de salida (closed_at) y su
+// entrada existe; si no, 409 y la pagina del reporte no se genera (no basta con ocultar el boton).
+export function exitReportBlock(p, entrada) {
+  if (!p) return 'Pallet no encontrado.'
+  if (p.type !== 'salida') return 'El reporte es de salida: este pallet es de entrada.'
+  if (p.status !== 'cerrado') return 'La salida sigue abierta. El reporte se imprime al cerrarla.'
+  if (!p.closed_at || Number.isNaN(new Date(p.closed_at).getTime())) return 'La salida no tiene fecha y hora de cierre.'
+  if (!entrada) return 'No se encontró el pallet de entrada de esta salida.'
+  return null
+}
+
+r.get('/pallets/:id/report', requireAuth(), async (req, res) => {
+  const id = clean(req.params.id, 20)
+  const [p] = await rows(sql`select * from pallets where id = ${id}`)
+  const [entrada] = p?.linked_pallet_id ? await rows(sql`select * from pallets where id = ${p.linked_pallet_id}`) : []
+  const block = exitReportBlock(p, entrada)
+  if (block) return res.status(p ? 409 : 404).json({ error: block, palletId: id })
+  const items = await rows(sql`select code, scanned_at from pallet_items where pallet_id = ${id} order by scanned_at, code`)
+  const rec = await reconciliation({ id: p.id, linkedPalletId: p.linked_pallet_id })
+  const reasons = await rows(sql`select code, reason from pallet_missing where pallet_id = ${id}`)
+  res.json({
+    pallet: { id: p.id, status: p.status, model: p.model, brand: p.brand, closedAt: p.closed_at },
+    entrada: { id: entrada.id, createdAt: entrada.created_at },
+    items: items.map((i) => i.code),
+    expected: rec.expected,
+    extras: rec.extras,
+    missing: rec.missing.map((code) => ({ code, reason: reasons.find((x) => x.code === code)?.reason || null })),
+  })
+})
+
 // Crear (o retomar) un pallet de entrada.
 r.post('/pallets/entrada', requireAuth(), async (req, res) => {
   const id = code(req.body?.id)

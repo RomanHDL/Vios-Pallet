@@ -7,7 +7,7 @@ import { useApi } from '@/lib/hooks'
 import { useSession } from '@/lib/session'
 import { canDo, cn, fmtDateTime, fmtInt } from '@/lib/utils'
 import { ScannedList } from './ScannedList'
-import { BackLink, InfoRow, ReconSummary, SearchBox, StatusBadge, TypeBadge, isOpen, normPallet, resumePath } from './shared'
+import { BackLink, InfoRow, ReconSummary, SearchBox, StatusBadge, TypeBadge, canPrintExit, isOpen, normPallet, resumePath } from './shared'
 
 const linkBtn =
   'inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-[14.5px] font-semibold transition active:scale-[.98]'
@@ -36,6 +36,9 @@ export default function PalletDetail() {
   const items = data.items || []
   const salida = data.salida ? normPallet(data.salida) : null
   const isAdmin = user?.role === 'admin'
+  // Reporte impreso = solo de salida cerrada. En una entrada se ofrece el de su salida si ya se cerro.
+  const exitForReport = p.type === 'salida' ? p : salida
+  const printable = canPrintExit(exitForReport)
 
   const openDialog = (d) => {
     setActionError(null)
@@ -94,9 +97,15 @@ export default function PalletDetail() {
                   <ScanLine className="h-[18px] w-[18px]" /> Seguir escaneando
                 </Link>
               )}
-              <Button variant="outline" onClick={() => window.print()}>
-                <Printer className="h-[18px] w-[18px]" /> Imprimir hoja
-              </Button>
+              {printable ? (
+                <Link to={`/pallets/${encodeURIComponent(exitForReport.id)}/reporte`} className={cn(linkBtn, 'border border-input bg-card hover:bg-muted')}>
+                  <Printer className="h-[18px] w-[18px]" /> Imprimir reporte de salida
+                </Link>
+              ) : (
+                <Button variant="outline" disabled title="Disponible al registrar la salida">
+                  <Printer className="h-[18px] w-[18px]" /> Disponible al registrar la salida
+                </Button>
+              )}
               {!isOpen(p) && canDo(user, ['supervisor']) && (
                 <Button variant="outline" onClick={() => openDialog('reopen')}>
                   <Unlock className="h-[18px] w-[18px]" /> Reabrir
@@ -166,8 +175,6 @@ export default function PalletDetail() {
           )}
         </div>
       </div>
-
-      <PrintSheet pallet={p} items={items} rec={data.reconciliation} reasons={data.missingReasons} />
 
       <Dialog
         open={dialog === 'reopen'}
@@ -302,101 +309,6 @@ function SalidaReconciliation({ pallet, rec, reasons }) {
           </ul>
         )}
       </Card>
-    </div>
-  )
-}
-
-// Hoja imprimible (solo visible al imprimir).
-function PrintSheet({ pallet: p, items, rec, reasons }) {
-  const reasonOf = Object.fromEntries((reasons || []).map((r) => [r.code, r.reason]))
-  const codes = p.type === 'salida' && rec ? [...rec.confirmed, ...rec.extras] : [...items].reverse().map((i) => i.code)
-  return (
-    <div className="print-sheet hidden bg-white text-[11pt] text-black print:block">
-      <div className="flex items-start justify-between border-b-2 border-black pb-3">
-        <div>
-          <p className="text-[10pt] font-semibold uppercase tracking-wide">VIOS Pallet · MI Technologies MTY</p>
-          <h1 className="mt-1 text-[22pt] font-extrabold">
-            {p.type === 'salida' ? 'Salida' : 'Entrada'} <span className="font-mono">{p.id}</span>
-          </h1>
-        </div>
-        <div className="text-right text-[10pt]">
-          <p>Estado: <b>{p.status === 'abierto' ? 'Abierto' : 'Cerrado'}</b></p>
-          <p>Impreso: {fmtDateTime(new Date().toISOString())}</p>
-        </div>
-      </div>
-
-      <table className="mt-3 w-full text-[10.5pt]">
-        <tbody>
-          <tr>
-            <td className="py-0.5 pr-2 font-semibold">Modelo</td>
-            <td>{p.model || '—'}</td>
-            <td className="py-0.5 pr-2 font-semibold">Marca</td>
-            <td>{p.brand || '—'}</td>
-          </tr>
-          <tr>
-            <td className="py-0.5 pr-2 font-semibold">Creado</td>
-            <td>
-              {fmtDateTime(p.createdAt)} · {p.createdByName || '—'}
-            </td>
-            <td className="py-0.5 pr-2 font-semibold">Cerrado</td>
-            <td>
-              {fmtDateTime(p.closedAt)} · {p.closedByName || '—'}
-            </td>
-          </tr>
-          {p.type === 'salida' && (
-            <tr>
-              <td className="py-0.5 pr-2 font-semibold">Entrada</td>
-              <td className="font-mono">{p.linkedPalletId}</td>
-              <td />
-              <td />
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {p.type === 'salida' && rec ? (
-        <p className="mt-3 text-[11pt]">
-          Esperados <b>{rec.expected}</b> · Confirmados <b>{rec.confirmed.length}</b> · Faltantes <b>{rec.missing.length}</b> · Extras{' '}
-          <b>{rec.extras.length}</b>
-        </p>
-      ) : (
-        <p className="mt-3 text-[11pt]">
-          Total de piezas: <b>{items.length}</b>
-        </p>
-      )}
-
-      {p.type === 'salida' && rec?.missing.length > 0 && (
-        <>
-          <h2 className="mt-4 border-b border-black text-[11pt] font-bold">Faltantes</h2>
-          <ol className="mt-1 columns-2 text-[9.5pt]">
-            {rec.missing.map((c) => (
-              <li key={c} className="break-inside-avoid">
-                <span className="font-mono">{c}</span> — {reasonOf[c] || 'Pendiente'}
-              </li>
-            ))}
-          </ol>
-        </>
-      )}
-
-      <h2 className="mt-4 border-b border-black text-[11pt] font-bold">Piezas ({codes.length})</h2>
-      <ol className="mt-1 list-inside list-decimal columns-3 gap-6 font-mono text-[9pt] leading-snug">
-        {codes.map((c) => (
-          <li key={c} className="break-inside-avoid">
-            {c}
-            {rec?.extras.includes(c) ? ' (extra)' : ''}
-          </li>
-        ))}
-      </ol>
-
-      <div className="mt-12 grid grid-cols-3 gap-8 break-inside-avoid">
-        {['Calidad', 'Producción', 'Almacén'].map((a) => (
-          <div key={a} className="text-center">
-            <div className="h-16 border-b border-black" />
-            <p className="mt-1 text-[10.5pt] font-bold">{a}</p>
-            <p className="text-[9pt]">Nombre y firma</p>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

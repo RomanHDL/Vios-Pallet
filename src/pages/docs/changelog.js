@@ -2,6 +2,18 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.6.0',
+    date: '2026-10-07',
+    title: 'Reporte de salida y nuevo Inicio',
+    added: [
+      'Reporte de salida imprimible (hoja vertical): encabezado MI Technologies, estado y fecha/hora reales de salida, entrada y salida, seriales en 3 columnas, faltantes con motivo y firmas.',
+    ],
+    changed: [
+      'El reporte solo se imprime para salidas cerradas con fecha y hora de cierre; el servidor lo valida y la página lo bloquea aunque se entre directo por la dirección. En pallets abiertos o sin salida el botón dice "Disponible al registrar la salida".',
+      'Inicio rediseñado: producción del turno con indicador circular y barra (mismo cálculo), proyección y ritmo, tarjetas de rechazos/faltantes/entradas/salidas, accesos y actividad reciente en línea de tiempo. Se quitó el botón "Escanear salida" de Inicio (sigue en Pallets → Salida).',
+    ],
+  },
+  {
     version: '1.5.1',
     date: '2026-10-07',
     title: 'Productividad con salidas cerradas',

@@ -3,6 +3,16 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.6.0] — 2026-10-07
+
+### Added
+- Reporte de salida imprimible (`/pallets/:id/reporte`, `GET /api/pallets/:id/report`).
+
+### Changed
+- El reporte solo existe para salidas cerradas con `closed_at` (validado en servidor con `exitReportBlock` y en la
+  página). Se quitó la hoja de impresión anterior del detalle del pallet.
+- Inicio rediseñado; sin botón "Escanear salida" en Inicio. Menú lateral: elemento activo en azul.
+
 ## [1.5.1] — 2026-10-07
 
 ### Changed

@@ -18,6 +18,7 @@ import Perfil from './pages/Perfil'
 import PalletDetail from './pages/pallets/PalletDetail'
 import PalletHistory from './pages/pallets/PalletHistory'
 import PalletsHome from './pages/pallets/PalletsHome'
+import ReporteSalida from './pages/pallets/ReporteSalida'
 import ScanEntrada from './pages/pallets/ScanEntrada'
 import ScanSalida from './pages/pallets/ScanSalida'
 import LineaDetalle from './pages/produccion/LineaDetalle'
@@ -38,6 +39,8 @@ export default function App() {
   if (!user) return <Login />
   return (
     <Routes>
+      {/* Reporte de salida para imprimir: hoja sola, sin menu. */}
+      <Route path="pallets/:id/reporte" element={<ReporteSalida />} />
       <Route element={<Layout />}>
         <Route index element={<Home />} />
         <Route path="perfil" element={<Perfil />} />

@@ -74,8 +74,14 @@
     margin-left: 0 !important;
     padding: 0 !important;
   }
-  .print-sheet {
-    box-shadow: none !important;
-    border: 0 !important;
+  /* Reporte de salida: hoja vertical, conservar el azul de las barras y encabezados. */
+  .exit-report,
+  .exit-report * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
+}
+@page {
+  size: portrait;
+  margin: 0.45in 0.5in;
 }
