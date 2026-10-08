@@ -62,7 +62,7 @@ const SECTIONS = [
     steps: [
       'Reporte del día: Plan, Real, Delta (Real − Plan; rojo = faltó) y Recovery (plan + lo que faltó en el turno anterior), por turno y por línea. Se puede imprimir.',
       'Producción por modelo: producido, rechazado y neto contra los objetivos MTY y Texas, con gráfica diaria y proyección de 5 días hábiles.',
-      'Personal: personas por línea y piezas por persona.',
+      'Personal y productividad: piezas de salidas cerradas del turno entre las personas del turno (se capturan en Reportes → Personal del turno).',
       'Dashboard de pallets: estado de cada pallet (escaneando, sin salida, en proceso, con faltantes, consolidado).',
     ],
   },

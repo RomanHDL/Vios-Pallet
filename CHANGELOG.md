@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.5.1] — 2026-10-07
+
+### Changed
+- Personal y productividad: piezas de salidas cerradas del turno ÷ personas del turno (`outputByShift`).
+
 ## [1.5.0] — 2026-10-07
 
 ### Added

@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.5.1',
+    date: '2026-10-07',
+    title: 'Productividad con salidas cerradas',
+    changed: [
+      'Personal y productividad usa el mismo conteo que Producción: piezas de salidas cerradas del turno ÷ personas del turno (suma de las líneas capturadas).',
+    ],
+  },
+  {
     version: '1.5.0',
     date: '2026-10-07',
     title: 'Nueva pantalla de Producción',

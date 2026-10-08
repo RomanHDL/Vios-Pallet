@@ -4,6 +4,7 @@
 // "solamente se cuentan las piezas de salidas cerradas, no todas").
 import { sql } from 'drizzle-orm'
 import { DEFAULT_DAILY_GOAL, shiftWindow } from '../shared/pace.js'
+import { shiftOf } from '../shared/shift.js'
 import { rows } from './util.js'
 
 // Meta total del turno en hourly_goals. Clave nueva: las metas capturadas antes (por linea/plan) ya no aplican.
@@ -18,6 +19,23 @@ export async function shiftOutput(shiftDate, shift) {
     where p.type = 'salida' and p.status = 'cerrado'
       and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}
     group by i.code order by 2`)
+}
+
+// Piezas por turno entre dos fechas de turno: { 'YYYY-MM-DD|T1': n }. `brand` opcional (marca del pallet).
+export async function outputByShift(from, to, brand = null) {
+  const list = await rows(sql`
+    select i.code, min(i.scanned_at) as at from pallet_items i join pallets p on p.id = i.pallet_id
+    where p.type = 'salida' and p.status = 'cerrado' and ${brand ? sql`p.brand = ${brand}` : sql`true`}
+      and i.scanned_at >= ${shiftWindow(from, 'T1').start.toISOString()}
+      and i.scanned_at < ${shiftWindow(to, 'T2').end.toISOString()}
+    group by i.code`)
+  const count = {}
+  for (const x of list) {
+    const { shiftDate, shift } = shiftOf(new Date(x.at))
+    const k = `${shiftDate}|${shift}`
+    count[k] = (count[k] || 0) + 1
+  }
+  return count
 }
 
 // Meta del turno: la ultima capturada (sigue vigente los dias siguientes) o 765.

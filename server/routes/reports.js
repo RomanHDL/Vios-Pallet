@@ -4,8 +4,8 @@ import { addDays, isWorkday, shiftOf, todayPlant } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { lines, models } from '../schema.js'
-import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
-import { GOAL_SCOPE, shiftGoal, shiftOutput } from '../output.js'
+import { DEFAULT_DAILY_GOAL, pace } from '../../shared/pace.js'
+import { GOAL_SCOPE, outputByShift, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -34,17 +34,7 @@ function eachDay(from, to) {
 r.get('/reports/day', requireAuth(), async (req, res) => {
   const { from, to } = range(req.query, 0)
   const prev = addDays(from, -7)
-  const out = await rows(sql`
-    select i.code, min(i.scanned_at) as at from pallet_items i join pallets p on p.id = i.pallet_id
-    where p.type = 'salida' and p.status = 'cerrado' and ${brandCond(req.query, sql`p.brand`)}
-      and i.scanned_at >= ${shiftWindow(prev, 'T1').start.toISOString()}
-      and i.scanned_at < ${shiftWindow(to, 'T2').end.toISOString()}
-    group by i.code`)
-  const count = {}
-  for (const x of out) {
-    const k = Object.values(shiftOf(new Date(x.at))).join('|')
-    count[k] = (count[k] || 0) + 1
-  }
+  const count = await outputByShift(prev, to, req.query.brand ? clean(req.query.brand, 20) : null)
   const rej = await rows(sql`
     select shift_date, shift, count(*)::int n from rejections
     where shift_date between ${prev} and ${to} and ${brandCond(req.query)} group by 1, 2`)
@@ -180,20 +170,27 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
 })
 
 // Personal por turno y productividad (piezas por persona).
+// Personal y productividad por turno: piezas de salidas cerradas (sin linea) / personas del turno
+// (suma de las lineas capturadas en Reportes -> Personal del turno).
 r.get('/reports/staffing', requireAuth(), async (req, res) => {
   const { from, to } = range(req.query, 6)
-  const staff = await rows(sql`select shift_date, shift, line, people from staffing where shift_date between ${from} and ${to}`)
-  const prod = await rows(sql`
-    select shift_date, shift, line, count(*)::int n from production
-    where shift_date between ${from} and ${to} group by 1, 2, 3`)
-  const keys = new Map()
-  for (const x of [...staff, ...prod]) keys.set(`${x.shift_date}|${x.shift}|${x.line}`, x)
-  const list = [...keys.keys()].sort().map((k) => {
-    const [shiftDate, shift, line] = k.split('|')
-    const people = staff.find((x) => x.shift_date === shiftDate && x.shift === shift && x.line === line)?.people ?? null
-    const produced = prod.find((x) => x.shift_date === shiftDate && x.shift === shift && x.line === line)?.n || 0
-    return { shiftDate, shift, line, people, produced, perPerson: people ? produced / people : null }
-  })
+  const staff = await rows(sql`
+    select shift_date, shift, line, people from staffing
+    where shift_date between ${from} and ${to} and people > 0 order by line`)
+  const count = await outputByShift(from, to)
+  const keys = new Set([...staff.map((x) => `${x.shift_date}|${x.shift}`), ...Object.keys(count)])
+  const list = [...keys]
+    .filter((k) => k.slice(0, 10) >= from && k.slice(0, 10) <= to)
+    .sort()
+    .map((k) => {
+      const [shiftDate, shift] = k.split('|')
+      const lines = staff
+        .filter((x) => x.shift_date === shiftDate && x.shift === shift)
+        .map((x) => ({ line: x.line, people: x.people }))
+      const people = lines.length ? lines.reduce((a, x) => a + x.people, 0) : null
+      const produced = count[k] || 0
+      return { shiftDate, shift, people, produced, perPerson: people ? produced / people : null, lines }
+    })
   res.json({ from, to, rows: list })
 })
 
