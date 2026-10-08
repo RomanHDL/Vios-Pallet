@@ -223,6 +223,17 @@ r.post('/pallets/:id/items', requireAuth(), async (req, res) => {
       { notInEntrada: true, belongsTo: other?.pallet_id || null },
     )
   }
+  // Regla (2026-10-08): una tele pertenece a UN solo pallet de entrada. Si ya esta en otro pallet ID, no se
+  // puede dar entrada en este (aplica tambien a "tele diferente").
+  if (p.type === 'entrada') {
+    const [other] = await rows(sql`
+      select i.pallet_id from pallet_items i join pallets x on x.id = i.pallet_id
+      where i.code = ${c} and x.type = 'entrada' and i.pallet_id <> ${p.id} order by i.scanned_at desc limit 1`)
+    if (other)
+      throw conflict(`${c} ya es del pallet ${other.pallet_id}. Una tele solo puede estar en un pallet.`, {
+        otherPallet: other.pallet_id,
+      })
+  }
   // "Agregar tele diferente": se acepta cualquier prefijo y queda marcada (no es error del proceso).
   const different = req.body?.different === true || Boolean(hit?.different)
   if (!different && !hit) {

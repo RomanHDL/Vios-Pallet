@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.11.1] — 2026-10-08
+
+### Changed
+- Entrada: 409 `otherPallet` si el serial ya está en otro pallet de entrada (antes solo aviso).
+
 ## [1.11.0] — 2026-10-08
 
 ### Added

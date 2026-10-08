@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.11.1',
+    date: '2026-10-08',
+    title: 'Una tele, un solo pallet',
+    changed: [
+      'En la entrada ya no se acepta una tele que está en otro pallet ID (antes solo avisaba); dice en qué pallet está. Junto con la regla de salida, las teles de un pallet solo pueden salir en la salida de ese mismo pallet.',
+    ],
+  },
+  {
     version: '1.11.0',
     date: '2026-10-08',
     title: 'Rechazos históricos en Calidad',

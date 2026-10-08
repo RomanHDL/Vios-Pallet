@@ -20,6 +20,7 @@ const SECTIONS = [
     steps: [
       'Entrada: Pallets → Entrada. Escanea el ID del pallet (6 dígitos). Si es nuevo, elige modelo y marca. Después escanea cada pieza; el contador sube con cada lectura.',
       'Tele de otro modelo (ej. una JL en un pallet EL): toca "Agregar tele diferente" y escanéala, o usa el botón que aparece cuando el serial no coincide. Se agrega sin error y queda marcada como "Diferente" (también en la salida y en el reporte impreso).',
+      'Una tele solo puede estar en un pallet: si ya se dio entrada en otro pallet ID, no se acepta y te dice en cuál está.',
       'Si escaneaste una pieza por error, quítala de la lista con el bote de basura. Cuando termines, toca "Cerrar pallet".',
       'Salida: Pallets → Salida. Escanea el ID del pallet de entrada (debe estar cerrado). Escanea las piezas que salen; verás cuántas faltan. Solo entran las teles de SU entrada: si escaneas una de otro pallet, no la acepta y te dice de qué pallet es.',
       '"Piezas pendientes" (botón amarillo en la salida) abre la lista de las piezas de la entrada que aún no salen, con buscador.',

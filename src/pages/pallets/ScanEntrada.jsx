@@ -135,7 +135,15 @@ export default function ScanEntrada() {
         else fb.show('ok', r.code, `Pieza #${fmtInt(r.count)} registrada`)
       } catch (e) {
         setWrong(e.body?.wrongPrefix ? code : null)
-        fb.show('error', e.body?.duplicate ? 'Pieza duplicada' : 'No se registró', e.message)
+        fb.show(
+          'error',
+          e.body?.duplicate
+            ? 'Pieza duplicada'
+            : e.body?.otherPallet
+              ? `Es del pallet ${e.body.otherPallet}`
+              : 'No se registró',
+          e.message,
+        )
       }
     })
 
