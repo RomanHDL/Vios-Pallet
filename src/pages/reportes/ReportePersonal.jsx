@@ -1,4 +1,4 @@
-// Personal y productividad: piezas de salidas cerradas del turno (sin linea) entre las personas del turno
+// Personal y productividad: piezas producidas del turno (salidas cerradas + escaneo por linea) (sin linea) entre las personas del turno
 // (suma de lo capturado por linea en Reportes -> Personal del turno).
 import { shiftLabel } from '@shared/shift.js'
 import { AlertTriangle, BarChart3, Factory, Gauge, Users } from 'lucide-react'
@@ -63,7 +63,7 @@ export default function ReportePersonal() {
       <PageHeader
         back={<BackLink to="/reportes" label="Reportes" />}
         title="Personal y productividad"
-        subtitle={`Piezas de salidas cerradas por persona · ${periodText(p.from, p.to)}`}
+        subtitle={`Piezas producidas por persona · ${periodText(p.from, p.to)}`}
       />
 
       <Card className="p-3 sm:p-4">
@@ -88,7 +88,7 @@ export default function ReportePersonal() {
               value={fmtInt(totals.produced)}
               icon={Factory}
               tone="blue"
-              hint={`Salidas cerradas · ${rows.length} turno${rows.length === 1 ? '' : 's'}`}
+              hint={`Salidas + por línea · ${rows.length} turno${rows.length === 1 ? '' : 's'}`}
             />
             <Stat
               label="Personas / turno"

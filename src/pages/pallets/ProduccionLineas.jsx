@@ -1,6 +1,6 @@
 // Produccion por linea (diseno de PalletScan). Arriba la estacion: Marca -> Modelo -> Linea y se escanea
 // serial de TV + caja (deben coincidir). Abajo el avance por linea con su personal ("Editar personal").
-// Estos escaneos son por linea; la produccion del turno (Inicio / Hora x Hora) sigue siendo salidas cerradas.
+// Estos escaneos tambien suman a la produccion del turno (Inicio / Hora x Hora), junto con las salidas cerradas.
 import { shiftOf } from '@shared/shift.js'
 import { Factory, Plus, ScanBarcode, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'

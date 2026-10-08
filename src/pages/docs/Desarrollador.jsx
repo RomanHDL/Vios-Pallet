@@ -12,7 +12,7 @@ const TABLE_INFO = {
   brands: 'Marcas (HY, SILO).',
   defects: 'Catálogo de defectos de Calidad.',
   pallets: 'Pallets de entrada (6 dígitos) y salida (ID-S). linked_pallet_id de una salida = id de su entrada; line = línea elegida al iniciar la salida.',
-  pallet_items: 'Piezas escaneadas por pallet. PK (pallet_id, code).',
+  pallet_items: 'Piezas escaneadas por pallet. PK (pallet_id, code). different = "tele diferente" (otro prefijo, agregada a propósito).',
   pallet_missing: 'Motivo de cada pieza faltante al conciliar una salida.',
   production: 'Producto terminado. serial único. shift_date + shift = turno.',
   rejections: 'Rechazos de Calidad. defects = arreglo JSON. in_production = el serial ya se había producido (salida cerrada o registro histórico).',

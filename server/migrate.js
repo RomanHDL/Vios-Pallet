@@ -130,6 +130,8 @@ CREATE TABLE IF NOT EXISTS hourly_goals (
 );
 -- Linea de la salida (se elige al iniciarla); alimenta "Produccion por linea".
 ALTER TABLE pallets ADD COLUMN IF NOT EXISTS line text;
+-- Pieza de otro modelo/prefijo agregada a proposito ("tele diferente"), identificada en listas y reportes.
+ALTER TABLE pallet_items ADD COLUMN IF NOT EXISTS different boolean NOT NULL DEFAULT false;
 `
 
 export async function migrate() {

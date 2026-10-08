@@ -19,12 +19,13 @@ const SECTIONS = [
     title: 'Pallets',
     steps: [
       'Entrada: Pallets → Entrada. Escanea el ID del pallet (6 dígitos). Si es nuevo, elige modelo y marca. Después escanea cada pieza; el contador sube con cada lectura.',
+      'Tele de otro modelo (ej. una JL en un pallet EL): toca "Agregar tele diferente" y escanéala, o usa el botón que aparece cuando el serial no coincide. Se agrega sin error y queda marcada como "Diferente" (también en la salida y en el reporte impreso).',
       'Si escaneaste una pieza por error, quítala de la lista con el bote de basura. Cuando termines, toca "Cerrar pallet".',
       'Salida: Pallets → Salida. Escanea el ID del pallet de entrada (debe estar cerrado). Escanea las piezas que salen; verás cuántas faltan.',
       'Toca "Conciliar y cerrar". Cada pieza faltante necesita un motivo (Dañada, No llegó, Rechazo de calidad, etc.). Las piezas que no venían en la entrada aparecen como extras.',
       'Reporte de salida: cuando la salida ya está cerrada, en su detalle (o en el de su entrada) aparece "Imprimir reporte de salida": hoja vertical con datos de entrada y salida, seriales en 3 columnas, faltantes y firmas de Calidad, Producción y Almacén. Mientras la salida no se registre, el botón dice "Disponible al registrar la salida" y no se puede imprimir. Un supervisor puede reabrir un pallet; solo el administrador puede eliminarlo.',
       '"Buscar serial" te dice en qué pallet está una pieza.',
-      'Producción por línea (botón en Pallets): elige Marca (HY/SILO) → Modelo → Línea y escanea el serial de la TV y luego el de la caja (deben coincidir). Abajo se ve cada línea con sus piezas, personas y piezas por persona; "Editar personal" captura las personas. Estos escaneos son por línea: la producción del turno sigue siendo la de salidas cerradas.',
+      'Producción por línea (botón en Pallets): elige Marca (HY/SILO) → Modelo → Línea y escanea el serial de la TV y luego el de la caja (deben coincidir). Abajo se ve cada línea con sus piezas, personas y piezas por persona; "Editar personal" captura las personas. Estos escaneos también suman a la producción del turno.',
     ],
   },
   {
@@ -41,7 +42,7 @@ const SECTIONS = [
     icon: Clock3,
     title: 'Hora por Hora VIOS',
     steps: [
-      'Cuenta como producción SOLO cada pieza de un pallet de SALIDA ya CERRADO (en la hora en que se escaneó). Las salidas abiertas y lo registrado en Producción → Registrar no cuentan. No se divide por línea.',
+      'Cuenta como producción cada pieza de un pallet de SALIDA ya CERRADO y cada pieza escaneada (TV + caja) en Pallets → Producción por línea, en la hora en que se escaneó. Una serie cuenta una sola vez. Las salidas abiertas no cuentan.',
       'Verde = cumplió la meta de esa hora, rojo = quedó abajo, azul = hora en curso, gris = todavía no llega. Arriba de cada barra está la diferencia contra la meta.',
       'Meta del día: 765 piezas por defecto. Escribe otra y toca Guardar (o Enter); sigue vigente los días siguientes hasta que la cambies.',
       'Tiempo por pieza: cada cuánto sale una pieza (tiempo trabajado desde la primera pieza del turno ÷ piezas), comparado con lo que pide la meta. Proyección fin de turno: cuántas piezas habrá al terminar si se sigue al mismo ritmo.',

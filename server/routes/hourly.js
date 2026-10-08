@@ -30,11 +30,13 @@ r.get('/hourly', requireAuth(), async (req, res) => {
     if (h >= 0 && h < hours) perHour[h] += 1
   }
   const { goal, manual, since } = await shiftGoal(shiftDate, shift)
-  // Ultimo escaneo en cualquier salida del turno (abierta o cerrada): "desde ultimo scan".
+  // Ultimo escaneo del turno (salidas, abiertas o cerradas, y escaneo por linea): "desde ultimo scan".
   const { start, end } = shiftWindow(shiftDate, shift)
   const [{ last }] = await rows(sql`
-    select max(i.scanned_at) as last from pallet_items i join pallets p on p.id = i.pallet_id
-    where p.type = 'salida' and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}`)
+    select greatest(
+      (select max(i.scanned_at) from pallet_items i join pallets p on p.id = i.pallet_id
+        where p.type = 'salida' and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}),
+      (select max(registered_at) from production where shift_date = ${shiftDate} and shift = ${shift})) as last`)
   const now = new Date()
   res.json({
     shiftDate,

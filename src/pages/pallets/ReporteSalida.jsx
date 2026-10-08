@@ -39,7 +39,7 @@ function Row({ label, children, w }) {
   )
 }
 
-function SerialColumns({ list, extras }) {
+function SerialColumns({ list, extras, different }) {
   return (
     <div className="grid grid-cols-3 items-start gap-0 divide-x divide-slate-300">
       {threeColumns(list).map((col, ci) => (
@@ -58,6 +58,9 @@ function SerialColumns({ list, extras }) {
                   {v}
                   {extras.has(v) && (
                     <span className="ml-1 font-sans text-[7pt] font-bold uppercase">extra</span>
+                  )}
+                  {different.has(v) && (
+                    <span className="ml-1 font-sans text-[7pt] font-bold uppercase">dif.</span>
                   )}
                 </td>
               </tr>
@@ -108,6 +111,7 @@ export default function ReporteSalida() {
 
   const { pallet: p, entrada, items, expected, missing } = state.data
   const extras = new Set(state.data.extras)
+  const different = new Set(state.data.different || [])
   const complete = missing.length === 0
   const shownId = p.id.replace(/-S$/, '')
 
@@ -193,7 +197,7 @@ export default function ReporteSalida() {
           </h2>
           <div className="px-2 py-2">
             {items.length ? (
-              <SerialColumns list={items} extras={extras} />
+              <SerialColumns list={items} extras={extras} different={different} />
             ) : (
               <p className="px-2 py-2 text-slate-600">Sin items escaneados.</p>
             )}

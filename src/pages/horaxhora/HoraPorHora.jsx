@@ -267,7 +267,7 @@ export default function HoraPorHora() {
             <div>
               <h2 className="text-[19px] font-extrabold tracking-tight">Conteo por hora</h2>
               <p className="text-[13.5px] text-muted-foreground">
-                Piezas de salidas cerradas por hora{data ? ` · ${fmtInt(data.total)} en el turno` : ''}
+                Piezas producidas por hora{data ? ` · ${fmtInt(data.total)} en el turno` : ''}
               </p>
             </div>
             {data && (

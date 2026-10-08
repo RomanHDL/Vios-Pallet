@@ -42,7 +42,14 @@ export function ScannedList({ items, title = 'Piezas escaneadas', onRemove, extr
                   {q ? '' : items.length - i}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-mono text-[14.5px] font-semibold">{it.code}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate font-mono text-[14.5px] font-semibold">{it.code}</span>
+                    {it.different && (
+                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+                        Diferente
+                      </span>
+                    )}
+                  </span>
                   <span className="block truncate text-[12px] text-muted-foreground">
                     {fmtTime(it.scanned_at)}
                     {it.scanned_by_name && ` · ${it.scanned_by_name}`}
@@ -89,7 +96,9 @@ export function RemoveItemDialog({ code, palletId, busy, onCancel, onConfirm }) 
       <p className="text-[14.5px]">
         ¿Quitar esta pieza del pallet <span className="font-mono font-bold">{palletId}</span>?
       </p>
-      <p className="mt-3 break-all rounded-xl bg-muted px-4 py-3 text-center font-mono text-[18px] font-bold">{code}</p>
+      <p className="mt-3 break-all rounded-xl bg-muted px-4 py-3 text-center font-mono text-[18px] font-bold">
+        {code}
+      </p>
     </Dialog>
   )
 }

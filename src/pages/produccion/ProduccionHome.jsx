@@ -1,6 +1,6 @@
 // Produccion del turno (diseno de la pantalla de linea de PalletScan, pedido 2026-10-07): numero grande contra
 // la meta, desde ultimo scan, piezas por hora, promedio por unidad, proyeccion (con tiempo extra) y la grafica
-// por hora. Mismo conteo que Inicio y Hora por Hora: piezas de salidas cerradas contra la meta del dia.
+// por hora. Mismo conteo que Inicio y Hora por Hora: salidas cerradas + escaneo por linea, contra la meta del dia.
 import { shiftLabel } from '@shared/shift.js'
 import { BarChart3, ChevronRight, Target, Timer, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -59,7 +59,7 @@ export default function ProduccionHome() {
       <PageHeader
         back={<BackLink to="/">Inicio</BackLink>}
         title="Producción"
-        subtitle={data ? `${shiftLabel(data.shift)} · ${fmtYmd(data.shiftDate)} · piezas de salidas cerradas` : 'Piezas de salidas cerradas'}
+        subtitle={data ? `${shiftLabel(data.shift)} · ${fmtYmd(data.shiftDate)} · salidas cerradas + escaneo por línea` : 'Salidas cerradas + escaneo por línea'}
       />
 
       <ErrorBox error={error} />

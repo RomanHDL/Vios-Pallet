@@ -84,7 +84,7 @@ r.get('/pallets/:id', requireAuth(), async (req, res) => {
     from pallets p where p.id = ${id}`)
   if (!p) throw notFound('Pallet no encontrado.')
   const items = await rows(sql`
-    select i.code, i.scanned_at, ${userName(sql`i.scanned_by`)} as scanned_by_name
+    select i.code, i.scanned_at, i.different, ${userName(sql`i.scanned_by`)} as scanned_by_name
     from pallet_items i where i.pallet_id = ${id} order by i.scanned_at desc`)
   const out = { pallet: p, items }
   if (p.type === 'salida') {
@@ -116,13 +116,14 @@ r.get('/pallets/:id/report', requireAuth(), async (req, res) => {
   const [entrada] = p?.linked_pallet_id ? await rows(sql`select * from pallets where id = ${p.linked_pallet_id}`) : []
   const block = exitReportBlock(p, entrada)
   if (block) return res.status(p ? 409 : 404).json({ error: block, palletId: id })
-  const items = await rows(sql`select code, scanned_at from pallet_items where pallet_id = ${id} order by scanned_at, code`)
+  const items = await rows(sql`select code, scanned_at, different from pallet_items where pallet_id = ${id} order by scanned_at, code`)
   const rec = await reconciliation({ id: p.id, linkedPalletId: p.linked_pallet_id })
   const reasons = await rows(sql`select code, reason from pallet_missing where pallet_id = ${id}`)
   res.json({
     pallet: { id: p.id, status: p.status, model: p.model, brand: p.brand, closedAt: p.closed_at },
     entrada: { id: entrada.id, createdAt: entrada.created_at },
     items: items.map((i) => i.code),
+    different: items.filter((i) => i.different).map((i) => i.code),
     expected: rec.expected,
     extras: rec.extras,
     missing: rec.missing.map((code) => ({ code, reason: reasons.find((x) => x.code === code)?.reason || null })),
@@ -202,21 +203,25 @@ r.post('/pallets/:id/items', requireAuth(), async (req, res) => {
   const c = code(req.body?.code)
   if (!c) throw bad('Código vacío.')
   if (c === p.id || c === p.linkedPalletId) throw bad('Ese es el ID del pallet, no una pieza.')
-  const [m] = await db.select().from(models).where(eq(models.code, p.model || ''))
-  if (m && !c.startsWith(m.prefix))
-    throw bad(`El serial debe empezar con ${m.prefix} (modelo ${m.code}).`)
-  if (!m && !/^(EL|J0)/.test(c)) throw bad('El serial debe empezar con EL o J0.')
-  let extra = false
-  if (p.type === 'salida') {
-    const [hit] = await db
+  // En una salida, la pieza que ya venia en su entrada pasa aunque sea de otro modelo ("tele diferente").
+  let hit = null
+  if (p.type === 'salida')
+    [hit] = await db
       .select()
       .from(palletItems)
       .where(and(eq(palletItems.palletId, p.linkedPalletId), eq(palletItems.code, c)))
-    extra = !hit
+  // "Agregar tele diferente": se acepta cualquier prefijo y queda marcada (no es error del proceso).
+  const different = req.body?.different === true || Boolean(hit?.different)
+  if (!different && !hit) {
+    const [m] = await db.select().from(models).where(eq(models.code, p.model || ''))
+    if (m && !c.startsWith(m.prefix))
+      throw bad(`El serial debe empezar con ${m.prefix} (modelo ${m.code}).`, { prefix: m.prefix, wrongPrefix: true })
+    if (!m && !/^(EL|J0)/.test(c)) throw bad('El serial debe empezar con EL o J0.', { wrongPrefix: true })
   }
+  const extra = p.type === 'salida' && !hit
   const inserted = await db
     .insert(palletItems)
-    .values({ palletId: p.id, code: c, scannedBy: req.user.id })
+    .values({ palletId: p.id, code: c, different, scannedBy: req.user.id })
     .onConflictDoNothing()
     .returning()
   if (!inserted.length) throw conflict(`${c} ya está escaneado en este pallet.`, { duplicate: true })
@@ -230,7 +235,7 @@ r.post('/pallets/:id/items', requireAuth(), async (req, res) => {
         select i.pallet_id from pallet_items i join pallets x on x.id = i.pallet_id
         where i.code = ${c} and x.type = 'entrada' and i.pallet_id <> ${p.id}`)
     ).map((x) => x.pallet_id)
-  res.status(201).json({ code: c, count: n, extra, otherPallets })
+  res.status(201).json({ code: c, count: n, extra, different, otherPallets })
 })
 
 // Quitar una pieza escaneada (corregir error) mientras el pallet esta abierto.

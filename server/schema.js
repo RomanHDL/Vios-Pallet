@@ -84,6 +84,7 @@ export const palletItems = pgTable(
   {
     palletId: text('pallet_id').notNull(),
     code: text().notNull(),
+    different: boolean().notNull().default(false), // "tele diferente": otro prefijo, agregada a proposito
     scannedBy: integer('scanned_by'),
     scannedAt: ts('scanned_at').notNull().defaultNow(),
   },

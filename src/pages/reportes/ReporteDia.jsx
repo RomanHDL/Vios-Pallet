@@ -129,7 +129,7 @@ export default function ReporteDia() {
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
             <Stat label="Plan" value={fmtInt(t.plan)} icon={Target} hint={`${shifts.length} turno${shifts.length === 1 ? '' : 's'}`} />
-            <Stat label="Real" value={fmtInt(t.processed)} icon={TrendingUp} tone="blue" hint="Salidas cerradas" />
+            <Stat label="Real" value={fmtInt(t.processed)} icon={TrendingUp} tone="blue" hint="Salidas cerradas + por línea" />
             <Stat
               label="Delta"
               value={<Delta value={t.delta} className="font-extrabold" />}
@@ -195,7 +195,7 @@ export default function ReporteDia() {
                     vigente los días siguientes). Cuenta en Turno 1 de día hábil; en Turno 2, fines de semana y feriados solo si se trabajó.
                   </li>
                   <li>
-                    <b className="text-foreground">Real:</b> piezas de pallets de salida cerrados, en el turno en que se escanearon.
+                    <b className="text-foreground">Real:</b> piezas de pallets de salida cerrados más las escaneadas (TV + caja) en Producción por línea, en el turno en que se escanearon; cada serie cuenta una vez.
                   </li>
                   <li>
                     <b className="text-foreground">Delta:</b> Real − Plan. Negativo (rojo) es lo que faltó; positivo (verde) es lo que se hizo de más.

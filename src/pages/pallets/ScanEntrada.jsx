@@ -1,4 +1,4 @@
-import { ArrowDownToLine, CheckCircle2, Lock, Plus, RotateCcw } from 'lucide-react'
+import { ArrowDownToLine, CheckCircle2, Lock, Plus, RotateCcw, Tv } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Scanner, ScanResult } from '@/components/Scanner'
@@ -12,9 +12,9 @@ import {
   BackLink,
   BigCount,
   ChipGroup,
+  normPallet,
   PALLET_ID,
   StatusBadge,
-  normPallet,
   useScanFeedback,
   useSerialQueue,
 } from './shared'
@@ -95,22 +95,46 @@ export default function ScanEntrada() {
     setParams({}, { replace: true })
   }
 
-  const scanItem = (code) =>
+  // "Agregar tele diferente": la siguiente pieza se acepta aunque sea de otro prefijo (ej. JL en un pallet EL)
+  // y queda identificada como Diferente, sin marcar error.
+  const [diffMode, setDiffMode] = useState(false)
+  const [wrong, setWrong] = useState(null) // serial rechazado por prefijo: se ofrece agregarlo como diferente
+
+  const scanItem = (code, forceDifferent = false) =>
     enqueue(async () => {
       if (PALLET_ID.test(code) && code !== pallet.id) {
-        fb.show('error', 'Eso es un ID de pallet', `Cierra el pallet ${pallet.id} antes de empezar el ${code}.`)
+        fb.show(
+          'error',
+          'Eso es un ID de pallet',
+          `Cierra el pallet ${pallet.id} antes de empezar el ${code}.`,
+        )
         return
       }
+      const different = forceDifferent || diffMode
       try {
-        const r = await api(`/pallets/${pallet.id}/items`, { method: 'POST', body: { code } })
+        const r = await api(`/pallets/${pallet.id}/items`, { method: 'POST', body: { code, different } })
         setItems((list) => [
-          { code: r.code, scanned_at: new Date().toISOString(), scanned_by_name: user?.name },
+          {
+            code: r.code,
+            different: r.different,
+            scanned_at: new Date().toISOString(),
+            scanned_by_name: user?.name,
+          },
           ...list.filter((x) => x.code !== r.code),
         ])
-        if (r.otherPallets?.length)
+        setWrong(null)
+        if (different) {
+          setDiffMode(false)
+          fb.show(
+            'warn',
+            `${r.code} · tele diferente`,
+            `Pieza #${fmtInt(r.count)} agregada e identificada como diferente.`,
+          )
+        } else if (r.otherPallets?.length)
           fb.show('warn', `${r.code} registrada`, `Ojo: también está en pallet ${r.otherPallets.join(', ')}.`)
         else fb.show('ok', r.code, `Pieza #${fmtInt(r.count)} registrada`)
       } catch (e) {
+        setWrong(e.body?.wrongPrefix ? code : null)
         fb.show('error', e.body?.duplicate ? 'Pieza duplicada' : 'No se registró', e.message)
       }
     })
@@ -152,7 +176,11 @@ export default function ScanEntrada() {
         back={<BackLink />}
         title="Entrada de pallet"
         subtitle={
-          stage === 'scan' ? 'Escanea cada pieza del pallet' : stage === 'setup' ? 'Pallet nuevo' : 'Registrar pallet recibido'
+          stage === 'scan'
+            ? 'Escanea cada pieza del pallet'
+            : stage === 'setup'
+              ? 'Pallet nuevo'
+              : 'Registrar pallet recibido'
         }
       />
 
@@ -169,10 +197,21 @@ export default function ScanEntrada() {
               <p className="text-[13px] text-muted-foreground">6 dígitos. Si ya está abierto, se retoma.</p>
             </div>
           </div>
-          <Scanner onScan={openPallet} placeholder="ID del pallet (6 dígitos)" status={idError ? 'error' : null} />
-          {idError && <ScanResult result={{ tone: 'error', title: idError.title, detail: idError.detail, at: idError.title }} />}
+          <Scanner
+            onScan={openPallet}
+            placeholder="ID del pallet (6 dígitos)"
+            status={idError ? 'error' : null}
+          />
+          {idError && (
+            <ScanResult
+              result={{ tone: 'error', title: idError.title, detail: idError.detail, at: idError.title }}
+            />
+          )}
           {idError?.id && (
-            <Link to={`/pallets/${idError.id}`} className="mt-3 inline-flex h-11 items-center rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted">
+            <Link
+              to={`/pallets/${idError.id}`}
+              className="mt-3 inline-flex h-11 items-center rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted"
+            >
               Ver detalle del pallet {idError.id}
             </Link>
           )}
@@ -180,11 +219,7 @@ export default function ScanEntrada() {
       )}
 
       {stage === 'setup' && (
-        <NewPalletSetup
-          id={newId}
-          onCancel={startOver}
-          onCreated={(id) => openPallet(id)}
-        />
+        <NewPalletSetup id={newId} onCancel={startOver} onCreated={(id) => openPallet(id)} />
       )}
 
       {stage === 'scan' && pallet && (
@@ -211,7 +246,35 @@ export default function ScanEntrada() {
 
             <Scanner onScan={scanItem} status={fb.status} placeholder="Escanea el serial de la pieza" />
             <ScanResult result={fb.result} />
-            {pending > 1 && <p className="mt-2 text-center text-[12.5px] text-muted-foreground">Procesando {pending} lecturas…</p>}
+            {wrong && (
+              <Button
+                variant="outline"
+                className="mt-2 w-full border-amber-300 text-amber-800 dark:text-amber-300"
+                onClick={() => scanItem(wrong, true)}
+              >
+                <Tv className="h-4 w-4" /> Agregar {wrong} como tele diferente
+              </Button>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                setDiffMode((m) => !m)
+                setWrong(null)
+              }}
+              className={
+                diffMode
+                  ? 'mt-3 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-400 bg-amber-50 px-4 py-3 text-[14.5px] font-bold text-amber-800 dark:bg-amber-500/10 dark:text-amber-300'
+                  : 'mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-input px-4 py-3 text-[14.5px] font-semibold text-muted-foreground hover:bg-muted'
+              }
+            >
+              <Tv className="h-[18px] w-[18px]" />
+              {diffMode ? 'Escanea la tele diferente… (toca para cancelar)' : 'Agregar tele diferente'}
+            </button>
+            {pending > 1 && (
+              <p className="mt-2 text-center text-[12.5px] text-muted-foreground">
+                Procesando {pending} lecturas…
+              </p>
+            )}
 
             <Button
               variant="success"
@@ -279,12 +342,15 @@ export default function ScanEntrada() {
         }
       >
         <p className="text-[14.5px]">
-          Vas a cerrar el pallet <span className="font-mono font-bold">{pallet?.id}</span>. Después ya no se podrán agregar piezas.
+          Vas a cerrar el pallet <span className="font-mono font-bold">{pallet?.id}</span>. Después ya no se
+          podrán agregar piezas.
         </p>
         <div className="my-5">
           <BigCount label="Piezas" value={fmtInt(items.length)} />
         </div>
-        <p className="text-center text-[13px] text-muted-foreground">Confirma que el conteo coincide con el pallet físico.</p>
+        <p className="text-center text-[13px] text-muted-foreground">
+          Confirma que el conteo coincide con el pallet físico.
+        </p>
         <ErrorBox error={closeError} className="mt-3" />
       </Dialog>
     </div>
@@ -329,14 +395,18 @@ function NewPalletSetup({ id, onCancel, onCreated }) {
         <span className="font-mono text-[24px] font-extrabold tracking-tight">{id}</span>
         <Badge tone="blue">Nuevo</Badge>
       </div>
-      <p className="mt-1 text-[13.5px] text-muted-foreground">Este pallet no existe todavía. Elige modelo y marca para crearlo.</p>
+      <p className="mt-1 text-[13.5px] text-muted-foreground">
+        Este pallet no existe todavía. Elige modelo y marca para crearlo.
+      </p>
 
       <section className="mt-5">
         <h3 className="label">Modelo</h3>
         {models.length ? (
           <ChipGroup options={models.map((m) => m.code)} value={model} onChange={setModel} />
         ) : (
-          <p className="text-[13.5px] text-muted-foreground">No hay modelos activos. Pide a un administrador que los dé de alta.</p>
+          <p className="text-[13.5px] text-muted-foreground">
+            No hay modelos activos. Pide a un administrador que los dé de alta.
+          </p>
         )}
       </section>
       <section className="mt-5">

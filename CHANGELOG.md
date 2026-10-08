@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.9.0] — 2026-10-08
+
+### Added
+- `pallet_items.different` y `different: true` en `POST /api/pallets/:id/items` ("tele diferente", sin validar prefijo).
+  En la salida, la pieza que venía en su entrada pasa aunque sea de otro prefijo.
+
+### Changed
+- Producción del turno = salidas cerradas + `production` (escaneo por línea), primera vez por serie (`server/output.js`).
+
 ## [1.8.0] — 2026-10-08
 
 ### Added

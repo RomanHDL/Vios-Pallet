@@ -49,10 +49,12 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
     const g = goals.filter((x) => x.shift === s && x.shift_date <= d).at(-1)
     return { goal: g ? g.goal : DEFAULT_DAILY_GOAL, captured: Boolean(g) }
   }
-  // La meta automatica solo cuenta desde el primer dia con salidas cerradas (antes la app no se usaba).
+  // La meta automatica solo cuenta desde el primer dia con produccion (antes la app no se usaba).
   const [{ first }] = await rows(sql`
-    select min(i.scanned_at) as first from pallet_items i join pallets p on p.id = i.pallet_id
-    where p.type = 'salida' and p.status = 'cerrado'`)
+    select least(
+      (select min(i.scanned_at) from pallet_items i join pallets p on p.id = i.pallet_id
+        where p.type = 'salida' and p.status = 'cerrado'),
+      (select min(registered_at) from production)) as first`)
   const firstDay = first ? shiftOf(new Date(first)).shiftDate : null
 
   const shifts = []

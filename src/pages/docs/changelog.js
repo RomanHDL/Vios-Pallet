@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.9.0',
+    date: '2026-10-08',
+    title: 'Tele diferente y conteo por línea',
+    added: [
+      'Entrada: botón "Agregar tele diferente" para meter una tele de otro modelo (ej. JL en un pallet EL) sin error; queda marcada como "Diferente" en la lista, la salida y el reporte impreso.',
+    ],
+    changed: [
+      'La producción del turno (Inicio, Producción, Hora x Hora y reportes) suma las salidas cerradas y lo escaneado TV + caja en Producción por línea; cada serie cuenta una vez.',
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-10-08',
     title: 'Registro por línea: marca, modelo y línea',

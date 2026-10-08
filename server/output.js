@@ -1,7 +1,8 @@
-// Produccion del turno = SOLO piezas de pallets de SALIDA CERRADOS, a la hora en que se escanearon.
-// Un serial cuenta una sola vez. Sin dividir por linea. No cuenta Produccion -> Registrar ni salidas abiertas.
-// (2026-10-07, a peticion del usuario: "no quiero que lo dividas por linea, debe ser meta diaria 765" y
-// "solamente se cuentan las piezas de salidas cerradas, no todas").
+// Produccion del turno = piezas de pallets de SALIDA CERRADOS (a la hora en que se escanearon) + piezas
+// escaneadas TV + caja en Pallets -> Produccion por linea (tabla production). Un serial cuenta una sola vez
+// (la primera vez que aparece). Sin dividir por linea. No cuentan las salidas abiertas.
+// Historia: 2026-10-07 "solo salidas cerradas"; 2026-10-08 "la produccion de hora por hora que ya empiece a
+// contar... ese area es el de produccion por linea".
 import { sql } from 'drizzle-orm'
 import { DEFAULT_DAILY_GOAL, shiftWindow } from '../shared/pace.js'
 import { shiftOf } from '../shared/shift.js'
@@ -10,25 +11,35 @@ import { rows } from './util.js'
 // Meta total del turno en hourly_goals. Clave nueva: las metas capturadas antes (por linea/plan) ya no aplican.
 export const GOAL_SCOPE = 'total'
 
+// Todas las piezas producidas: salidas cerradas + escaneo por linea. Columnas: serial, at, model, brand.
+const PRODUCED = sql`(
+  select i.code as serial, i.scanned_at as at, p.model, p.brand
+  from pallet_items i join pallets p on p.id = i.pallet_id
+  where p.type = 'salida' and p.status = 'cerrado'
+  union all
+  select serial, registered_at, model, brand from production
+)`
+
+// Una fila por serial (la primera vez que se produjo), dentro de [desde, hasta) y marca opcional.
+const firstTimes = (startIso, endIso, brand) => sql`
+  select distinct on (serial) serial, at, model, brand from ${PRODUCED} x
+  where ${brand ? sql`x.brand = ${brand}` : sql`true`}
+    ${startIso ? sql`and x.at >= ${startIso}` : sql``} ${endIso ? sql`and x.at < ${endIso}` : sql``}
+  order by serial, at`
+
 // [{ serial, at }] del turno, ordenado por hora.
 export async function shiftOutput(shiftDate, shift) {
   const { start, end } = shiftWindow(shiftDate, shift)
-  return rows(sql`
-    select i.code as serial, min(i.scanned_at) as at
-    from pallet_items i join pallets p on p.id = i.pallet_id
-    where p.type = 'salida' and p.status = 'cerrado'
-      and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}
-    group by i.code order by 2`)
+  return rows(
+    sql`select serial, at from (${firstTimes(start.toISOString(), end.toISOString())}) t order by at`,
+  )
 }
 
-// Piezas por turno entre dos fechas de turno: { 'YYYY-MM-DD|T1': n }. `brand` opcional (marca del pallet).
+// Piezas por turno entre dos fechas de turno: { 'YYYY-MM-DD|T1': n }. `brand` opcional.
 export async function outputByShift(from, to, brand = null) {
-  const list = await rows(sql`
-    select i.code, min(i.scanned_at) as at from pallet_items i join pallets p on p.id = i.pallet_id
-    where p.type = 'salida' and p.status = 'cerrado' and ${brand ? sql`p.brand = ${brand}` : sql`true`}
-      and i.scanned_at >= ${shiftWindow(from, 'T1').start.toISOString()}
-      and i.scanned_at < ${shiftWindow(to, 'T2').end.toISOString()}
-    group by i.code`)
+  const list = await rows(
+    firstTimes(shiftWindow(from, 'T1').start.toISOString(), shiftWindow(to, 'T2').end.toISOString(), brand),
+  )
   const count = {}
   for (const x of list) {
     const { shiftDate, shift } = shiftOf(new Date(x.at))
@@ -38,16 +49,12 @@ export async function outputByShift(from, to, brand = null) {
   return count
 }
 
-// Todas las piezas producidas (salidas cerradas), una por serial: [{ serial, at, model, brand }].
+// Todas las piezas producidas, una por serial: [{ serial, at, model, brand }].
 export async function closedExitItems(brand = null) {
-  return rows(sql`
-    select distinct on (i.code) i.code as serial, i.scanned_at as at, p.model, p.brand
-    from pallet_items i join pallets p on p.id = i.pallet_id
-    where p.type = 'salida' and p.status = 'cerrado' and ${brand ? sql`p.brand = ${brand}` : sql`true`}
-    order by i.code, i.scanned_at`)
+  return rows(firstTimes(null, null, brand))
 }
 
-// ¿Ya se produjo este serial? Salida cerrada (regla actual) o registro historico de Produccion -> Registrar.
+// ¿Ya se produjo este serial? Salida cerrada o escaneo por linea (tabla production).
 export async function producedInfo(serial) {
   const [exit] = await rows(sql`
     select p.id as pallet_id, p.model, p.brand, i.scanned_at as at
@@ -55,7 +62,9 @@ export async function producedInfo(serial) {
     where i.code = ${serial} and p.type = 'salida' and p.status = 'cerrado'
     order by i.scanned_at limit 1`)
   if (exit) return { source: 'salida', ...exit }
-  const [reg] = await rows(sql`select line, model, brand, registered_at as at from production where serial = ${serial}`)
+  const [reg] = await rows(
+    sql`select line, model, brand, registered_at as at from production where serial = ${serial}`,
+  )
   return reg ? { source: 'registro', ...reg } : null
 }
 

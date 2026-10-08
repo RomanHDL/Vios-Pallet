@@ -25,7 +25,7 @@ export default function ReportesHome() {
           to="/reportes/personal"
           icon={Users}
           title="Personal y productividad"
-          description="Piezas de salidas cerradas por persona, por turno"
+          description="Piezas producidas por persona, por turno"
           tone="amber"
         />
         <MenuCard
