@@ -53,7 +53,8 @@ export default function App() {
         <Route path="produccion/lineas" element={<Lineas />} />
         <Route path="produccion/lineas/:line" element={<LineaDetalle />} />
         <Route path="produccion/historial" element={<ProduccionHistorial />} />
-        <Route path="produccion/plan" element={<PlanPersonal />} />
+        <Route path="produccion/plan" element={<Navigate to="/reportes/personal-turno" replace />} />
+        <Route path="reportes/personal-turno" element={<PlanPersonal />} />
 
         <Route path="hora-por-hora" element={<HoraPorHora />} />
 

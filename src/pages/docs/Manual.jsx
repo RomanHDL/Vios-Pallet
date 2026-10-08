@@ -30,10 +30,10 @@ const SECTIONS = [
     icon: Factory,
     title: 'Producción',
     steps: [
-      'Registrar: la primera vez configura la estación (línea, modelo y marca). Se queda guardada en ese equipo.',
-      'Escanea el serial de la TV y luego el de la caja. Deben ser iguales. Si el serial ya estaba registrado o fue rechazado por Calidad, la app lo bloquea y te dice por qué.',
-      'Líneas en vivo: avance de cada línea contra su meta, piezas por hora, minutos desde el último escaneo (amarillo > 10 min, rojo > 30 min) y proyección al cierre del turno.',
-      'Plan y personal (supervisor): captura cuántas piezas se pueden hacer por línea según materiales y cuántas personas hay. Si no se captura plan, se usa la meta de la línea.',
+      'Producción muestra el turno en curso: piezas de pallets de salida cerrados contra la meta del día (765 por defecto, se cambia en Hora x Hora).',
+      'Desde último scan: tiempo desde la última pieza escaneada en una salida (amarillo > 10 min, rojo > 30 min). Por hora: piezas por hora al ritmo del turno. Promedio / unidad: cada cuánto sale una pieza.',
+      'Proyección turno: piezas al terminar el turno si se sigue al mismo ritmo; en el turno de día también se muestra cuántas serían con tiempo extra (hasta las 22:00).',
+      'Abajo está la producción por hora; "Hora x Hora" abre el tablero completo. El personal por línea se captura en Reportes → Personal del turno.',
     ],
   },
   {

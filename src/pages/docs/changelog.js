@@ -2,6 +2,18 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.5.0',
+    date: '2026-10-07',
+    title: 'Nueva pantalla de Producción',
+    added: [
+      'Producción con el diseño de la pantalla de línea: conteo grande contra la meta, desde último scan, piezas por hora, promedio por unidad, proyección del turno (y con tiempo extra) y producción por hora.',
+    ],
+    changed: [
+      'Los apartados de Producción se acomodaron: Hora por Hora queda solo en el menú; Personal del turno pasó a Reportes (solo personas; la meta se ajusta en Hora por Hora).',
+      'Se quitaron Líneas en vivo, Registrar producto terminado e Historial de producción (los reemplazan las salidas de pallet y Buscar serial). En Inicio el botón ahora es "Escanear salida".',
+    ],
+  },
+  {
     version: '1.4.3',
     date: '2026-10-07',
     title: 'Producción y Reporte del día con el mismo conteo',

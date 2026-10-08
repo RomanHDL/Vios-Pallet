@@ -3,6 +3,16 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.5.0] — 2026-10-07
+
+### Added
+- Producción con el diseño de pantalla de línea: conteo contra meta, desde último scan, por hora, promedio por unidad,
+  proyección del turno y con tiempo extra, producción por hora.
+
+### Changed
+- Personal del turno pasó a Reportes (`/reportes/personal-turno`, solo personas). Hora por Hora solo en el menú.
+- Fuera del menú: Líneas en vivo, Registrar producto terminado e Historial de producción. Inicio: botón "Escanear salida".
+
 ## [1.4.3] — 2026-10-07
 
 ### Fixed

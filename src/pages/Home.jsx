@@ -6,7 +6,6 @@ import {
   ClipboardCheck,
   Factory,
   PackageCheck,
-  ScanBarcode,
   Target,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -40,8 +39,8 @@ export default function Home() {
         </div>
         <div className="flex gap-2">
           {canDo(user, ['supervisor', 'operador']) && (
-            <Link to="/produccion/registro" className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-[14.5px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
-              <ScanBarcode className="h-[18px] w-[18px]" /> Registrar producción
+            <Link to="/pallets/salida" className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-[14.5px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90">
+              <ArrowUpFromLine className="h-[18px] w-[18px]" /> Escanear salida
             </Link>
           )}
         </div>
@@ -87,7 +86,7 @@ export default function Home() {
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
             <div className="grid content-start gap-3 sm:grid-cols-2">
               <MenuCard to="/pallets" icon={PackageCheck} title="Control de Pallet" description="Entrada, salida y conciliación" tone="blue" />
-              <MenuCard to="/produccion" icon={Factory} title="Producción" description="Producto terminado por línea" tone="green" />
+              <MenuCard to="/produccion" icon={Factory} title="Producción" description="Conteo del turno, ritmo y proyección" tone="green" />
               <MenuCard to="/calidad" icon={ClipboardCheck} title="Calidad" description="Rechazos por defecto" tone="red" />
               <MenuCard to="/reportes" icon={BarChart3} title="Reportes" description="Plan vs Real, modelos y pallets" tone="violet" />
             </div>

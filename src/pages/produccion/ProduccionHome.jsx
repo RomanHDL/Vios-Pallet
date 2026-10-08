@@ -1,69 +1,136 @@
-import { ClipboardList, Clock3, Gauge, History, MonitorPlay, ScanBarcode, Target, TrendingUp, Users } from 'lucide-react'
+// Produccion del turno (diseno de la pantalla de linea de PalletScan, pedido 2026-10-07): numero grande contra
+// la meta, desde ultimo scan, piezas por hora, promedio por unidad, proyeccion (con tiempo extra) y la grafica
+// por hora. Mismo conteo que Inicio y Hora por Hora: piezas de salidas cerradas contra la meta del dia.
 import { shiftLabel } from '@shared/shift.js'
-import { MenuCard } from '@/components/MenuCard'
-import { Badge, Card, ErrorBox, PageHeader, Stat } from '@/components/ui'
+import { BarChart3, ChevronRight, Target, Timer, Zap } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Card, ErrorBox, PageHeader, Spinner } from '@/components/ui'
 import { useApi } from '@/lib/hooks'
-import { useSession } from '@/lib/session'
-import { canDo, fmtInt, fmtYmd } from '@/lib/utils'
-import { BackLink, CountVsGoal } from './common'
+import { cn, fmtInt, fmtYmd } from '@/lib/utils'
+import { HourlyChart, HourlyLegend } from '../horaxhora/HourlyChart'
+import { buildSlots } from '../horaxhora/slots'
+import { BackLink } from './common'
+
+// 88 -> "01:28", 4000 -> "1:06:40"
+function clock(sec) {
+  if (sec === null || sec === undefined || !Number.isFinite(sec)) return '—'
+  const t = Math.max(0, Math.round(sec))
+  const h = Math.floor(t / 3600)
+  const m = Math.floor((t % 3600) / 60)
+  const s = t % 60
+  const mm = String(m).padStart(2, '0')
+  const ss = String(s).padStart(2, '0')
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`
+}
+
+// Segundos desde `iso`, actualizandose cada segundo.
+function useSince(iso) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+  return iso ? (now - new Date(iso).getTime()) / 1000 : null
+}
+
+function Tile({ icon: Icon, iconClass, value, valueClass, extra, label }) {
+  return (
+    <Card className="flex flex-col items-center justify-center px-3 py-5 text-center sm:py-6">
+      <Icon className={cn('h-6 w-6', iconClass)} />
+      <div className={cn('tabular mt-2 text-[34px] font-extrabold leading-none tracking-tight text-navy dark:text-foreground sm:text-[40px]', valueClass)}>
+        {value}
+      </div>
+      {extra}
+      <div className="mt-2 text-[14px] text-muted-foreground">{label}</div>
+    </Card>
+  )
+}
 
 export default function ProduccionHome() {
-  const { user } = useSession()
-  // Mismo conteo y meta que Inicio y Hora por Hora: piezas de salidas cerradas contra la meta del dia (765).
-  const { data, error } = useApi('/hourly', { refreshMs: 20000 })
+  const { data, error, loading } = useApi('/hourly', { refreshMs: 15000 })
+  const idle = useSince(data?.lastScanAt)
   const p = data?.pace
-  const sec = p?.secPerPiece
+  const pct = data?.goal ? data.total / data.goal : 0
+  const built = data && buildSlots(data)
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-5xl space-y-4">
       <PageHeader
         back={<BackLink to="/">Inicio</BackLink>}
         title="Producción"
-        subtitle="Piezas de pallets de salida cerrados"
-        actions={data && <Badge tone="blue" dot>{shiftLabel(data.shift)} · {fmtYmd(data.shiftDate)}</Badge>}
+        subtitle={data ? `${shiftLabel(data.shift)} · ${fmtYmd(data.shiftDate)} · piezas de salidas cerradas` : 'Piezas de salidas cerradas'}
       />
 
       <ErrorBox error={error} />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="col-span-2 p-4 sm:p-5">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">Total del turno</span>
-            <Target className="h-4 w-4 text-primary" />
-          </div>
-          <CountVsGoal count={data?.total} goal={data?.goal} pct={data?.goal ? data.total / data.goal : null} size="lg" />
-        </Card>
-        <Stat
-          label="Tiempo por pieza"
-          value={sec ? `${Math.round(sec)} s` : '—'}
-          icon={Gauge}
-          tone="blue"
-          hint={p ? `${sec ? `${Math.round(3600 / sec)} pzs por hora · ` : ''}meta 1 pz cada ${Math.round(p.goalSecPerPiece)} s` : ' '}
-        />
-        <Stat
-          label="Proyección"
-          value={fmtInt(p?.projection)}
-          icon={TrendingUp}
-          tone={data && p.projection >= data.goal ? 'green' : 'amber'}
-          hint="Al cierre del turno, a este ritmo"
-        />
-      </div>
+      {loading && !data ? (
+        <Spinner />
+      ) : (
+        data && (
+          <>
+            <div className="grid gap-3 lg:grid-cols-[1.15fr_1fr]">
+              {/* Conteo contra la meta */}
+              <div className="flex flex-col items-center justify-center rounded-2xl bg-navy px-6 py-8 text-white shadow-sm sm:py-10">
+                <div className="tabular text-[96px] font-extrabold leading-none tracking-tight sm:text-[120px]">
+                  {fmtInt(data.total)}
+                </div>
+                <div className="mt-3 text-[17px] text-white/70">
+                  de {fmtInt(data.goal)} meta · {shiftLabel(data.shift)}
+                </div>
+                <div className="mt-5 h-3 w-full max-w-md overflow-hidden rounded-full bg-white/20">
+                  <div className="h-full rounded-full bg-white/85 transition-all" style={{ width: `${Math.min(100, pct * 100)}%` }} />
+                </div>
+                <div className="mt-4 text-[22px] font-bold text-white/90">{Math.round(pct * 100)}%</div>
+              </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {canDo(user, ['supervisor', 'operador']) && (
-          <MenuCard to="/produccion/registro" icon={ScanBarcode} title="Registrar producto terminado" description="Escanea serial de TV y de caja" tone="green" />
-        )}
-        <MenuCard to="/produccion/lineas" icon={MonitorPlay} title="Líneas en vivo" description="Avance contra meta por línea" tone="blue" />
-        <MenuCard to="/hora-por-hora" icon={Clock3} title="Hora por Hora VIOS" description="Conteo por hora contra la meta del turno" tone="navy" />
-        <MenuCard
-          to="/produccion/plan"
-          icon={canDo(user, ['supervisor']) ? Users : ClipboardList}
-          title="Plan y personal del turno"
-          description={canDo(user, ['supervisor']) ? 'Materiales disponibles y personas por línea' : 'Consulta el plan del turno'}
-          tone="amber"
-        />
-        <MenuCard to="/produccion/historial" icon={History} title="Historial" description="Busca seriales registrados" tone="violet" />
-      </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Tile
+                  icon={Timer}
+                  iconClass="text-slate-700 dark:text-slate-300"
+                  value={clock(idle)}
+                  valueClass={idle > 1800 ? 'text-red-600 dark:text-red-400' : idle > 600 ? 'text-amber-600 dark:text-amber-400' : ''}
+                  label="Desde último scan"
+                />
+                <Tile
+                  icon={Zap}
+                  iconClass="text-amber-500"
+                  value={p.secPerPiece && Number.isFinite(p.perHour) ? p.perHour.toFixed(1) : '—'}
+                  label="Por hora (turno)"
+                />
+                <Tile icon={BarChart3} iconClass="text-blue-600" value={clock(p.secPerPiece)} label="Promedio / unidad" />
+                <Tile
+                  icon={Target}
+                  iconClass="text-red-500"
+                  value={fmtInt(p.projection)}
+                  valueClass={p.projection >= data.goal ? 'text-emerald-600 dark:text-emerald-400' : ''}
+                  extra={
+                    p.projectionExtra != null &&
+                    p.projectionExtra > p.projection && (
+                      <div className="mt-1.5 text-[15px] font-bold text-amber-600 dark:text-amber-400">
+                        ~{fmtInt(p.projectionExtra)} c/T. Extra
+                      </div>
+                    )
+                  }
+                  label="Proyección turno"
+                />
+              </div>
+            </div>
+
+            {/* Produccion por hora */}
+            <Card className="px-3 pb-3 pt-4 sm:px-5">
+              <div className="flex items-center justify-between px-1">
+                <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground">Producción por hora</h2>
+                <Link to="/hora-por-hora" className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-primary hover:underline">
+                  Hora x Hora <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <HourlyChart slots={built.slots} className="mt-2 h-[240px] sm:h-[300px]" />
+              <HourlyLegend className="mt-1 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[12.5px] font-semibold text-muted-foreground" />
+            </Card>
+          </>
+        )
+      )}
     </div>
   )
 }

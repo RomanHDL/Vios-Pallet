@@ -48,6 +48,8 @@ function elapsedProductive(shiftDate, shift, now) {
  *                   (si arrancaron tarde no se cuenta el tiempo sin trabajar)
  *  goalSecPerPiece  tiempo por pieza que pide la meta
  *  projection       piezas al fin del turno si se sigue al mismo ritmo
+ *  projectionExtra  igual pero con tiempo extra (Dia: hasta las 22:00); null si el turno no tiene extra
+ *  perHour          piezas por hora productiva al ritmo actual
  */
 export function pace({ shiftDate, shift, count, goal, firstAt = null, now = new Date() }) {
   const total = productiveHours(shift)
@@ -59,7 +61,13 @@ export function pace({ shiftDate, shift, count, goal, firstAt = null, now = new 
   // Con muy poco tiempo trabajado el ritmo no es confiable: minimo 5 minutos.
   const basis = Math.max(worked, Math.min(elapsed, 5 / 60))
   const rate = basis > 0 ? count / basis : 0 // piezas por hora productiva
+  // Tiempo extra que queda (Dia: 17:00 a 22:00).
+  const cfg = SCHEDULE[shift]
+  const sinceRegularEnd = (now - shiftWindow(shiftDate, shift).start) / 3_600_000 - cfg.blocks
+  const extraLeft = cfg.extra ? Math.min(cfg.extra, Math.max(0, cfg.extra - Math.max(0, sinceRegularEnd))) : 0
   return {
+    perHour: rate,
+    projectionExtra: cfg.extra ? Math.round(count + rate * (remaining + extraLeft)) : null,
     elapsedHours: elapsed,
     remainingHours: remaining,
     secPerPiece: count > 0 && basis > 0 ? (basis * 3600) / count : null,

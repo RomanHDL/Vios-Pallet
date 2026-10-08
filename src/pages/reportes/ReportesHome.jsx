@@ -1,4 +1,4 @@
-import { CalendarDays, PackageSearch, Tv, Users } from 'lucide-react'
+import { CalendarDays, PackageSearch, Tv, UserPlus, Users } from 'lucide-react'
 import { MenuCard } from '@/components/MenuCard'
 import { PageHeader } from '@/components/ui'
 
@@ -27,6 +27,13 @@ export default function ReportesHome() {
           title="Personal y productividad"
           description="Personas por línea y piezas por persona"
           tone="amber"
+        />
+        <MenuCard
+          to="/reportes/personal-turno"
+          icon={UserPlus}
+          title="Personal del turno"
+          description="Captura cuántas personas hay por línea"
+          tone="navy"
         />
         <MenuCard
           to="/reportes/pallets"
