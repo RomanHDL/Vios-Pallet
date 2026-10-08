@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.4.2] — 2026-10-07
+
+### Changed
+- Producción del turno = solo piezas de pallets de salida cerrados (sin Registrar ni salidas abiertas).
+
 ## [1.4.1] — 2026-10-07
 
 ### Fixed

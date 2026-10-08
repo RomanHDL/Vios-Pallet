@@ -1,7 +1,7 @@
-// Produccion del turno = piezas escaneadas en pallets de SALIDA (a la hora en que se escanean), mas lo que
-// se haya registrado en Produccion -> Registrar. Un serial cuenta una sola vez. Sin dividir por linea.
-// (2026-10-07, a peticion del usuario: "ya se cerro uno de salida pero no veo las piezas... no quiero que lo
-// dividas por linea, debe ser meta diaria 765 que se pueda ajustar").
+// Produccion del turno = SOLO piezas de pallets de SALIDA CERRADOS, a la hora en que se escanearon.
+// Un serial cuenta una sola vez. Sin dividir por linea. No cuenta Produccion -> Registrar ni salidas abiertas.
+// (2026-10-07, a peticion del usuario: "no quiero que lo dividas por linea, debe ser meta diaria 765" y
+// "solamente se cuentan las piezas de salidas cerradas, no todas").
 import { sql } from 'drizzle-orm'
 import { DEFAULT_DAILY_GOAL, shiftWindow } from '../shared/pace.js'
 import { rows } from './util.js'
@@ -13,13 +13,11 @@ export const GOAL_SCOPE = 'total'
 export async function shiftOutput(shiftDate, shift) {
   const { start, end } = shiftWindow(shiftDate, shift)
   return rows(sql`
-    select serial, min(at) as at from (
-      select i.code as serial, i.scanned_at as at
-      from pallet_items i join pallets p on p.id = i.pallet_id
-      where p.type = 'salida' and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}
-      union all
-      select serial, registered_at from production where shift_date = ${shiftDate} and shift = ${shift}
-    ) x group by serial order by 2`)
+    select i.code as serial, min(i.scanned_at) as at
+    from pallet_items i join pallets p on p.id = i.pallet_id
+    where p.type = 'salida' and p.status = 'cerrado'
+      and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}
+    group by i.code order by 2`)
 }
 
 // Meta del turno: la ultima capturada (sigue vigente los dias siguientes) o 765.

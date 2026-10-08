@@ -45,7 +45,7 @@ const API = [
   ['GET/POST/DELETE', '/api/rejections', 'Rechazos de Calidad; /lookup/:serial antes de rechazar.'],
   ['GET', '/api/reports/day | models | staffing | pallets', 'Reportes.'],
   ['GET', '/api/dashboard', 'Resumen del inicio.'],
-  ['GET', '/api/hourly', 'Hora por Hora: piezas por hora (salidas de pallet + registradas, server/output.js), meta, tiempo por pieza y proyección.'],
+  ['GET', '/api/hourly', 'Hora por Hora: piezas por hora (solo piezas de salidas cerradas, server/output.js), meta, tiempo por pieza y proyección.'],
   ['PUT', '/api/hourly/goal', 'Guardar la meta del turno (765 por defecto; scope total).'],
 ]
 

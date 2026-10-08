@@ -1,7 +1,7 @@
 {
   "name": "vios-pallet",
   "private": true,
-  "version": "1.4.1",
+  "version": "1.4.2",
   "type": "module",
   "description": "VIOS Pallet: control de pallets, producción, calidad y reportes (MI Technologies Monterrey)",
   "scripts": {

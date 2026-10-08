@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.4.2',
+    date: '2026-10-07',
+    title: 'Producción = solo salidas cerradas',
+    changed: ['La producción del turno cuenta solo las piezas de pallets de salida cerrados; ya no suman las salidas abiertas ni Producción → Registrar.'],
+  },
+  {
     version: '1.4.1',
     date: '2026-10-07',
     title: 'Tiempo por pieza desde la primera pieza',

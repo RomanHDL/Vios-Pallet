@@ -40,7 +40,7 @@ const SECTIONS = [
     icon: Clock3,
     title: 'Hora por Hora VIOS',
     steps: [
-      'Cuenta como producción cada pieza escaneada en un pallet de SALIDA (a la hora en que se escanea) más lo registrado en Producción → Registrar. Un serial cuenta una sola vez y no se divide por línea.',
+      'Cuenta como producción SOLO cada pieza de un pallet de SALIDA ya CERRADO (en la hora en que se escaneó). Las salidas abiertas y lo registrado en Producción → Registrar no cuentan. No se divide por línea.',
       'Verde = cumplió la meta de esa hora, rojo = quedó abajo, azul = hora en curso, gris = todavía no llega. Arriba de cada barra está la diferencia contra la meta.',
       'Meta del día: 765 piezas por defecto. Escribe otra y toca Guardar (o Enter); sigue vigente los días siguientes hasta que la cambies.',
       'Tiempo por pieza: cada cuánto sale una pieza (tiempo trabajado desde la primera pieza del turno ÷ piezas), comparado con lo que pide la meta. Proyección fin de turno: cuántas piezas habrá al terminar si se sigue al mismo ritmo.',
