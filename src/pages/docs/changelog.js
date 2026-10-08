@@ -2,6 +2,16 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.8.0',
+    date: '2026-10-08',
+    title: 'Registro por línea: marca, modelo y línea',
+    added: [
+      'En Producción por línea: elegir Marca → Modelo → Línea y escanear serial de TV y de caja (deben coincidir). Cada línea muestra sus piezas, personas y piezas por persona.',
+      'Modelo J0-50" en el catálogo (EL-32", J0-43", EL-43", EL-50", J0-50").',
+    ],
+    changed: ['La salida ya no pide línea. La producción del turno (Inicio, Hora x Hora) sigue siendo solo salidas cerradas.'],
+  },
+  {
     version: '1.7.0',
     date: '2026-10-08',
     title: 'Producción por línea',

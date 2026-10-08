@@ -16,6 +16,7 @@ const MODELS = [
   { code: 'J0-43"', prefix: 'J0', targetMty: 1585, targetTexas: 1865 },
   { code: 'EL-43"', prefix: 'EL', targetMty: 1314, targetTexas: 0 },
   { code: 'EL-50"', prefix: 'EL', targetMty: 1044, targetTexas: 0 },
+  { code: 'J0-50"', prefix: 'J0', targetMty: 0, targetTexas: 0 },
 ]
 const BRANDS = ['HY', 'SILO']
 const DEFECTS = [
@@ -40,6 +41,8 @@ export async function ensureSeed() {
     await db.insert(brands).values(BRANDS.map((code) => ({ code })))
     await db.insert(defects).values(DEFECTS.map((name, i) => ({ name, sort: i })))
   }
+  // Modelos agregados despues del primer arranque (2026-10-08: J0-50"). No toca los que ya existen.
+  for (const [i, m] of MODELS.entries()) await db.insert(models).values({ ...m, sort: i }).onConflictDoNothing()
   // Cuenta compartida del boton "Entrar" (sin contrasena usable: solo se entra por /api/auth/guest).
   await db
     .insert(users)

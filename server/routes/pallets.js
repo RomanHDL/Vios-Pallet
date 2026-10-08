@@ -161,7 +161,7 @@ r.post('/pallets/salida', requireAuth(), async (req, res) => {
   if (entrada.type !== 'entrada') throw bad('Ese ID no es un pallet de entrada.')
   if (entrada.status !== 'cerrado') throw conflict(`El pallet ${entradaId} sigue abierto en Entrada. Ciérralo primero.`)
   const id = `${entradaId}-S`
-  // Linea de la salida (obligatoria al crearla; al retomar se completa si faltaba).
+  // Linea de la salida (opcional; la produccion por linea sale de Produccion por linea -> escaneo TV + caja).
   const lineName = clean(req.body?.line, 40)
   let line = null
   if (lineName) {
@@ -178,7 +178,6 @@ r.post('/pallets/salida', requireAuth(), async (req, res) => {
     }
     return res.json({ pallet: existing, resumed: true })
   }
-  if (!line) throw bad('Elige la línea de la salida.', { needLine: true })
   const [p] = await db
     .insert(pallets)
     .values({

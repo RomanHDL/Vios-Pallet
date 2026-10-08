@@ -4,8 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Scanner, ScanResult } from '@/components/Scanner'
 import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Progress, Segmented, Spinner } from '@/components/ui'
 import { api } from '@/lib/api'
-import { useStored } from '@/lib/hooks'
-import { useCatalogs, useSession } from '@/lib/session'
+import { useSession } from '@/lib/session'
 import { cn, feedback, fmtInt } from '@/lib/utils'
 import { RemoveItemDialog, ScannedList } from './ScannedList'
 import { BackLink, ChipGroup, MISSING_REASONS, PALLET_ID, ReconSummary, SearchBox, StatusBadge, normPallet, useScanFeedback, useSerialQueue } from './shared'
@@ -27,10 +26,6 @@ export default function ScanSalida() {
   const [removing, setRemoving] = useState(null)
   const [removeBusy, setRemoveBusy] = useState(false)
   const [tab, setTab] = useState('pendientes')
-  // Linea de la salida: se elige antes de escanear y se recuerda en este equipo.
-  const { lines } = useCatalogs()
-  const [line, setLine] = useStored('vp.salida.line', '')
-  const lineOk = lines.some((l) => l.name === line)
 
   const loadDetail = async (salidaId) => {
     const d = await api(`/pallets/${salidaId}`)
@@ -49,7 +44,7 @@ export default function ScanSalida() {
     }
     setStage('loading')
     try {
-      const r = await api('/pallets/salida', { method: 'POST', body: { entradaId, line: lineOk ? line : undefined } })
+      const r = await api('/pallets/salida', { method: 'POST', body: { entradaId } })
       await loadDetail(r.pallet.id)
       fb.reset()
       setTab('pendientes')
@@ -57,11 +52,7 @@ export default function ScanSalida() {
       if (urlId !== entradaId) setParams({ id: entradaId }, { replace: true })
     } catch (e) {
       setStage('id')
-      setIdError({
-        title: e.body?.needLine ? 'Elige la línea' : 'No se puede iniciar la salida',
-        detail: e.body?.needLine ? 'Toca la línea de esta salida y vuelve a escanear el ID.' : e.message,
-        id: e.body?.pallet?.id,
-      })
+      setIdError({ title: 'No se puede iniciar la salida', detail: e.message, id: e.body?.pallet?.id })
     }
   }
 
@@ -151,22 +142,6 @@ export default function ScanSalida() {
               <p className="text-[16px] font-bold">Escanea el ID del pallet de entrada</p>
               <p className="text-[13px] text-muted-foreground">El pallet de entrada debe estar cerrado.</p>
             </div>
-          </div>
-          <div className="mb-4">
-            <span className="label">Línea de la salida</span>
-            {lines.length ? (
-              <Segmented
-                value={lineOk ? line : null}
-                onChange={(v) => {
-                  setLine(v)
-                  setIdError(null)
-                }}
-                options={lines.map((l) => ({ value: l.name, label: l.name }))}
-                stretch
-              />
-            ) : (
-              <p className="text-[13px] text-muted-foreground">No hay líneas activas (Administración → Catálogos).</p>
-            )}
           </div>
           <Scanner onScan={openSalida} placeholder="ID del pallet de entrada" status={idError ? 'error' : null} />
           {idError && <ScanResult result={{ tone: 'error', title: idError.title, detail: idError.detail, at: idError.detail }} />}

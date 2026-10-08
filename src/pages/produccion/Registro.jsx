@@ -91,7 +91,7 @@ const Pair = ({ label, value }) => (
   </span>
 )
 
-function Chips({ label, options, value, onChange }) {
+export function Chips({ label, options, value, onChange }) {
   return (
     <div>
       <span className="label">{label}</span>
@@ -137,7 +137,7 @@ function StationForm({ initial, catalogs, onSave }) {
   )
 }
 
-function ScanStation({ station, prefix, defaultGoal }) {
+export function ScanStation({ station, prefix, defaultGoal, onRegistered }) {
   const [step, setStep] = useState('tv') // tv | box
   const [tv, setTv] = useState('')
   const [busy, setBusy] = useState(false)
@@ -187,6 +187,7 @@ function ScanStation({ station, prefix, defaultGoal }) {
       setResult({ tone: 'ok', title: 'Registrado', detail: tv, count: d.lineCount, goal: d.goal, at: Date.now() })
       live.reload(true)
       recent.reload(true)
+      onRegistered?.()
     } catch (e) {
       const b = e.body || {}
       if (b.duplicate) {
@@ -228,7 +229,7 @@ function ScanStation({ station, prefix, defaultGoal }) {
         <Card className="p-4 sm:p-5">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Línea {station.line} · {fmtShift(shiftDate, shift)}
+              {station.line} · {fmtShift(shiftDate, shift)}
             </span>
             <Target className="h-4 w-4 text-primary" />
           </div>
@@ -237,7 +238,7 @@ function ScanStation({ station, prefix, defaultGoal }) {
       </div>
 
       <Card className="self-start">
-        <CardHeader icon={History} title="Últimos registros" subtitle={`Línea ${station.line} · este turno`} />
+        <CardHeader icon={History} title="Últimos registros" subtitle={`${station.line} · este turno`} />
         {recent.loading && !recent.data ? (
           <Spinner className="py-10" />
         ) : recent.error ? (

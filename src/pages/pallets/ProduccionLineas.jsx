@@ -1,14 +1,16 @@
-// Produccion por linea (diseno de PalletScan): piezas de salidas cerradas del turno por la linea elegida al
-// iniciar cada salida, con el personal por linea (boton "Editar personal" -> /api/staffing).
+// Produccion por linea (diseno de PalletScan). Arriba la estacion: Marca -> Modelo -> Linea y se escanea
+// serial de TV + caja (deben coincidir). Abajo el avance por linea con su personal ("Editar personal").
+// Estos escaneos son por linea; la produccion del turno (Inicio / Hora x Hora) sigue siendo salidas cerradas.
 import { shiftOf } from '@shared/shift.js'
-import { Factory, Plus, Trash2, Users } from 'lucide-react'
+import { Factory, Plus, ScanBarcode, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button, Card, Dialog, Empty, ErrorBox, Segmented, Spinner, useToast } from '@/components/ui'
 import { api } from '@/lib/api'
-import { useApi } from '@/lib/hooks'
+import { useApi, useStored } from '@/lib/hooks'
 import { useCatalogs, useSession } from '@/lib/session'
 import { canDo, cn, fmtAgo, fmtInt, fmtYmd } from '@/lib/utils'
 import { ShiftPicker } from '../produccion/common'
+import { Chips, ScanStation } from '../produccion/Registro'
 import { BackLink } from './shared'
 
 const RANGE = { T1: '07:00 a.m. – 10:00 p.m.', T2: '10:00 p.m. – 07:00 a.m.' }
@@ -133,6 +135,88 @@ function StaffDialog({ open, onClose, sel, data, onSaved }) {
   )
 }
 
+// Estacion: se elige en orden Marca -> Modelo -> Linea; despues se escanea TV + caja. Se recuerda en el equipo.
+function Station({ onRegistered }) {
+  const cat = useCatalogs()
+  const [st, setSt] = useStored('vp:station', { line: '', model: '', brand: '' })
+  const [open, setOpen] = useState(true)
+  const brand = cat.brands.some((b) => b.code === st?.brand) ? st.brand : ''
+  const model = cat.models.find((m) => m.code === st?.model)
+  const line = cat.lines.some((l) => l.name === st?.line) ? st.line : ''
+  const ready = Boolean(brand && model && line)
+  const set = (k) => (v) =>
+    setSt((x) => {
+      const n = { ...x, [k]: v }
+      // Cambiar un paso anterior pide volver a elegir los siguientes.
+      if (k === 'brand') Object.assign(n, { model: '', line: '' })
+      if (k === 'model') n.line = ''
+      return n
+    })
+
+  if (!cat.loaded) return null
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-5">
+        <h2 className="flex items-center gap-2 text-[16px] font-extrabold">
+          <ScanBarcode className="h-5 w-5 text-primary" /> Registrar producción
+        </h2>
+        {ready && (
+          <div className="flex flex-wrap items-center gap-2 text-[14px] font-bold">
+            <span className="rounded-lg bg-muted px-2.5 py-1">{brand}</span>
+            <span className="rounded-lg bg-muted px-2.5 py-1">{model.code}</span>
+            <span className="rounded-lg bg-primary px-2.5 py-1 text-primary-foreground">{line}</span>
+            <Button variant="outline" size="sm" onClick={() => setOpen((o) => !o)}>
+              {open ? 'Cambiar' : 'Ocultar'}
+            </Button>
+          </div>
+        )}
+      </div>
+      <div className="space-y-4 p-4 sm:p-5">
+        {(!ready || !open) && (
+          <>
+            <Chips
+              label="1. Marca"
+              value={brand}
+              onChange={set('brand')}
+              options={cat.brands.map((b) => ({ value: b.code, label: b.code }))}
+            />
+            {brand && (
+              <Chips
+                label="2. Modelo"
+                value={model?.code || ''}
+                onChange={set('model')}
+                options={cat.models.map((m) => ({
+                  value: m.code,
+                  label: m.code,
+                  hint: `Serial ${m.prefix}…`,
+                }))}
+              />
+            )}
+            {brand && model && (
+              <Chips
+                label="3. Línea"
+                value={line}
+                onChange={(v) => {
+                  set('line')(v)
+                  setOpen(true)
+                }}
+                options={cat.lines.map((l) => ({ value: l.name, label: l.name }))}
+              />
+            )}
+          </>
+        )}
+        {ready && open && (
+          <ScanStation
+            station={{ brand, model: model.code, line }}
+            prefix={model.prefix}
+            onRegistered={onRegistered}
+          />
+        )}
+      </div>
+    </Card>
+  )
+}
+
 function LineCard({ l, total }) {
   const share = total ? l.pieces / total : 0
   return (
@@ -142,7 +226,7 @@ function LineCard({ l, total }) {
           {l.line || 'Sin línea'}
         </h3>
         <span className="text-[12.5px] font-semibold text-muted-foreground">
-          {l.pallets} salida{l.pallets === 1 ? '' : 's'}
+          {l.models} modelo{l.models === 1 ? '' : 's'}
         </span>
       </div>
       <div className="mt-3 flex items-end gap-2">
@@ -242,6 +326,8 @@ export default function ProduccionLineas() {
         </p>
       )}
 
+      {canDo(user, ['supervisor', 'operador']) && <Station onRegistered={() => reload(true)} />}
+
       <ErrorBox error={error} />
 
       {loading && !data ? (
@@ -249,7 +335,7 @@ export default function ProduccionLineas() {
       ) : data && !data.lines.length ? (
         <Card>
           <Empty icon={Factory} title="Sin líneas activas en este turno">
-            Aparecerán aquí en cuanto se cierre una salida con su línea o se capture el personal.
+            Aparecerán aquí en cuanto se escanee producción en una línea o se capture el personal.
           </Empty>
         </Card>
       ) : (

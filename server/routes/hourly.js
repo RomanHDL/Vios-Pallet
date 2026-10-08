@@ -52,18 +52,16 @@ r.get('/hourly', requireAuth(), async (req, res) => {
   })
 })
 
-// Produccion por linea del turno: piezas de salidas CERRADAS agrupadas por la linea de la salida, mas el
-// personal capturado por linea. Misma regla que Hora por Hora (las piezas cuentan en la hora del escaneo).
+// Produccion por linea del turno: piezas escaneadas en la estacion (TV + caja) de cada linea, desde
+// Pallets -> Produccion por linea (tabla production). No suma a la produccion del turno (esa es solo salidas
+// cerradas); es el avance por linea, con el personal capturado por linea.
 r.get('/production/by-line', requireAuth(), async (req, res) => {
   const { shiftDate, shift } = params(req.query)
   const brand = req.query.brand ? clean(req.query.brand, 20) : null
-  const { start, end } = shiftWindow(shiftDate, shift)
   const out = await rows(sql`
-    select coalesce(p.line, '') as line, count(distinct i.code)::int as pieces,
-           count(distinct p.id)::int as pallets, max(i.scanned_at) as last_at
-    from pallet_items i join pallets p on p.id = i.pallet_id
-    where p.type = 'salida' and p.status = 'cerrado' and ${brand ? sql`p.brand = ${brand}` : sql`true`}
-      and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}
+    select line, count(*)::int as pieces, count(distinct model)::int as models, max(registered_at) as last_at
+    from production
+    where shift_date = ${shiftDate} and shift = ${shift} and ${brand ? sql`brand = ${brand}` : sql`true`}
     group by 1`)
   const staff = await rows(sql`
     select line, people from staffing where shift_date = ${shiftDate} and shift = ${shift} and people > 0`)
@@ -76,7 +74,7 @@ r.get('/production/by-line', requireAuth(), async (req, res) => {
       return {
         line: line || null,
         pieces,
-        pallets: o?.pallets || 0,
+        models: o?.models || 0,
         lastAt: o?.last_at || null,
         people,
         perPerson: people ? pieces / people : null,

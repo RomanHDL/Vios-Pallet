@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.8.0] — 2026-10-08
+
+### Added
+- Estación en Producción por línea: Marca → Modelo → Línea → TV + caja (`POST /api/production`); por línea desde `production`.
+- Modelo J0-50" (seed idempotente de modelos).
+
+### Changed
+- `POST /api/pallets/salida`: la línea vuelve a ser opcional.
+
 ## [1.7.0] — 2026-10-08
 
 ### Added
