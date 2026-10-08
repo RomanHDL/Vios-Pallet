@@ -210,6 +210,19 @@ r.post('/pallets/:id/items', requireAuth(), async (req, res) => {
       .select()
       .from(palletItems)
       .where(and(eq(palletItems.palletId, p.linkedPalletId), eq(palletItems.code, c)))
+  // Regla (2026-10-08): las teles de una entrada solo pueden ir en SU salida. Si la pieza no viene en la
+  // entrada de esta salida no se acepta, y se avisa en que pallet de entrada esta.
+  if (p.type === 'salida' && !hit) {
+    const [other] = await rows(sql`
+      select i.pallet_id from pallet_items i join pallets x on x.id = i.pallet_id
+      where i.code = ${c} and x.type = 'entrada' order by i.scanned_at desc limit 1`)
+    throw conflict(
+      other
+        ? `${c} es del pallet ${other.pallet_id}, no de ${p.linkedPalletId}. Solo entran piezas de su entrada.`
+        : `${c} no viene en la entrada ${p.linkedPalletId}. Solo entran piezas de su entrada.`,
+      { notInEntrada: true, belongsTo: other?.pallet_id || null },
+    )
+  }
   // "Agregar tele diferente": se acepta cualquier prefijo y queda marcada (no es error del proceso).
   const different = req.body?.different === true || Boolean(hit?.different)
   if (!different && !hit) {

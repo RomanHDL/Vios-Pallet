@@ -1,15 +1,51 @@
-import { AlertTriangle, ArrowUpFromLine, CheckCircle2, ChevronLeft, ClipboardCheck, ListTodo, Plus, RotateCcw } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowUpFromLine,
+  CheckCircle2,
+  ChevronLeft,
+  ClipboardCheck,
+  ListTodo,
+  Plus,
+  RotateCcw,
+} from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Scanner, ScanResult } from '@/components/Scanner'
-import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Progress, Segmented, Spinner } from '@/components/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Dialog,
+  Empty,
+  ErrorBox,
+  PageHeader,
+  Progress,
+  Segmented,
+  Spinner,
+} from '@/components/ui'
 import { api } from '@/lib/api'
 import { useSession } from '@/lib/session'
 import { cn, feedback, fmtInt } from '@/lib/utils'
 import { RemoveItemDialog, ScannedList } from './ScannedList'
-import { BackLink, ChipGroup, MISSING_REASONS, PALLET_ID, ReconSummary, SearchBox, StatusBadge, normPallet, useScanFeedback, useSerialQueue } from './shared'
+import {
+  BackLink,
+  ChipGroup,
+  MISSING_REASONS,
+  normPallet,
+  PALLET_ID,
+  ReconSummary,
+  SearchBox,
+  StatusBadge,
+  useScanFeedback,
+  useSerialQueue,
+} from './shared'
 
-const entradaOf = (raw) => String(raw || '').trim().toUpperCase().replace(/-S$/, '')
+const entradaOf = (raw) =>
+  String(raw || '')
+    .trim()
+    .toUpperCase()
+    .replace(/-S$/, '')
 
 export default function ScanSalida() {
   const { user } = useSession()
@@ -26,6 +62,7 @@ export default function ScanSalida() {
   const [removing, setRemoving] = useState(null)
   const [removeBusy, setRemoveBusy] = useState(false)
   const [tab, setTab] = useState('pendientes')
+  const [showPending, setShowPending] = useState(false)
 
   const loadDetail = async (salidaId) => {
     const d = await api(`/pallets/${salidaId}`)
@@ -90,10 +127,19 @@ export default function ScanSalida() {
             ? { ...x, extras: [...x.extras, r.code] }
             : { ...x, confirmed: [...x.confirmed, r.code], missing: x.missing.filter((c) => c !== r.code) },
         )
-        if (r.extra) fb.show('warn', `${r.code}: pieza extra`, `No estaba en la entrada ${pallet.linkedPalletId}.`)
+        if (r.extra)
+          fb.show('warn', `${r.code}: pieza extra`, `No estaba en la entrada ${pallet.linkedPalletId}.`)
         else fb.show('ok', r.code, 'Confirmada')
       } catch (e) {
-        fb.show('error', e.body?.duplicate ? 'Pieza duplicada' : 'No se registró', e.message)
+        fb.show(
+          'error',
+          e.body?.duplicate
+            ? 'Pieza duplicada'
+            : e.body?.notInEntrada
+              ? 'No es de este pallet'
+              : 'No se registró',
+          e.message,
+        )
       }
     })
 
@@ -143,10 +189,21 @@ export default function ScanSalida() {
               <p className="text-[13px] text-muted-foreground">El pallet de entrada debe estar cerrado.</p>
             </div>
           </div>
-          <Scanner onScan={openSalida} placeholder="ID del pallet de entrada" status={idError ? 'error' : null} />
-          {idError && <ScanResult result={{ tone: 'error', title: idError.title, detail: idError.detail, at: idError.detail }} />}
+          <Scanner
+            onScan={openSalida}
+            placeholder="ID del pallet de entrada"
+            status={idError ? 'error' : null}
+          />
+          {idError && (
+            <ScanResult
+              result={{ tone: 'error', title: idError.title, detail: idError.detail, at: idError.detail }}
+            />
+          )}
           {idError?.id && (
-            <Link to={`/pallets/${idError.id}`} className="mt-3 inline-flex h-11 items-center rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted">
+            <Link
+              to={`/pallets/${idError.id}`}
+              className="mt-3 inline-flex h-11 items-center rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted"
+            >
               Ver detalle de {idError.id}
             </Link>
           )}
@@ -163,7 +220,8 @@ export default function ScanSalida() {
                   <StatusBadge status={pallet.status} />
                 </div>
                 <p className="mt-0.5 text-[13.5px] text-muted-foreground">
-                  Entrada <span className="font-mono font-semibold">{pallet.linkedPalletId}</span> · {pallet.model} · {pallet.brand}
+                  Entrada <span className="font-mono font-semibold">{pallet.linkedPalletId}</span> ·{' '}
+                  {pallet.model} · {pallet.brand}
                   {pallet.line && <b className="text-foreground"> · {pallet.line}</b>}
                 </p>
               </div>
@@ -175,17 +233,27 @@ export default function ScanSalida() {
             <div className="my-5 rounded-2xl bg-muted/50 p-4">
               <div className="flex items-end justify-between gap-3">
                 <div>
-                  <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">Confirmados</div>
+                  <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Confirmados
+                  </div>
                   <div className="mt-1 flex items-end gap-1.5">
-                    <span className={cn('tabular text-[52px] font-extrabold leading-none tracking-tight', complete && 'text-emerald-600 dark:text-emerald-400')}>
+                    <span
+                      className={cn(
+                        'tabular text-[52px] font-extrabold leading-none tracking-tight',
+                        complete && 'text-emerald-600 dark:text-emerald-400',
+                      )}
+                    >
                       {fmtInt(confirmed)}
                     </span>
-                    <span className="tabular pb-1.5 text-[18px] font-bold text-muted-foreground">/ {fmtInt(expected)}</span>
+                    <span className="tabular pb-1.5 text-[18px] font-bold text-muted-foreground">
+                      / {fmtInt(expected)}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-1 text-right text-[13px]">
                   <div>
-                    <span className="tabular font-bold">{fmtInt(rec.missing.length)}</span> <span className="text-muted-foreground">pendientes</span>
+                    <span className="tabular font-bold">{fmtInt(rec.missing.length)}</span>{' '}
+                    <span className="text-muted-foreground">pendientes</span>
                   </div>
                   {rec.extras.length > 0 && (
                     <div className="text-amber-700 dark:text-amber-300">
@@ -194,14 +262,44 @@ export default function ScanSalida() {
                   )}
                 </div>
               </div>
-              <Progress value={expected ? confirmed / expected : 0} tone={complete ? 'green' : 'primary'} className="mt-3" />
+              <Progress
+                value={expected ? confirmed / expected : 0}
+                tone={complete ? 'green' : 'primary'}
+                className="mt-3"
+              />
             </div>
 
             <Scanner onScan={scanItem} status={fb.status} placeholder="Escanea el serial de la pieza" />
             <ScanResult result={fb.result} />
-            {pending > 1 && <p className="mt-2 text-center text-[12.5px] text-muted-foreground">Procesando {pending} lecturas…</p>}
+            {pending > 1 && (
+              <p className="mt-2 text-center text-[12.5px] text-muted-foreground">
+                Procesando {pending} lecturas…
+              </p>
+            )}
 
-            <Button variant={complete ? 'success' : 'primary'} size="lg" className="mt-5 w-full" onClick={() => setStage('reconcile')}>
+            {/* Piezas que faltan por salir de esta entrada: se abren y se buscan. */}
+            <button
+              type="button"
+              onClick={() => setShowPending(true)}
+              className={cn(
+                'mt-4 flex w-full items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 text-left transition',
+                rec.missing.length
+                  ? 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300',
+              )}
+            >
+              <span className="flex items-center gap-2 text-[15px] font-bold">
+                <ListTodo className="h-5 w-5" /> Piezas pendientes
+              </span>
+              <span className="tabular text-[20px] font-extrabold">{fmtInt(rec.missing.length)}</span>
+            </button>
+
+            <Button
+              variant={complete ? 'success' : 'primary'}
+              size="lg"
+              className="mt-5 w-full"
+              onClick={() => setStage('reconcile')}
+            >
               <ClipboardCheck className="h-5 w-5" /> Conciliar y cerrar
             </Button>
           </Card>
@@ -219,7 +317,12 @@ export default function ScanSalida() {
             {tab === 'pendientes' ? (
               <PendingList codes={rec.missing} />
             ) : (
-              <ScannedList items={items} extras={extrasSet} onRemove={setRemoving} highlight={items[0]?.code} />
+              <ScannedList
+                items={items}
+                extras={extrasSet}
+                onRemove={setRemoving}
+                highlight={items[0]?.code}
+              />
             )}
           </div>
         </div>
@@ -269,6 +372,15 @@ export default function ScanSalida() {
         </Card>
       )}
 
+      <Dialog
+        open={showPending}
+        onClose={() => setShowPending(false)}
+        title={`Piezas pendientes · ${pallet?.linkedPalletId || ''}`}
+        wide
+      >
+        {rec && <PendingList codes={rec.missing} bare />}
+      </Dialog>
+
       <RemoveItemDialog
         code={removing}
         palletId={pallet?.id}
@@ -281,16 +393,29 @@ export default function ScanSalida() {
 }
 
 // Piezas de la entrada que aun no se escanean en la salida.
-function PendingList({ codes }) {
+function PendingList({ codes, bare }) {
   const [q, setQ] = useState('')
-  const shown = useMemo(() => {
-    const t = q.trim().toUpperCase()
-    return t ? codes.filter((c) => c.includes(t)) : codes
-  }, [codes, q])
+  const t = q.trim().toUpperCase()
+  const shown = useMemo(() => (t ? codes.filter((c) => c.includes(t)) : codes), [codes, t])
   return (
-    <Card className="overflow-hidden">
-      <CardHeader icon={ListTodo} title="Pendientes por escanear" subtitle={`${fmtInt(codes.length)} de la entrada`} />
-      {codes.length > 8 && <SearchBox value={q} onChange={setQ} className="border-b p-3 sm:px-5" />}
+    <Card className={cn('overflow-hidden', bare && 'border-0 shadow-none')}>
+      {!bare && (
+        <CardHeader
+          icon={ListTodo}
+          title="Pendientes por escanear"
+          subtitle={`${fmtInt(codes.length)} de la entrada`}
+        />
+      )}
+      {codes.length > 0 && (
+        <div className="border-b p-3 sm:px-5">
+          <SearchBox value={q} onChange={setQ} />
+          <p className="mt-1.5 text-[12px] text-muted-foreground">
+            {t
+              ? `${fmtInt(shown.length)} de ${fmtInt(codes.length)} pendientes`
+              : `${fmtInt(codes.length)} piezas de la entrada aún no salen`}
+          </p>
+        </div>
+      )}
       {!codes.length ? (
         <Empty icon={CheckCircle2} title="¡Completo!">
           Todas las piezas de la entrada ya se confirmaron.
@@ -363,18 +488,33 @@ function ReconcilePanel({ pallet, rec, onBack, onDone }) {
           />
           {rec.missing.length > 1 && (
             <div className="border-b bg-muted/40 px-4 py-3 sm:px-5">
-              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">Aplicar a todos</p>
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Aplicar a todos
+              </p>
               <ChipGroup size="sm" options={MISSING_REASONS} value={null} onChange={applyAll} />
             </div>
           )}
           <ul className="divide-y">
             {rec.missing.map((c) => (
-              <li key={c} className={cn('px-4 py-3.5 sm:px-5', lacking.has(c) && 'bg-red-50 dark:bg-red-500/10')}>
+              <li
+                key={c}
+                className={cn('px-4 py-3.5 sm:px-5', lacking.has(c) && 'bg-red-50 dark:bg-red-500/10')}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate font-mono text-[15px] font-bold">{c}</span>
-                  {reasons[c]?.trim() ? <Badge tone="green">Listo</Badge> : <Badge tone="red">Sin motivo</Badge>}
+                  {reasons[c]?.trim() ? (
+                    <Badge tone="green">Listo</Badge>
+                  ) : (
+                    <Badge tone="red">Sin motivo</Badge>
+                  )}
                 </div>
-                <ChipGroup size="sm" className="mt-2" options={MISSING_REASONS} value={reasons[c]} onChange={(v) => set(c, v)} />
+                <ChipGroup
+                  size="sm"
+                  className="mt-2"
+                  options={MISSING_REASONS}
+                  value={reasons[c]}
+                  onChange={(v) => set(c, v)}
+                />
                 <input
                   value={reasons[c] || ''}
                   onChange={(e) => set(c, e.target.value)}
@@ -390,17 +530,25 @@ function ReconcilePanel({ pallet, rec, onBack, onDone }) {
         <Card className="p-5">
           <div className="flex items-center gap-3">
             <CheckCircle2 className="h-8 w-8 shrink-0 text-emerald-500" />
-            <p className="text-[14.5px] font-semibold">Sin faltantes: todas las piezas de la entrada fueron confirmadas.</p>
+            <p className="text-[14.5px] font-semibold">
+              Sin faltantes: todas las piezas de la entrada fueron confirmadas.
+            </p>
           </div>
         </Card>
       )}
 
       {rec.extras.length > 0 && (
         <Card className="overflow-hidden">
-          <CardHeader title={`Extras (${fmtInt(rec.extras.length)})`} subtitle="Escaneadas en la salida pero no estaban en la entrada" />
+          <CardHeader
+            title={`Extras (${fmtInt(rec.extras.length)})`}
+            subtitle="Escaneadas en la salida pero no estaban en la entrada"
+          />
           <ul className="grid gap-px bg-border sm:grid-cols-2">
             {rec.extras.map((c) => (
-              <li key={c} className="truncate bg-card px-4 py-2.5 font-mono text-[14px] font-semibold text-amber-800 dark:text-amber-300 sm:px-5">
+              <li
+                key={c}
+                className="truncate bg-card px-4 py-2.5 font-mono text-[14px] font-semibold text-amber-800 dark:text-amber-300 sm:px-5"
+              >
                 {c}
               </li>
             ))}
@@ -414,7 +562,13 @@ function ReconcilePanel({ pallet, rec, onBack, onDone }) {
         <Button variant="outline" size="lg" onClick={onBack} disabled={busy}>
           <ChevronLeft className="h-5 w-5" /> Seguir escaneando
         </Button>
-        <Button variant="success" size="lg" loading={busy} onClick={submit} disabled={done < rec.missing.length}>
+        <Button
+          variant="success"
+          size="lg"
+          loading={busy}
+          onClick={submit}
+          disabled={done < rec.missing.length}
+        >
           <ClipboardCheck className="h-5 w-5" /> Confirmar y cerrar salida
         </Button>
       </div>

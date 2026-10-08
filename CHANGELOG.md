@@ -3,6 +3,14 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.10.0] — 2026-10-08
+
+### Changed
+- `POST /api/pallets/:id/items` en salidas: rechaza (409 `notInEntrada`, `belongsTo`) piezas que no vienen en su entrada.
+
+### Added
+- Salida: botón "Piezas pendientes" con diálogo y buscador.
+
 ## [1.9.1] — 2026-10-08
 
 ### Added

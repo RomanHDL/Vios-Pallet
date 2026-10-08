@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.10.0',
+    date: '2026-10-08',
+    title: 'Salida solo con piezas de su entrada y piezas pendientes',
+    changed: [
+      'En la salida solo entran las teles de su pallet de entrada; si escanean una de otro pallet, no se acepta y se avisa de qué pallet es.',
+    ],
+    added: ['Botón "Piezas pendientes" en la salida: lista con buscador de las piezas de la entrada que aún no salen.'],
+  },
+  {
     version: '1.9.1',
     date: '2026-10-08',
     title: 'Histórico de PalletScan en Producción por modelo',
