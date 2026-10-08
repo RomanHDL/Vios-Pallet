@@ -45,11 +45,16 @@ export const canPrintExit = (p) =>
 
 // Ruta para seguir escaneando un pallet abierto.
 export const resumePath = (p) =>
-  p.type === 'salida' ? `/pallets/salida?id=${p.linkedPalletId || p.id.replace(/-S$/, '')}` : `/pallets/entrada?id=${p.id}`
+  p.type === 'salida'
+    ? `/pallets/salida?id=${p.linkedPalletId || p.id.replace(/-S$/, '')}`
+    : `/pallets/entrada?id=${p.id}`
 
 export function BackLink({ to = '/pallets', label = 'Pallets' }) {
   return (
-    <Link to={to} className="no-print -ml-1 mb-1 inline-flex h-8 items-center gap-0.5 rounded-lg pr-2 text-[13.5px] font-semibold text-muted-foreground hover:text-foreground">
+    <Link
+      to={to}
+      className="no-print -ml-1 mb-1 inline-flex h-8 items-center gap-0.5 rounded-lg pr-2 text-[13.5px] font-semibold text-muted-foreground hover:text-foreground"
+    >
       <ChevronLeft className="h-4 w-4" />
       {label}
     </Link>
@@ -116,7 +121,9 @@ export function BigCount({ value, label, of, tone = 'default' }) {
         >
           {value}
         </span>
-        {of !== undefined && of !== null && <span className="tabular pb-2 text-[20px] font-bold text-muted-foreground">/ {of}</span>}
+        {of !== undefined && of !== null && (
+          <span className="tabular pb-2 text-[20px] font-bold text-muted-foreground">/ {of}</span>
+        )}
       </div>
     </div>
   )
@@ -201,8 +208,40 @@ export function ReconSummary({ rec, className }) {
     <div className={cn('grid grid-cols-2 gap-3 sm:grid-cols-4', className)}>
       <Stat label="Esperados" value={fmtInt(rec.expected)} />
       <Stat label="Confirmados" value={fmtInt(rec.confirmed.length)} tone="green" />
-      <Stat label="Faltantes" value={fmtInt(rec.missing.length)} tone={rec.missing.length ? 'red' : 'default'} />
+      <Stat
+        label="Faltantes"
+        value={fmtInt(rec.missing.length)}
+        tone={rec.missing.length ? 'red' : 'default'}
+      />
       <Stat label="Extras" value={fmtInt(rec.extras.length)} tone={rec.extras.length ? 'amber' : 'default'} />
     </div>
+  )
+}
+
+// "Esta en otro pallet": para encontrar rapido un faltante que se escaneo en otro pallet ID.
+// where = [{ id, type, status }] (de /api/pallets/:id -> missingElsewhere[code]).
+export function ElsewhereNote({ where, className }) {
+  if (!where?.length) return null
+  return (
+    <span
+      className={cn(
+        'mt-1 flex flex-wrap items-center gap-1.5 text-[12.5px] font-semibold text-amber-800 dark:text-amber-300',
+        className,
+      )}
+    >
+      Está en:
+      {where.map((w) => (
+        <Link
+          key={w.id}
+          to={`/pallets/${encodeURIComponent(w.id)}`}
+          className="rounded-md bg-amber-100 px-1.5 py-0.5 font-mono text-[12.5px] font-bold text-amber-900 hover:underline dark:bg-amber-500/15 dark:text-amber-200"
+        >
+          {w.id}
+          <span className="ml-1 font-sans text-[11px] font-semibold opacity-80">
+            {w.type === 'salida' ? 'salida' : 'entrada'} · {w.status}
+          </span>
+        </Link>
+      ))}
+    </span>
   )
 }

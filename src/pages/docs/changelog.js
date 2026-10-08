@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.11.2',
+    date: '2026-10-08',
+    title: 'Faltantes: en qué pallet están',
+    added: [
+      'Si una pieza faltante de una salida está escaneada en otro pallet, se muestra "Está en: <pallet>" con liga directa (detalle de la salida, Piezas pendientes y conciliación).',
+    ],
+  },
+  {
     version: '1.11.1',
     date: '2026-10-08',
     title: 'Una tele, un solo pallet',

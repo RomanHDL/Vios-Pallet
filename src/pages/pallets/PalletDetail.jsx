@@ -1,13 +1,47 @@
-import { AlertTriangle, CheckCircle2, ListChecks, PackagePlus, Printer, ScanLine, Trash2, Unlock } from 'lucide-react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ListChecks,
+  PackagePlus,
+  Printer,
+  ScanLine,
+  Trash2,
+  Unlock,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Badge, Button, Card, CardHeader, Dialog, Empty, ErrorBox, PageHeader, Segmented, Spinner, Stat, useToast } from '@/components/ui'
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Dialog,
+  Empty,
+  ErrorBox,
+  PageHeader,
+  Segmented,
+  Spinner,
+  Stat,
+  useToast,
+} from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
 import { useSession } from '@/lib/session'
 import { canDo, cn, fmtDateTime, fmtInt } from '@/lib/utils'
 import { ScannedList } from './ScannedList'
-import { BackLink, InfoRow, ReconSummary, SearchBox, StatusBadge, TypeBadge, canPrintExit, isOpen, normPallet, resumePath } from './shared'
+import {
+  BackLink,
+  canPrintExit,
+  ElsewhereNote,
+  InfoRow,
+  isOpen,
+  normPallet,
+  ReconSummary,
+  resumePath,
+  SearchBox,
+  StatusBadge,
+  TypeBadge,
+} from './shared'
 
 const linkBtn =
   'inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-[14.5px] font-semibold transition active:scale-[.98]'
@@ -84,7 +118,9 @@ export default function PalletDetail() {
             <span className="mt-1 flex flex-wrap items-center gap-2">
               <TypeBadge type={p.type} />
               <StatusBadge status={p.status} />
-              {p.type === 'salida' && p.missingCount > 0 && <Badge tone="red">{p.missingCount} faltantes</Badge>}
+              {p.type === 'salida' && p.missingCount > 0 && (
+                <Badge tone="red">{p.missingCount} faltantes</Badge>
+              )}
               <span>
                 {p.model} · {p.brand}
               </span>
@@ -93,12 +129,18 @@ export default function PalletDetail() {
           actions={
             <>
               {isOpen(p) && (
-                <Link to={resumePath(p)} className={cn(linkBtn, 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90')}>
+                <Link
+                  to={resumePath(p)}
+                  className={cn(linkBtn, 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90')}
+                >
                   <ScanLine className="h-[18px] w-[18px]" /> Seguir escaneando
                 </Link>
               )}
               {printable ? (
-                <Link to={`/pallets/${encodeURIComponent(exitForReport.id)}/reporte`} className={cn(linkBtn, 'border border-input bg-card hover:bg-muted')}>
+                <Link
+                  to={`/pallets/${encodeURIComponent(exitForReport.id)}/reporte`}
+                  className={cn(linkBtn, 'border border-input bg-card hover:bg-muted')}
+                >
                   <Printer className="h-[18px] w-[18px]" /> Imprimir reporte de salida
                 </Link>
               ) : (
@@ -112,7 +154,11 @@ export default function PalletDetail() {
                 </Button>
               )}
               {isAdmin && (
-                <Button variant="ghost" className="text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10" onClick={() => openDialog('delete')}>
+                <Button
+                  variant="ghost"
+                  className="text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+                  onClick={() => openDialog('delete')}
+                >
                   <Trash2 className="h-[18px] w-[18px]" /> Eliminar
                 </Button>
               )}
@@ -133,14 +179,20 @@ export default function PalletDetail() {
               {p.type === 'salida' && <InfoRow label="Línea">{p.line || 'Sin línea'}</InfoRow>}
               {p.type === 'salida' ? (
                 <InfoRow label="Entrada">
-                  <Link to={`/pallets/${p.linkedPalletId}`} className="font-mono text-primary hover:underline">
+                  <Link
+                    to={`/pallets/${p.linkedPalletId}`}
+                    className="font-mono text-primary hover:underline"
+                  >
                     {p.linkedPalletId}
                   </Link>
                 </InfoRow>
               ) : (
                 <InfoRow label="Salida">
                   {salida ? (
-                    <Link to={`/pallets/${salida.id}`} className="inline-flex items-center gap-2 font-mono text-primary hover:underline">
+                    <Link
+                      to={`/pallets/${salida.id}`}
+                      className="inline-flex items-center gap-2 font-mono text-primary hover:underline"
+                    >
                       {salida.id} <StatusBadge status={salida.status} />
                     </Link>
                   ) : (
@@ -151,7 +203,10 @@ export default function PalletDetail() {
             </dl>
             {p.type === 'entrada' && !salida && p.status === 'cerrado' && (
               <div className="border-t p-4 sm:px-5">
-                <Link to={`/pallets/salida?id=${p.id}`} className={cn(linkBtn, 'w-full border border-input bg-card hover:bg-muted')}>
+                <Link
+                  to={`/pallets/salida?id=${p.id}`}
+                  className={cn(linkBtn, 'w-full border border-input bg-card hover:bg-muted')}
+                >
                   <PackagePlus className="h-[18px] w-[18px]" /> Iniciar salida
                 </Link>
               </div>
@@ -165,14 +220,25 @@ export default function PalletDetail() {
                 <Stat
                   label="Salida"
                   value={salida ? fmtInt(salida.itemCount) : '—'}
-                  hint={salida ? (isOpen(salida) ? 'En proceso' : `${fmtInt(salida.missingCount)} faltantes`) : 'Aún no sale'}
+                  hint={
+                    salida
+                      ? isOpen(salida)
+                        ? 'En proceso'
+                        : `${fmtInt(salida.missingCount)} faltantes`
+                      : 'Aún no sale'
+                  }
                   tone={salida?.missingCount ? 'red' : 'default'}
                 />
               </div>
               <ScannedList items={items} />
             </div>
           ) : (
-            <SalidaReconciliation pallet={p} rec={data.reconciliation} reasons={data.missingReasons} />
+            <SalidaReconciliation
+              pallet={p}
+              rec={data.reconciliation}
+              reasons={data.missingReasons}
+              elsewhere={data.missingElsewhere || {}}
+            />
           )}
         </div>
       </div>
@@ -193,7 +259,8 @@ export default function PalletDetail() {
         }
       >
         <p className="text-[14.5px]">
-          El pallet <span className="font-mono font-bold">{p.id}</span> volverá a quedar abierto para escanear.
+          El pallet <span className="font-mono font-bold">{p.id}</span> volverá a quedar abierto para
+          escanear.
           {p.type === 'salida' && ' Los motivos de faltantes se capturarán de nuevo al conciliar.'}
         </p>
         <ErrorBox error={actionError} className="mt-3" />
@@ -208,7 +275,12 @@ export default function PalletDetail() {
             <Button variant="outline" onClick={() => setDialog(null)}>
               Cancelar
             </Button>
-            <Button variant="danger" loading={busy} disabled={confirmText.trim().toUpperCase() !== p.id} onClick={remove}>
+            <Button
+              variant="danger"
+              loading={busy}
+              disabled={confirmText.trim().toUpperCase() !== p.id}
+              onClick={remove}
+            >
               <Trash2 className="h-4 w-4" /> Eliminar definitivamente
             </Button>
           </>
@@ -217,7 +289,8 @@ export default function PalletDetail() {
         <div className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-[13.5px] text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200">
           <AlertTriangle className="h-5 w-5 shrink-0" />
           <p>
-            Se borrarán el pallet y sus {fmtInt(items.length)} piezas escaneadas. Esta acción <b>no se puede deshacer</b>.
+            Se borrarán el pallet y sus {fmtInt(items.length)} piezas escaneadas. Esta acción{' '}
+            <b>no se puede deshacer</b>.
           </p>
         </div>
         <label className="mt-4 block">
@@ -242,13 +315,19 @@ export default function PalletDetail() {
 const REC_TABS = {
   faltantes: { label: 'Faltantes', tone: 'text-red-700 dark:text-red-300', dot: 'bg-red-500' },
   extras: { label: 'Extras', tone: 'text-amber-800 dark:text-amber-300', dot: 'bg-amber-500' },
-  confirmados: { label: 'Confirmados', tone: 'text-emerald-700 dark:text-emerald-300', dot: 'bg-emerald-500' },
+  confirmados: {
+    label: 'Confirmados',
+    tone: 'text-emerald-700 dark:text-emerald-300',
+    dot: 'bg-emerald-500',
+  },
   esperados: { label: 'Esperados', tone: 'text-foreground', dot: 'bg-slate-400' },
 }
 
-function SalidaReconciliation({ pallet, rec, reasons }) {
+function SalidaReconciliation({ pallet, rec, reasons, elsewhere = {} }) {
   const reasonOf = useMemo(() => Object.fromEntries((reasons || []).map((r) => [r.code, r])), [reasons])
-  const [tab, setTab] = useState(rec.missing.length ? 'faltantes' : rec.extras.length ? 'extras' : 'confirmados')
+  const [tab, setTab] = useState(
+    rec.missing.length ? 'faltantes' : rec.extras.length ? 'extras' : 'confirmados',
+  )
   const [q, setQ] = useState('')
   const confirmedSet = useMemo(() => new Set(rec.confirmed), [rec])
 
@@ -271,7 +350,10 @@ function SalidaReconciliation({ pallet, rec, reasons }) {
             value={tab}
             onChange={setTab}
             size="sm"
-            options={Object.entries(REC_TABS).map(([k, v]) => ({ value: k, label: `${v.label} (${fmtInt(lists[k].length)})` }))}
+            options={Object.entries(REC_TABS).map(([k, v]) => ({
+              value: k,
+              label: `${v.label} (${fmtInt(lists[k].length)})`,
+            }))}
           />
           <SearchBox value={q} onChange={setQ} className="sm:w-56" />
         </div>
@@ -293,7 +375,15 @@ function SalidaReconciliation({ pallet, rec, reasons }) {
                 <li key={c} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
                   <span className={cn('h-2 w-2 shrink-0 rounded-full', REC_TABS[kind].dot)} />
                   <span className="min-w-0 flex-1">
-                    <span className={cn('block truncate font-mono text-[14.5px] font-semibold', REC_TABS[kind].tone)}>{c}</span>
+                    <span
+                      className={cn(
+                        'block truncate font-mono text-[14.5px] font-semibold',
+                        REC_TABS[kind].tone,
+                      )}
+                    >
+                      {c}
+                    </span>
+                    {kind === 'faltantes' && <ElsewhereNote where={elsewhere[c]} />}
                     {kind === 'faltantes' && r && (
                       <span className="block truncate text-[12.5px] text-muted-foreground">
                         <b className="text-foreground">{r.reason}</b>
@@ -302,7 +392,9 @@ function SalidaReconciliation({ pallet, rec, reasons }) {
                     )}
                   </span>
                   {tab === 'esperados' && (
-                    <Badge tone={kind === 'confirmados' ? 'green' : 'red'}>{kind === 'confirmados' ? 'Salió' : 'Falta'}</Badge>
+                    <Badge tone={kind === 'confirmados' ? 'green' : 'red'}>
+                      {kind === 'confirmados' ? 'Salió' : 'Falta'}
+                    </Badge>
                   )}
                 </li>
               )

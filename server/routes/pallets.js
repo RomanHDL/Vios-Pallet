@@ -89,6 +89,18 @@ r.get('/pallets/:id', requireAuth(), async (req, res) => {
   const out = { pallet: p, items }
   if (p.type === 'salida') {
     out.reconciliation = await reconciliation({ id: p.id, linkedPalletId: p.linked_pallet_id })
+    // Para buscar rapido un faltante: en que otros pallets esta (fuera de esta entrada y esta salida).
+    const missing = out.reconciliation.missing
+    out.missingElsewhere = {}
+    if (missing.length) {
+      const found = await rows(sql`
+        select i.code, x.id as pallet_id, x.type, x.status, i.scanned_at
+        from pallet_items i join pallets x on x.id = i.pallet_id
+        where i.code in (${sql.join(missing.map((c) => sql`${c}`), sql`, `)})
+          and x.id <> ${p.id} and x.id <> ${p.linked_pallet_id}
+        order by i.scanned_at desc`)
+      for (const f of found) (out.missingElsewhere[f.code] ||= []).push({ id: f.pallet_id, type: f.type, status: f.status })
+    }
     out.missingReasons = await rows(sql`
       select m.code, m.reason, m.noted_at, ${userName(sql`m.noted_by`)} as noted_by_name
       from pallet_missing m where m.pallet_id = ${id}`)

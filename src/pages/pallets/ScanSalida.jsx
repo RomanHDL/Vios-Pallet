@@ -31,6 +31,7 @@ import { RemoveItemDialog, ScannedList } from './ScannedList'
 import {
   BackLink,
   ChipGroup,
+  ElsewhereNote,
   MISSING_REASONS,
   normPallet,
   PALLET_ID,
@@ -63,12 +64,14 @@ export default function ScanSalida() {
   const [removeBusy, setRemoveBusy] = useState(false)
   const [tab, setTab] = useState('pendientes')
   const [showPending, setShowPending] = useState(false)
+  const [elsewhere, setElsewhere] = useState({}) // faltante -> otros pallets donde esta
 
   const loadDetail = async (salidaId) => {
     const d = await api(`/pallets/${salidaId}`)
     setPallet(normPallet(d.pallet))
     setItems(d.items || [])
     setRec(d.reconciliation)
+    setElsewhere(d.missingElsewhere || {})
   }
 
   const openSalida = async (raw) => {
@@ -315,7 +318,7 @@ export default function ScanSalida() {
               ]}
             />
             {tab === 'pendientes' ? (
-              <PendingList codes={rec.missing} />
+              <PendingList codes={rec.missing} elsewhere={elsewhere} />
             ) : (
               <ScannedList
                 items={items}
@@ -332,6 +335,7 @@ export default function ScanSalida() {
         <ReconcilePanel
           pallet={pallet}
           rec={rec}
+          elsewhere={elsewhere}
           onBack={() => setStage('scan')}
           onDone={(out) => {
             setFinal(out)
@@ -378,7 +382,7 @@ export default function ScanSalida() {
         title={`Piezas pendientes · ${pallet?.linkedPalletId || ''}`}
         wide
       >
-        {rec && <PendingList codes={rec.missing} bare />}
+        {rec && <PendingList codes={rec.missing} elsewhere={elsewhere} bare />}
       </Dialog>
 
       <RemoveItemDialog
@@ -393,7 +397,7 @@ export default function ScanSalida() {
 }
 
 // Piezas de la entrada que aun no se escanean en la salida.
-function PendingList({ codes, bare }) {
+function PendingList({ codes, bare, elsewhere = {} }) {
   const [q, setQ] = useState('')
   const t = q.trim().toUpperCase()
   const shown = useMemo(() => (t ? codes.filter((c) => c.includes(t)) : codes), [codes, t])
@@ -423,8 +427,9 @@ function PendingList({ codes, bare }) {
       ) : (
         <ul className="grid max-h-[60dvh] grid-cols-1 gap-px overflow-y-auto bg-border sm:grid-cols-2 lg:max-h-[calc(100dvh-260px)]">
           {shown.map((c) => (
-            <li key={c} className="truncate bg-card px-4 py-2.5 font-mono text-[14px] font-semibold sm:px-5">
-              {c}
+            <li key={c} className="bg-card px-4 py-2.5 sm:px-5">
+              <span className="block truncate font-mono text-[14px] font-semibold">{c}</span>
+              <ElsewhereNote where={elsewhere[c]} />
             </li>
           ))}
         </ul>
@@ -434,7 +439,7 @@ function PendingList({ codes, bare }) {
 }
 
 // Conciliacion: cada faltante necesita motivo antes de cerrar.
-function ReconcilePanel({ pallet, rec, onBack, onDone }) {
+function ReconcilePanel({ pallet, rec, elsewhere = {}, onBack, onDone }) {
   const [reasons, setReasons] = useState({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState(null)
@@ -508,6 +513,7 @@ function ReconcilePanel({ pallet, rec, onBack, onDone }) {
                     <Badge tone="red">Sin motivo</Badge>
                   )}
                 </div>
+                <ElsewhereNote where={elsewhere[c]} className="mb-1" />
                 <ChipGroup
                   size="sm"
                   className="mt-2"
