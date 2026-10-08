@@ -18,6 +18,7 @@ import Perfil from './pages/Perfil'
 import PalletDetail from './pages/pallets/PalletDetail'
 import PalletHistory from './pages/pallets/PalletHistory'
 import PalletsHome from './pages/pallets/PalletsHome'
+import ProduccionLineas from './pages/pallets/ProduccionLineas'
 import ReporteSalida from './pages/pallets/ReporteSalida'
 import ScanEntrada from './pages/pallets/ScanEntrada'
 import ScanSalida from './pages/pallets/ScanSalida'
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="pallets/entrada" element={<ScanEntrada />} />
         <Route path="pallets/salida" element={<ScanSalida />} />
         <Route path="pallets/historial" element={<PalletHistory />} />
+        <Route path="pallets/lineas" element={<ProduccionLineas />} />
         <Route path="pallets/:id" element={<PalletDetail />} />
 
         <Route path="produccion" element={<ProduccionHome />} />

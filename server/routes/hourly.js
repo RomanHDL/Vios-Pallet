@@ -8,7 +8,7 @@ import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { GOAL_SCOPE, shiftGoal, shiftOutput } from '../output.js'
 import { hourlyGoals } from '../schema.js'
-import { bad, isYmd, rows } from '../util.js'
+import { bad, clean, isYmd, rows } from '../util.js'
 
 const r = Router()
 
@@ -49,6 +49,49 @@ r.get('/hourly', requireAuth(), async (req, res) => {
     lastAt: output.at(-1)?.at || null,
     lastScanAt: last || null,
     pace: pace({ shiftDate, shift, count: output.length, goal, firstAt: output[0]?.at, now }),
+  })
+})
+
+// Produccion por linea del turno: piezas de salidas CERRADAS agrupadas por la linea de la salida, mas el
+// personal capturado por linea. Misma regla que Hora por Hora (las piezas cuentan en la hora del escaneo).
+r.get('/production/by-line', requireAuth(), async (req, res) => {
+  const { shiftDate, shift } = params(req.query)
+  const brand = req.query.brand ? clean(req.query.brand, 20) : null
+  const { start, end } = shiftWindow(shiftDate, shift)
+  const out = await rows(sql`
+    select coalesce(p.line, '') as line, count(distinct i.code)::int as pieces,
+           count(distinct p.id)::int as pallets, max(i.scanned_at) as last_at
+    from pallet_items i join pallets p on p.id = i.pallet_id
+    where p.type = 'salida' and p.status = 'cerrado' and ${brand ? sql`p.brand = ${brand}` : sql`true`}
+      and i.scanned_at >= ${start.toISOString()} and i.scanned_at < ${end.toISOString()}
+    group by 1`)
+  const staff = await rows(sql`
+    select line, people from staffing where shift_date = ${shiftDate} and shift = ${shift} and people > 0`)
+  const names = new Set([...out.map((x) => x.line), ...staff.map((x) => x.line)])
+  const list = [...names]
+    .map((line) => {
+      const o = out.find((x) => x.line === line)
+      const people = staff.find((x) => x.line === line)?.people ?? null
+      const pieces = o?.pieces || 0
+      return {
+        line: line || null,
+        pieces,
+        pallets: o?.pallets || 0,
+        lastAt: o?.last_at || null,
+        people,
+        perPerson: people ? pieces / people : null,
+      }
+    })
+    .sort((a, b) => (a.line === null) - (b.line === null) || String(a.line).localeCompare(String(b.line)))
+  const { goal } = await shiftGoal(shiftDate, shift)
+  res.json({
+    shiftDate,
+    shift,
+    current: shiftOf(),
+    goal,
+    total: list.reduce((a, x) => a + x.pieces, 0),
+    people: staff.reduce((a, x) => a + x.people, 0),
+    lines: list,
   })
 })
 

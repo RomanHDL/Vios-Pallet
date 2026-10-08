@@ -20,10 +20,11 @@ const SECTIONS = [
     steps: [
       'Entrada: Pallets → Entrada. Escanea el ID del pallet (6 dígitos). Si es nuevo, elige modelo y marca. Después escanea cada pieza; el contador sube con cada lectura.',
       'Si escaneaste una pieza por error, quítala de la lista con el bote de basura. Cuando termines, toca "Cerrar pallet".',
-      'Salida: Pallets → Salida. Escanea el ID del pallet de entrada (debe estar cerrado). Escanea las piezas que salen; verás cuántas faltan.',
+      'Salida: Pallets → Salida. Toca la línea de la salida (se recuerda en ese equipo) y escanea el ID del pallet de entrada (debe estar cerrado). Escanea las piezas que salen; verás cuántas faltan.',
       'Toca "Conciliar y cerrar". Cada pieza faltante necesita un motivo (Dañada, No llegó, Rechazo de calidad, etc.). Las piezas que no venían en la entrada aparecen como extras.',
       'Reporte de salida: cuando la salida ya está cerrada, en su detalle (o en el de su entrada) aparece "Imprimir reporte de salida": hoja vertical con datos de entrada y salida, seriales en 3 columnas, faltantes y firmas de Calidad, Producción y Almacén. Mientras la salida no se registre, el botón dice "Disponible al registrar la salida" y no se puede imprimir. Un supervisor puede reabrir un pallet; solo el administrador puede eliminarlo.',
       '"Buscar serial" te dice en qué pallet está una pieza.',
+      'Producción por línea (botón en Pallets): piezas de salidas cerradas del turno por línea, con personas y piezas por persona. "Editar personal" captura cuántas personas hay en cada línea.',
     ],
   },
   {

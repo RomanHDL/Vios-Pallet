@@ -130,6 +130,7 @@ export default function PalletDetail() {
               <InfoRow label="Creado">{fmtDateTime(p.createdAt)}</InfoRow>
               <InfoRow label="Cerrado por">{p.closedByName || '—'}</InfoRow>
               <InfoRow label="Cerrado">{fmtDateTime(p.closedAt)}</InfoRow>
+              {p.type === 'salida' && <InfoRow label="Línea">{p.line || 'Sin línea'}</InfoRow>}
               {p.type === 'salida' ? (
                 <InfoRow label="Entrada">
                   <Link to={`/pallets/${p.linkedPalletId}`} className="font-mono text-primary hover:underline">

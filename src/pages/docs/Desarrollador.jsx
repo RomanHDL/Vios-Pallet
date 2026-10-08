@@ -11,7 +11,7 @@ const TABLE_INFO = {
   models: 'Modelos de TV, prefijo obligatorio del serial y objetivos MTY/Texas.',
   brands: 'Marcas (HY, SILO).',
   defects: 'Catálogo de defectos de Calidad.',
-  pallets: 'Pallets de entrada (6 dígitos) y salida (ID-S). linked_pallet_id de una salida = id de su entrada.',
+  pallets: 'Pallets de entrada (6 dígitos) y salida (ID-S). linked_pallet_id de una salida = id de su entrada; line = línea elegida al iniciar la salida.',
   pallet_items: 'Piezas escaneadas por pallet. PK (pallet_id, code).',
   pallet_missing: 'Motivo de cada pieza faltante al conciliar una salida.',
   production: 'Producto terminado. serial único. shift_date + shift = turno.',
@@ -46,6 +46,7 @@ const API = [
   ['GET/POST/DELETE', '/api/rejections', 'Rechazos de Calidad; /lookup/:serial antes de rechazar.'],
   ['GET', '/api/reports/day | models | staffing | pallets', 'Reportes.'],
   ['GET', '/api/dashboard', 'Resumen del inicio.'],
+  ['GET', '/api/production/by-line', 'Piezas de salidas cerradas del turno por línea de la salida, con personal (shiftDate, shift, brand).'],
   ['GET', '/api/hourly', 'Hora por Hora: piezas por hora (solo piezas de salidas cerradas, server/output.js), meta, tiempo por pieza y proyección.'],
   ['PUT', '/api/hourly/goal', 'Guardar la meta del turno (765 por defecto; scope total).'],
 ]

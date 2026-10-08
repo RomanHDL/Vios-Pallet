@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.7.0',
+    date: '2026-10-08',
+    title: 'Producción por línea',
+    added: [
+      'Botón "Producción por línea" en Pallets: piezas de salidas cerradas del turno por línea, personas, piezas por persona y último escaneo; filtro HY/SILO y "Editar personal".',
+      'Al iniciar una salida se elige la línea (se recuerda en cada equipo) y se ve en el detalle del pallet.',
+    ],
+  },
+  {
     version: '1.6.2',
     date: '2026-10-07',
     title: 'Reportes sincronizados',

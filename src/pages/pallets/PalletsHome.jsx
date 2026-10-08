@@ -1,4 +1,4 @@
-import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, History, PackageOpen, Search } from 'lucide-react'
+import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Factory, History, PackageOpen, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MenuCard } from '@/components/MenuCard'
@@ -22,9 +22,14 @@ export default function PalletsHome() {
         title="Control de Pallet"
         subtitle="Entrada, salida y conciliación de piezas"
         actions={
-          <Link to="/pallets/historial" className="inline-flex h-11 items-center gap-2 rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted">
-            <History className="h-[18px] w-[18px]" /> Historial
-          </Link>
+          <>
+            <Link to="/pallets/lineas" className="inline-flex h-11 items-center gap-2 rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted">
+              <Factory className="h-[18px] w-[18px]" /> Producción por línea
+            </Link>
+            <Link to="/pallets/historial" className="inline-flex h-11 items-center gap-2 rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted">
+              <History className="h-[18px] w-[18px]" /> Historial
+            </Link>
+          </>
         }
       />
 

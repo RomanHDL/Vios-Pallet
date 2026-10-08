@@ -18,6 +18,7 @@ export function normPallet(p) {
     status: p.status,
     model: p.model,
     brand: p.brand,
+    line: p.line ?? null,
     linkedPalletId: g('linkedPalletId', 'linked_pallet_id'),
     expected: g('expectedItemCount', 'expected_item_count'),
     itemCount,

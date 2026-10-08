@@ -3,6 +3,12 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.7.0] — 2026-10-08
+
+### Added
+- Producción por línea (`/pallets/lineas`, `GET /api/production/by-line`) con edición de personal.
+- `pallets.line`: la salida pide línea al crearla (`POST /api/pallets/salida` con `line`; al retomar se completa si faltaba).
+
 ## [1.6.2] — 2026-10-07
 
 ### Fixed

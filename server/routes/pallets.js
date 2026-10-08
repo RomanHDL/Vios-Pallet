@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import { Router } from 'express'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
-import { brands, models, palletItems, palletMissing, pallets } from '../schema.js'
+import { brands, lines, models, palletItems, palletMissing, pallets } from '../schema.js'
 import { bad, clean, code, conflict, isYmd, notFound, rows } from '../util.js'
 
 const r = Router()
@@ -161,11 +161,24 @@ r.post('/pallets/salida', requireAuth(), async (req, res) => {
   if (entrada.type !== 'entrada') throw bad('Ese ID no es un pallet de entrada.')
   if (entrada.status !== 'cerrado') throw conflict(`El pallet ${entradaId} sigue abierto en Entrada. Ciérralo primero.`)
   const id = `${entradaId}-S`
+  // Linea de la salida (obligatoria al crearla; al retomar se completa si faltaba).
+  const lineName = clean(req.body?.line, 40)
+  let line = null
+  if (lineName) {
+    const [l] = await db.select().from(lines).where(and(eq(lines.name, lineName), eq(lines.active, true)))
+    if (!l) throw bad('Elige una línea válida.')
+    line = l.name
+  }
   const existing = await getPallet(id)
   if (existing) {
     if (existing.status === 'cerrado') throw conflict(`La salida ${id} ya está cerrada.`, { pallet: existing })
+    if (!existing.line && line) {
+      const [upd] = await db.update(pallets).set({ line }).where(eq(pallets.id, id)).returning()
+      return res.json({ pallet: upd, resumed: true })
+    }
     return res.json({ pallet: existing, resumed: true })
   }
+  if (!line) throw bad('Elige la línea de la salida.', { needLine: true })
   const [p] = await db
     .insert(pallets)
     .values({
@@ -174,6 +187,7 @@ r.post('/pallets/salida', requireAuth(), async (req, res) => {
       linkedPalletId: entradaId,
       model: entrada.model,
       brand: entrada.brand,
+      line,
       expectedItemCount: entrada.itemCount,
       createdBy: req.user.id,
     })

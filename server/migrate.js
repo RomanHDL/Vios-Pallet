@@ -128,6 +128,8 @@ CREATE TABLE IF NOT EXISTS hourly_goals (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (shift_date, shift, scope)
 );
+-- Linea de la salida (se elige al iniciarla); alimenta "Produccion por linea".
+ALTER TABLE pallets ADD COLUMN IF NOT EXISTS line text;
 `
 
 export async function migrate() {

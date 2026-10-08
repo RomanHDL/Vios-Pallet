@@ -66,6 +66,7 @@ export const pallets = pgTable(
     linkedPalletId: text('linked_pallet_id'),
     model: text(),
     brand: text(),
+    line: text(), // salidas: linea elegida al iniciar la salida
     expectedItemCount: integer('expected_item_count'),
     itemCount: integer('item_count').notNull().default(0),
     missingCount: integer('missing_count').notNull().default(0),
