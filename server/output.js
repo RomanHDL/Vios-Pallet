@@ -11,13 +11,30 @@ import { rows } from './util.js'
 // Meta total del turno en hourly_goals. Clave nueva: las metas capturadas antes (por linea/plan) ya no aplican.
 export const GOAL_SCOPE = 'total'
 
+// Fecha de turno de un timestamp (T2 de 22:00 a 07:00 cuenta para el dia en que empezo).
+const shiftDay = (col) => sql`((${col} at time zone 'America/Monterrey') - interval '7 hours')::date`
+
 // Todas las piezas producidas: salidas cerradas + escaneo por linea. Columnas: serial, at, model, brand.
+// 2026-10-08 (Roman): no cuentan las piezas de un pallet de entrada que aun no tiene salida cerrada, ni las de
+// un pallet de entrada de otro dia (los pallets de ayer no suman a hoy).
 const PRODUCED = sql`(
-  select i.code as serial, i.scanned_at as at, p.model, p.brand
-  from pallet_items i join pallets p on p.id = i.pallet_id
-  where p.type = 'salida' and p.status = 'cerrado'
-  union all
-  select serial, registered_at, model, brand from production
+  select * from (
+    select i.code as serial, i.scanned_at as at, p.model, p.brand
+    from pallet_items i join pallets p on p.id = i.pallet_id
+    where p.type = 'salida' and p.status = 'cerrado'
+    union all
+    select serial, registered_at, model, brand from production
+  ) u
+  where not exists (
+    select 1 from pallet_items ei join pallets e on e.id = ei.pallet_id
+    where e.type = 'entrada' and ei.code = u.serial
+      and (
+        ${shiftDay(sql`e.created_at`)} <> ${shiftDay(sql`u.at`)}
+        or not exists (
+          select 1 from pallets s where s.type = 'salida' and s.status = 'cerrado' and s.linked_pallet_id = e.id
+        )
+      )
+  )
 )`
 
 // Una fila por serial (la primera vez que se produjo), dentro de [desde, hasta) y marca opcional.

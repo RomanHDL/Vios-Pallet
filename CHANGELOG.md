@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.12.0] — 2026-10-08
+
+### Changed
+- `server/output.js`: la producción excluye seriales de un pallet de entrada creado otro día de turno o sin salida cerrada.
+
 ## [1.11.3] — 2026-10-08
 
 ### Added

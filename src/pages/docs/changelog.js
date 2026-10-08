@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.12.0',
+    date: '2026-10-08',
+    title: 'Producción: sin pallets de ayer ni entradas sin salida',
+    changed: [
+      'La producción del día (Hora x Hora, Inicio, Reportes) ya no cuenta las teles de pallets de entrada de otro día ni las de una entrada que todavía no tiene su salida cerrada.',
+    ],
+  },
+  {
     version: '1.11.3',
     date: '2026-10-08',
     title: 'Quitar tele repetida de la entrada',
