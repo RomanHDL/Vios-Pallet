@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.21.0] — 2026-10-08
+
+### Changed
+- `areaActivity()` en `server/output.js`: escaneos por turno de entrada / línea / salida. `/api/reports/staffing` y `/api/reports/day` toman personas = áreas activas (1 c/u) en lugar de la tabla `staffing`.
+
 ## [1.20.3] — 2026-10-08
 
 ### Changed

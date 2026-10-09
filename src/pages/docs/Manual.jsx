@@ -66,7 +66,7 @@ const SECTIONS = [
     steps: [
       'Reporte del día: Plan, Real, Delta (Real − Plan; rojo = faltó) y Recovery (plan + lo que faltó en el turno anterior), por turno y por línea. Se puede imprimir.',
       'Producción por modelo: producido, rechazado y neto contra los objetivos MTY y Texas, con gráfica diaria y proyección de 5 días hábiles.',
-      'Personal y productividad: piezas de salidas cerradas del turno entre las personas del turno (se capturan en Pallets → Producción por línea).',
+      'Personal y productividad: producción del turno (una vez por serial) entre las personas del turno. Cada área de trabajo (Entrada, Producción por línea, Salida) que escaneó algo en el turno cuenta como 1 persona; también se ven las piezas que escaneó cada área.',
       'Dashboard de pallets: estado de cada pallet (escaneando, sin salida, en proceso, con faltantes, consolidado). En "Progreso visual de pallets" cada salida iniciada se ve como una tarima que se llena conforme escanean; los pendientes van primero y no se ocultan, los consolidados rotan cada 10 s.',
     ],
   },

@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.21.0',
+    date: '2026-10-08',
+    title: 'Personal = áreas de trabajo',
+    changed: [
+      'Personal y productividad y Reporte del día: cada área (Entrada, Producción por línea, Salida) que escaneó en el turno cuenta como 1 persona, sin capturar nada. Lo producido no cambia (una vez por serial) y se ve cuántas piezas escaneó cada área.',
+    ],
+  },
+  {
     version: '1.20.3',
     date: '2026-10-08',
     title: 'Control de Pallet sin botón repetido',

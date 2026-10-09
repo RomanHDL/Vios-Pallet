@@ -1,5 +1,6 @@
-// Personal y productividad: piezas producidas del turno (salidas cerradas + escaneo por linea) (sin linea) entre las personas del turno
-// (suma de lo capturado por linea en Reportes -> Personal del turno).
+// Personal y productividad: piezas producidas del turno (salidas cerradas + escaneo por linea, una vez por serial)
+// entre las personas del turno. Personas = areas de trabajo (Entrada, Produccion por linea, Salida) que escanearon
+// algo en el turno, 1 por area (2026-10-08: "solo son 3 personas, 3 modos de trabajo").
 import { shiftLabel } from '@shared/shift.js'
 import { AlertTriangle, BarChart3, Factory, Gauge, Users } from 'lucide-react'
 import { useMemo } from 'react'
@@ -25,19 +26,22 @@ const fmt1 = (v) =>
   v === null || v === undefined ? '—' : v.toLocaleString('es-MX', { maximumFractionDigits: 1 })
 const shortShift = (r) => `${fmtYmd(r.shiftDate, { dow: false })} · ${r.shift === 'T1' ? 'T1' : 'T2'}`
 
-// Promedio de personas por linea en los turnos donde se capturo.
+const AREA_ORDER = ['Entrada', 'Producción por línea', 'Salida']
+
+// Trabajo de cada area en el periodo: piezas escaneadas y turnos en que trabajo.
 function peopleByLine(rows) {
   const m = new Map()
   for (const r of rows)
     for (const l of r.lines) {
-      const s = m.get(l.line) || { line: l.line, people: 0, shifts: 0 }
+      const s = m.get(l.line) || { line: l.line, people: 0, shifts: 0, pieces: 0 }
       s.people += l.people
+      s.pieces += l.pieces || 0
       s.shifts++
       m.set(l.line, s)
     }
   return [...m.values()]
     .map((s) => ({ ...s, avg: s.people / s.shifts }))
-    .sort((a, b) => a.line.localeCompare(b.line))
+    .sort((a, b) => AREA_ORDER.indexOf(a.line) - AREA_ORDER.indexOf(b.line))
 }
 
 export default function ReportePersonal() {
@@ -77,7 +81,7 @@ export default function ReportePersonal() {
       ) : data && !rows.length ? (
         <Card>
           <Empty icon={Users} title="Sin personal ni producción en este periodo">
-            El personal se captura por línea en Pallets → Producción por línea.
+            Cada área (Entrada, Producción por línea, Salida) cuenta como 1 persona en los turnos en que escanea.
           </Empty>
         </Card>
       ) : data ? (
@@ -94,21 +98,21 @@ export default function ReportePersonal() {
               label="Personas / turno"
               value={fmt1(totals.avgPeople)}
               icon={Users}
-              hint="Promedio, turnos con captura"
+              hint="Áreas que trabajaron (1 persona c/u)"
             />
             <Stat
               label="Piezas / persona"
               value={fmt1(totals.perPerson)}
               icon={Gauge}
               tone="green"
-              hint="Solo turnos con personal"
+              hint="Producido ÷ personas"
             />
             <Stat
-              label="Sin personal"
+              label="Sin actividad"
               value={fmtInt(totals.missing)}
               icon={AlertTriangle}
               tone={totals.missing ? 'amber' : 'default'}
-              hint="Turnos con producción sin captura"
+              hint="Turnos con producción sin escaneos de área"
             />
           </div>
 
@@ -134,26 +138,25 @@ export default function ReportePersonal() {
                   />
                 ) : (
                   <p className="text-[13.5px] text-muted-foreground">
-                    Captura el personal del turno para ver piezas por persona.
+                    Todavía ninguna área ha escaneado en el periodo.
                   </p>
                 )}
               </div>
             </Card>
             <Card>
-              <CardHeader icon={Users} title="Personas por línea" subtitle="Promedio por turno capturado" />
+              <CardHeader icon={Users} title="Trabajo por área" subtitle="Piezas escaneadas en cada área (1 persona por área)" />
               <div className="p-4 sm:p-5">
                 {lines.length ? (
                   <HBars
-                    format={fmt1}
                     items={lines.map((l) => ({
                       label: l.line,
-                      value: l.avg,
+                      value: l.pieces,
                       hint: `· ${l.shifts} turno${l.shifts === 1 ? '' : 's'}`,
                       className: 'bg-amber-500',
                     }))}
                   />
                 ) : (
-                  <p className="text-[13.5px] text-muted-foreground">Sin personal capturado en el periodo.</p>
+                  <p className="text-[13.5px] text-muted-foreground">Ninguna área escaneó en el periodo.</p>
                 )}
               </div>
             </Card>
@@ -193,7 +196,7 @@ export default function ReportePersonal() {
                   </div>
                   {r.lines.length > 0 && (
                     <p className="mt-1.5 text-[12px] text-muted-foreground">
-                      {r.lines.map((l) => `${l.line}: ${l.people}`).join(' · ')}
+                      {r.lines.map((l) => `${l.line}: ${fmtInt(l.pieces)}`).join(' · ')}
                     </p>
                   )}
                 </li>
@@ -205,7 +208,7 @@ export default function ReportePersonal() {
                 <tr>
                   <Th>Fecha</Th>
                   <Th>Turno</Th>
-                  <Th>Personas por línea</Th>
+                  <Th>Áreas (piezas escaneadas)</Th>
                   <Th className="text-right">Personas</Th>
                   <Th className="text-right">Producido</Th>
                   <Th className="text-right">Piezas / persona</Th>
@@ -219,10 +222,10 @@ export default function ReportePersonal() {
                       <Badge tone={r.shift === 'T1' ? 'amber' : 'blue'}>{shiftLabel(r.shift)}</Badge>
                     </Td>
                     <Td className="text-[13px] text-muted-foreground">
-                      {r.lines.length ? r.lines.map((l) => `${l.line}: ${l.people}`).join(' · ') : '—'}
+                      {r.lines.length ? r.lines.map((l) => `${l.line}: ${fmtInt(l.pieces)}`).join(' · ') : '—'}
                     </Td>
                     <Td className="tabular text-right">
-                      {r.people ?? <span className="text-amber-600 dark:text-amber-400">sin captura</span>}
+                      {r.people ?? <span className="text-amber-600 dark:text-amber-400">sin actividad</span>}
                     </Td>
                     <Td className="tabular text-right font-semibold">{fmtInt(r.produced)}</Td>
                     <Td className="tabular text-right font-bold text-emerald-700 dark:text-emerald-300">

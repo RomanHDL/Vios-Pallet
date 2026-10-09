@@ -150,6 +150,33 @@ export async function outputByShift(from, to, brand = null) {
   return count
 }
 
+// Personal por turno (2026-10-08, Roman: "solo son 3 personas, 3 modos de trabajo"): cada area de trabajo que
+// escaneo algo en el turno cuenta como 1 persona. Entrada = piezas escaneadas en pallets de entrada, Salida = en
+// salidas, Produccion por linea = escaneos TV + caja. Es trabajo de cada area, no produccion: la produccion del
+// turno sigue siendo el conteo de arriba (una vez por serial, sin duplicar).
+export const WORK_AREAS = [
+  { key: 'entrada', label: 'Entrada' },
+  { key: 'lineas', label: 'Producción por línea' },
+  { key: 'salida', label: 'Salida' },
+]
+export async function areaActivity(from, to) {
+  const start = shiftWindow(from, 'T1').start.toISOString()
+  const end = shiftWindow(to, 'T2').end.toISOString()
+  const list = await rows(sql`
+    select p.type as area, i.scanned_at as at from pallet_items i join pallets p on p.id = i.pallet_id
+    where i.scanned_at >= ${start} and i.scanned_at < ${end}
+    union all
+    select 'lineas', registered_at from production where registered_at >= ${start} and registered_at < ${end}`)
+  const out = {}
+  for (const x of list) {
+    const { shiftDate, shift } = shiftOf(new Date(x.at))
+    const k = `${shiftDate}|${shift}`
+    out[k] ??= { entrada: 0, lineas: 0, salida: 0 }
+    out[k][x.area] += 1
+  }
+  return out
+}
+
 // Todas las piezas producidas, una por serial (con ajustes): [{ serial, at, model, brand }].
 export async function closedExitItems(brand = null) {
   return produced(null, null, brand)

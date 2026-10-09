@@ -5,7 +5,7 @@ import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { models } from '../schema.js'
 import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
-import { BRANDS, brandSplit, palletsByDay, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
+import { areaActivity, BRANDS, brandSplit, WORK_AREAS, palletsByDay, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -39,9 +39,12 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
     select shift_date, shift, count(*)::int n from rejections
     where shift_date between ${prev} and ${to} and ${brandCond(req.query)} group by 1, 2`)
   // Personas del turno (Reportes -> Personal del turno), suma de las lineas capturadas.
-  const staff = await rows(sql`
-    select shift_date, shift, sum(people)::int n from staffing
-    where shift_date between ${prev} and ${to} and people > 0 group by 1, 2`)
+  // Personas del turno = areas de trabajo activas (ver areaActivity).
+  const activity = await areaActivity(prev, to)
+  const staff = Object.entries(activity).map(([k, a]) => {
+    const [shift_date, shift] = k.split('|')
+    return { shift_date, shift, n: Object.values(a).filter((v) => v > 0).length || null }
+  })
   const goals = await rows(sql`
     select shift_date, shift, goal from hourly_goals where scope = ${GOAL_SCOPE} and shift_date <= ${to}
     order by shift_date`)
@@ -245,20 +248,21 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
 // (suma de las lineas capturadas en Reportes -> Personal del turno).
 r.get('/reports/staffing', requireAuth(), async (req, res) => {
   const { from, to } = range(req.query, 6)
-  const staff = await rows(sql`
-    select shift_date, shift, line, people from staffing
-    where shift_date between ${from} and ${to} and people > 0 order by line`)
+  // Personas = areas de trabajo (Entrada, Produccion por linea, Salida) con escaneos en el turno, 1 por area.
   const count = await outputByShift(from, to)
-  const keys = new Set([...staff.map((x) => `${x.shift_date}|${x.shift}`), ...Object.keys(count)])
+  const activity = await areaActivity(from, to)
+  const keys = new Set([...Object.keys(activity), ...Object.keys(count)])
   const list = [...keys]
     .filter((k) => k.slice(0, 10) >= from && k.slice(0, 10) <= to)
     .sort()
     .map((k) => {
       const [shiftDate, shift] = k.split('|')
-      const lines = staff
-        .filter((x) => x.shift_date === shiftDate && x.shift === shift)
-        .map((x) => ({ line: x.line, people: x.people }))
-      const people = lines.length ? lines.reduce((a, x) => a + x.people, 0) : null
+      const lines = WORK_AREAS.filter((a) => activity[k]?.[a.key] > 0).map((a) => ({
+        line: a.label,
+        people: 1,
+        pieces: activity[k][a.key],
+      }))
+      const people = lines.length || null
       const produced = count[k] || 0
       return { shiftDate, shift, people, produced, perPerson: people ? produced / people : null, lines }
     })
