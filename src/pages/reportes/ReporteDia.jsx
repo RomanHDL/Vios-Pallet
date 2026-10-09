@@ -1,3 +1,4 @@
+import { BrandSplit } from '@/components/BrandSplit'
 import { CalendarDays, ChevronDown, HelpCircle, Printer, Target, TrendingUp, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { shiftLabel } from '@shared/shift.js'
@@ -150,6 +151,8 @@ export default function ReporteDia() {
               className="col-span-2 md:col-span-1"
             />
           </div>
+
+          <BrandSplit brands={data.brands} />
 
           <Card>
             <CardHeader

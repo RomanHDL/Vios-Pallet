@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.13.0',
+    date: '2026-10-08',
+    title: 'Producción por marca (HY / SILO)',
+    added: [
+      'Hora x Hora, Inicio y Reporte del día muestran la producción dividida en HY y SILO: piezas y pallets de salida cerrados.',
+    ],
+    changed: [
+      'Los pallets cuya entrada es de otro día cuentan en el día de su entrada (los de ayer van a ayer, no a hoy).',
+    ],
+  },
+  {
     version: '1.12.0',
     date: '2026-10-08',
     title: 'Producción: sin pallets de ayer ni entradas sin salida',

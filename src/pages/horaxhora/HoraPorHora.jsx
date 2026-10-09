@@ -9,6 +9,7 @@ import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
 import { useSession } from '@/lib/session'
 import { canDo, cn, fmtInt, fmtPct, fmtYmd } from '@/lib/utils'
+import { BrandSplit } from '@/components/BrandSplit'
 import { HourlyChart, HourlyLegend } from './HourlyChart'
 import { buildSlots, shiftRange } from './slots'
 
@@ -260,6 +261,8 @@ export default function HoraPorHora() {
             />
           </div>
         )}
+
+        {data && <BrandSplit brands={data.brands} big={full} />}
 
         {/* Tarjeta de la grafica */}
         <Card className={cn('overflow-hidden', full && 'flex min-h-0 flex-1 flex-col')}>

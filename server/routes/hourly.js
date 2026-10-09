@@ -6,7 +6,7 @@ import { pace, shiftWindow } from '../../shared/pace.js'
 import { hourOfShift, SHIFTS, shiftOf } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
-import { GOAL_SCOPE, shiftGoal, shiftOutput } from '../output.js'
+import { GOAL_SCOPE, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
 import { hourlyGoals } from '../schema.js'
 import { bad, clean, isYmd, rows } from '../util.js'
 
@@ -48,6 +48,7 @@ r.get('/hourly', requireAuth(), async (req, res) => {
     goalSince: since,
     perHour,
     total: output.length,
+    brands: await shiftBrandSplit(shiftDate, shift),
     lastAt: output.at(-1)?.at || null,
     lastScanAt: last || null,
     pace: pace({ shiftDate, shift, count: output.length, goal, firstAt: output[0]?.at, now }),

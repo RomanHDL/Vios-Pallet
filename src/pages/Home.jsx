@@ -1,5 +1,6 @@
 // Inicio (dashboard). Mismos datos que antes (GET /api/dashboard): produccion del turno contra la meta, ritmo y
 // proyeccion, rechazos, faltantes, pallets abiertos y actividad reciente. Sin boton de accion en el encabezado.
+import { BrandSplit } from '@/components/BrandSplit'
 import { shiftLabel } from '@shared/shift.js'
 import {
   AlertTriangle,
@@ -165,6 +166,8 @@ function ProductionCard({ data }) {
           style={{ width: `${pct}%`, transition: 'width 0.4s ease' }}
         />
       </div>
+
+      <BrandSplit brands={data.brands} className="mt-4" />
 
       {p && (
         <div className="mt-4 grid gap-3 rounded-xl bg-slate-50 px-4 py-3 dark:bg-muted/40 sm:grid-cols-[auto_1px_1fr] sm:items-center sm:gap-5">

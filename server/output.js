@@ -15,31 +15,33 @@ export const GOAL_SCOPE = 'total'
 const shiftDay = (col) => sql`((${col} at time zone 'America/Monterrey') - interval '7 hours')::date`
 
 // Todas las piezas producidas: salidas cerradas + escaneo por linea. Columnas: serial, at, model, brand.
-// 2026-10-08 (Roman): no cuentan las piezas de un pallet de entrada que aun no tiene salida cerrada, ni las de
-// un pallet de entrada de otro dia (los pallets de ayer no suman a hoy).
+// 2026-10-08 (Roman): no cuentan las piezas de un pallet de entrada que aun no tiene salida cerrada, y un pallet
+// cuya entrada es de otro dia cuenta en el dia de su entrada ("los pallets de ayer" no suman a hoy, van a ayer).
 const PRODUCED = sql`(
   select * from (
-    select i.code as serial, i.scanned_at as at, p.model, p.brand
+    select i.code as serial,
+      case when e.id is not null and ${shiftDay(sql`e.created_at`)} <> ${shiftDay(sql`i.scanned_at`)}
+        then coalesce(ei.scanned_at, e.created_at) else i.scanned_at end as at,
+      p.model, p.brand, p.id as pallet
     from pallet_items i join pallets p on p.id = i.pallet_id
+    left join pallets e on e.id = p.linked_pallet_id and e.type = 'entrada'
+    left join pallet_items ei on ei.pallet_id = e.id and ei.code = i.code
     where p.type = 'salida' and p.status = 'cerrado'
     union all
-    select serial, registered_at, model, brand from production
+    select serial, registered_at, model, brand, null from production
   ) u
   where not exists (
     select 1 from pallet_items ei join pallets e on e.id = ei.pallet_id
     where e.type = 'entrada' and ei.code = u.serial
-      and (
-        ${shiftDay(sql`e.created_at`)} <> ${shiftDay(sql`u.at`)}
-        or not exists (
-          select 1 from pallets s where s.type = 'salida' and s.status = 'cerrado' and s.linked_pallet_id = e.id
-        )
+      and not exists (
+        select 1 from pallets s where s.type = 'salida' and s.status = 'cerrado' and s.linked_pallet_id = e.id
       )
   )
 )`
 
 // Una fila por serial (la primera vez que se produjo), dentro de [desde, hasta) y marca opcional.
 const firstTimes = (startIso, endIso, brand) => sql`
-  select distinct on (serial) serial, at, model, brand from ${PRODUCED} x
+  select distinct on (serial) serial, at, model, brand, pallet from ${PRODUCED} x
   where ${brand ? sql`x.brand = ${brand}` : sql`true`}
     ${startIso ? sql`and x.at >= ${startIso}` : sql``} ${endIso ? sql`and x.at < ${endIso}` : sql``}
   order by serial, at`
@@ -48,8 +50,34 @@ const firstTimes = (startIso, endIso, brand) => sql`
 export async function shiftOutput(shiftDate, shift) {
   const { start, end } = shiftWindow(shiftDate, shift)
   return rows(
-    sql`select serial, at from (${firstTimes(start.toISOString(), end.toISOString())}) t order by at`,
+    sql`select serial, at, brand from (${firstTimes(start.toISOString(), end.toISOString())}) t order by at`,
   )
+}
+
+export const BRANDS = ['HY', 'SILO']
+
+// Produccion dividida por marca entre dos instantes: [{ brand, pieces, pallets }] (HY y SILO siempre).
+// Piezas = mismo conteo que el total (una vez por serial); pallets = salidas cerradas con piezas en el rango.
+export async function brandSplit(startIso, endIso) {
+  const pieces = await rows(sql`
+    select brand, count(*)::int n from (${firstTimes(startIso, endIso)}) t group by brand`)
+  const pallets = await rows(sql`
+    select brand, count(distinct pallet)::int n from ${PRODUCED} x
+    where pallet is not null and x.at >= ${startIso} and x.at < ${endIso} group by brand`)
+  const names = [...new Set([...BRANDS, ...pieces.map((x) => x.brand), ...pallets.map((x) => x.brand)])]
+  return names
+    .filter(Boolean)
+    .map((brand) => ({
+      brand,
+      pieces: pieces.find((x) => x.brand === brand)?.n || 0,
+      pallets: pallets.find((x) => x.brand === brand)?.n || 0,
+    }))
+}
+
+// Division por marca de un turno.
+export async function shiftBrandSplit(shiftDate, shift) {
+  const { start, end } = shiftWindow(shiftDate, shift)
+  return brandSplit(start.toISOString(), end.toISOString())
 }
 
 // Piezas por turno entre dos fechas de turno: { 'YYYY-MM-DD|T1': n }. `brand` opcional.

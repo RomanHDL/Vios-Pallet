@@ -4,8 +4,8 @@ import { addDays, isWorkday, shiftOf, todayPlant } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { models } from '../schema.js'
-import { DEFAULT_DAILY_GOAL, pace } from '../../shared/pace.js'
-import { closedExitItems, GOAL_SCOPE, outputByShift, shiftGoal, shiftOutput } from '../output.js'
+import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
+import { brandSplit, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -105,7 +105,9 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
   )
   totals.delta = totals.processed - totals.plan
   totals.pct = totals.plan ? totals.processed / totals.plan : null
-  res.json({ from, to, shifts: inRange, totals })
+  // Division por marca (pallets y piezas) del rango.
+  const brands = await brandSplit(shiftWindow(from, 'T1').start.toISOString(), shiftWindow(to, 'T2').end.toISOString())
+  res.json({ from, to, shifts: inRange, totals, brands })
 })
 
 // Produccion por dia y modelo + objetivos MTY/Texas + proyeccion.
@@ -309,6 +311,7 @@ r.get('/dashboard', requireAuth(), async (_req, res) => {
     shiftDate,
     shift,
     produced,
+    brands: await shiftBrandSplit(shiftDate, shift),
     goal,
     pace: pace({ shiftDate, shift, count: produced, goal, firstAt: output[0]?.at }),
     rejected,
