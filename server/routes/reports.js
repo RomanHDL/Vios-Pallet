@@ -5,7 +5,7 @@ import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { models } from '../schema.js'
 import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
-import { BRANDS, brandSplit, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
+import { BRANDS, brandSplit, palletsByDay, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -122,17 +122,16 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
   const brandDay = new Map()
   const brandRow = (d, b) => {
     const k = `${d}|${b}`
-    if (!brandDay.has(k)) brandDay.set(k, { pieces: 0, pallets: new Set() })
+    if (!brandDay.has(k)) brandDay.set(k, { pieces: 0, pallets: 0 })
     return brandDay.get(k)
   }
   for (const x of produced) {
     const d = shiftOf(new Date(x.at)).shiftDate
     const k = `${d}|${x.model}`
     dailyMap.set(k, (dailyMap.get(k) || 0) + 1)
-    const b = brandRow(d, x.brand)
-    b.pieces++
-    if (x.pallet) b.pallets.add(x.pallet)
+    brandRow(d, x.brand).pieces++
   }
+  for (const p of await palletsByDay()) brandRow(p.date, p.brand).pallets += p.n
   // Historico de PalletScan (antes de VIOS): se suma por dia y modelo a lo de VIOS.
   const brandQ = req.query.brand ? clean(req.query.brand, 20) : null
   const history = await rows(sql`
@@ -175,7 +174,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     }
     row.brands = BRANDS.map((brand) => {
       const b = brandDay.get(`${d}|${brand}`)
-      return { brand, pieces: b?.pieces || 0, pallets: b ? b.pallets.size : 0 }
+      return { brand, pieces: b?.pieces || 0, pallets: b?.pallets || 0 }
     })
     return row
   })

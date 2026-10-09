@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.14.2',
+    date: '2026-10-08',
+    title: 'Pallets por marca iguales en todos lados',
+    fixed: [
+      'Producción por modelo cuenta los pallets HY / SILO del día igual que Hora x Hora e Inicio.',
+    ],
+  },
+  {
     version: '1.14.1',
     date: '2026-10-08',
     title: 'Pallet de ayer cuenta completo en ayer',

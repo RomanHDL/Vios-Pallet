@@ -77,6 +77,13 @@ export async function brandSplit(startIso, endIso) {
     }))
 }
 
+// Pallets de salida cerrados por dia de turno y marca: [{ date, brand, n }] (mismo criterio que brandSplit).
+export async function palletsByDay() {
+  return rows(sql`
+    select ${shiftDay(sql`x.at`)}::text as date, brand, count(distinct pallet)::int n from ${PRODUCED} x
+    where pallet is not null group by 1, 2`)
+}
+
 // Division por marca de un turno.
 export async function shiftBrandSplit(shiftDate, shift) {
   const { start, end } = shiftWindow(shiftDate, shift)
