@@ -15,7 +15,7 @@ export const GOAL_SCOPE = 'total'
 const shiftDay = (col) => sql`((${col} at time zone 'America/Monterrey') - interval '7 hours')::date`
 
 // Todas las piezas producidas: salidas cerradas + escaneo por linea. Columnas: serial, at, model, brand.
-// 2026-10-08 (Roman): no cuentan las piezas de un pallet de entrada que aun no tiene salida cerrada, y un pallet
+// 2026-10-08 (Roman): no cuentan las piezas (de salida) de un pallet de entrada que aun no tiene salida cerrada, y un pallet
 // cuya entrada es de otro dia cuenta completo en el dia de su entrada ("los pallets de ayer" no suman a hoy, van a
 // ayer), aunque alguna tele se haya agregado a la entrada despues.
 const PRODUCED = sql`(
@@ -30,16 +30,23 @@ const PRODUCED = sql`(
     left join pallets e on e.id = p.linked_pallet_id and e.type = 'entrada'
     left join pallet_items ei on ei.pallet_id = e.id and ei.code = i.code
     where p.type = 'salida' and p.status = 'cerrado'
-    union all
-    select serial, registered_at, model, brand, null from production
-  ) u
-  where not exists (
-    select 1 from pallet_items ei join pallets e on e.id = ei.pallet_id
-    where e.type = 'entrada' and ei.code = u.serial
       and not exists (
-        select 1 from pallets s where s.type = 'salida' and s.status = 'cerrado' and s.linked_pallet_id = e.id
+        select 1 from pallet_items ei2 join pallets e2 on e2.id = ei2.pallet_id
+        where e2.type = 'entrada' and ei2.code = i.code
+          and not exists (
+            select 1 from pallets s where s.type = 'salida' and s.status = 'cerrado' and s.linked_pallet_id = e2.id
+          )
       )
-  )
+    union all
+    -- 2026-10-09 (Roman, "por que no esta aumentando"): el escaneo en linea ya es produccion, aunque su pallet
+    -- todavia no tenga salida cerrada. Marca y modelo los del pallet de entrada si la tele viene de uno.
+    select pr.serial, pr.registered_at, coalesce(pe.model, pr.model), coalesce(pe.brand, pr.brand), null
+    from production pr
+    left join lateral (
+      select e.model, e.brand from pallet_items ei join pallets e on e.id = ei.pallet_id
+      where e.type = 'entrada' and ei.code = pr.serial order by e.created_at desc limit 1
+    ) pe on true
+  ) u
 )`
 
 // Una fila por serial (la primera vez que se produjo), dentro de [desde, hasta) y marca opcional.
@@ -76,7 +83,9 @@ async function produced(startIso, endIso, brand = null) {
         extra.push({ serial: `AJUSTE-${k}-${i}`, at: at.toISOString(), model, brand: a.brand, pallet: null })
     }
   }
-  return [...list.filter((x) => !drop.has(x.serial)), ...extra].sort((a, b) => new Date(a.at) - new Date(b.at))
+  return [...list.filter((x) => !drop.has(x.serial)), ...extra].sort(
+    (a, b) => new Date(a.at) - new Date(b.at),
+  )
 }
 
 // Ajuste vigente de un turno: { HY: delta, SILO: delta }.
@@ -112,13 +121,11 @@ export async function brandSplit(startIso, endIso) {
     select brand, count(distinct pallet)::int n from ${PRODUCED} x
     where pallet is not null and x.at >= ${startIso} and x.at < ${endIso} group by brand`)
   const names = [...new Set([...BRANDS, ...list.map((x) => x.brand), ...pallets.map((x) => x.brand)])]
-  return names
-    .filter(Boolean)
-    .map((brand) => ({
-      brand,
-      pieces: list.filter((x) => x.brand === brand).length,
-      pallets: pallets.find((x) => x.brand === brand)?.n || 0,
-    }))
+  return names.filter(Boolean).map((brand) => ({
+    brand,
+    pieces: list.filter((x) => x.brand === brand).length,
+    pallets: pallets.find((x) => x.brand === brand)?.n || 0,
+  }))
 }
 
 // Pallets de salida cerrados por dia de turno y marca: [{ date, brand, n }] (mismo criterio que brandSplit).

@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.25.1] — 2026-10-09
+
+### Fixed
+- `PRODUCED` (`server/output.js`): la exclusión "entrada sin salida cerrada" ya solo aplica a piezas de salida; los escaneos de `production` cuentan siempre, con marca/modelo del pallet de entrada si existe.
+
 ## [1.25.0] — 2026-10-09
 
 ### Added

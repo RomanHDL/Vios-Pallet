@@ -2,13 +2,23 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.25.1',
+    date: '2026-10-09',
+    title: 'Las piezas de línea cuentan al momento',
+    fixed: [
+      'La producción del turno (Inicio, Hora x Hora, Reportes) ya suma cada tele escaneada en Producción por línea al momento, aunque su pallet todavía no tenga la salida cerrada. La marca y el modelo se toman del pallet de entrada.',
+    ],
+  },
+  {
     version: '1.25.0',
     date: '2026-10-09',
     title: 'Producción por línea: turno en curso e historial',
     changed: [
       'El área de Producción por línea siempre ve el turno en curso, sin selector de fecha: la pantalla arranca en 0 sola a las 7:00 am (Turno 1) y a las 10:00 pm (Turno 2). Las piezas no se borran.',
     ],
-    added: ['Admin: "Historial día por día" en Producción por línea con las piezas por turno y línea de los últimos 30 días; tocar un día lo abre arriba.'],
+    added: [
+      'Admin: "Historial día por día" en Producción por línea con las piezas por turno y línea de los últimos 30 días; tocar un día lo abre arriba.',
+    ],
   },
   {
     version: '1.24.0',
@@ -17,13 +27,17 @@ export const CHANGELOG = [
     changed: [
       'Producción por línea: al abrir, primero se elige Marca, Modelo y Línea; ya completo sale la estación de escaneo y el avance. Se quitaron "Editar personal" y el filtro Todos / HY / SILO (el personal ya es automático).',
     ],
-    added: ['Entrada y Salida: botón "Inicio de entrada" / "Inicio de salida" para regresar a escanear otro ID desde un pallet abierto.'],
+    added: [
+      'Entrada y Salida: botón "Inicio de entrada" / "Inicio de salida" para regresar a escanear otro ID desde un pallet abierto.',
+    ],
   },
   {
     version: '1.23.1',
     date: '2026-10-08',
     title: 'Áreas sin enlaces de regreso',
-    changed: ['En Entrada, Salida y Producción por línea ya no salen los enlaces "Pallets" / "Inicio" de arriba (no son de su área).'],
+    changed: [
+      'En Entrada, Salida y Producción por línea ya no salen los enlaces "Pallets" / "Inicio" de arriba (no son de su área).',
+    ],
   },
   {
     version: '1.23.0',
@@ -56,19 +70,25 @@ export const CHANGELOG = [
     version: '1.20.3',
     date: '2026-10-08',
     title: 'Control de Pallet sin botón repetido',
-    changed: ['Vista de administrador: se quitó el botón "Producción por línea" de arriba; ya está la tarjeta entre Entrada y Salida.'],
+    changed: [
+      'Vista de administrador: se quitó el botón "Producción por línea" de arriba; ya está la tarjeta entre Entrada y Salida.',
+    ],
   },
   {
     version: '1.20.2',
     date: '2026-10-08',
     title: 'Contraseña de admin: más tolerante',
-    fixed: ['ADMIN_INITIAL_PASSWORD se aplica sin espacios ni comillas alrededor, y crea el usuario admin si no existía.'],
+    fixed: [
+      'ADMIN_INITIAL_PASSWORD se aplica sin espacios ni comillas alrededor, y crea el usuario admin si no existía.',
+    ],
   },
   {
     version: '1.20.1',
     date: '2026-10-08',
     title: 'Contraseña de admin desde Coolify',
-    fixed: ['Si se cambia ADMIN_INITIAL_PASSWORD en Coolify, la contraseña de admin se actualiza al reiniciar (una vez por valor nuevo).'],
+    fixed: [
+      'Si se cambia ADMIN_INITIAL_PASSWORD en Coolify, la contraseña de admin se actualiza al reiniciar (una vez por valor nuevo).',
+    ],
   },
   {
     version: '1.20.0',
@@ -121,9 +141,7 @@ export const CHANGELOG = [
     added: [
       'Hora x Hora: un supervisor puede tocar "Ajustar" en HY o SILO y capturar cuántas piezas se hicieron de verdad en el turno. El ajuste cambia el total en Hora x Hora, Inicio y Reportes, y se puede quitar.',
     ],
-    fixed: [
-      'Producción por modelo con filtro de marca ya no muestra pallets de la otra marca.',
-    ],
+    fixed: ['Producción por modelo con filtro de marca ya no muestra pallets de la otra marca.'],
   },
   {
     version: '1.15.1',
@@ -145,9 +163,7 @@ export const CHANGELOG = [
     version: '1.14.2',
     date: '2026-10-08',
     title: 'Pallets por marca iguales en todos lados',
-    fixed: [
-      'Producción por modelo cuenta los pallets HY / SILO del día igual que Hora x Hora e Inicio.',
-    ],
+    fixed: ['Producción por modelo cuenta los pallets HY / SILO del día igual que Hora x Hora e Inicio.'],
   },
   {
     version: '1.14.1',
@@ -224,7 +240,9 @@ export const CHANGELOG = [
     changed: [
       'En la salida solo entran las teles de su pallet de entrada; si escanean una de otro pallet, no se acepta y se avisa de qué pallet es.',
     ],
-    added: ['Botón "Piezas pendientes" en la salida: lista con buscador de las piezas de la entrada que aún no salen.'],
+    added: [
+      'Botón "Piezas pendientes" en la salida: lista con buscador de las piezas de la entrada que aún no salen.',
+    ],
   },
   {
     version: '1.9.1',
@@ -253,7 +271,9 @@ export const CHANGELOG = [
       'En Producción por línea: elegir Marca → Modelo → Línea y escanear serial de TV y de caja (deben coincidir). Cada línea muestra sus piezas, personas y piezas por persona.',
       'Modelo J0-50" en el catálogo (EL-32", J0-43", EL-43", EL-50", J0-50").',
     ],
-    changed: ['La salida ya no pide línea. La producción del turno (Inicio, Hora x Hora) sigue siendo solo salidas cerradas.'],
+    changed: [
+      'La salida ya no pide línea. La producción del turno (Inicio, Hora x Hora) sigue siendo solo salidas cerradas.',
+    ],
   },
   {
     version: '1.7.0',
@@ -324,13 +344,17 @@ export const CHANGELOG = [
     version: '1.4.2',
     date: '2026-10-07',
     title: 'Producción = solo salidas cerradas',
-    changed: ['La producción del turno cuenta solo las piezas de pallets de salida cerrados; ya no suman las salidas abiertas ni Producción → Registrar.'],
+    changed: [
+      'La producción del turno cuenta solo las piezas de pallets de salida cerrados; ya no suman las salidas abiertas ni Producción → Registrar.',
+    ],
   },
   {
     version: '1.4.1',
     date: '2026-10-07',
     title: 'Tiempo por pieza desde la primera pieza',
-    fixed: ['El tiempo por pieza y la proyección se miden desde la primera pieza del turno: si arrancan tarde ya no sale un tiempo enorme.'],
+    fixed: [
+      'El tiempo por pieza y la proyección se miden desde la primera pieza del turno: si arrancan tarde ya no sale un tiempo enorme.',
+    ],
   },
   {
     version: '1.4.0',
@@ -340,7 +364,9 @@ export const CHANGELOG = [
       'La producción del turno cuenta las piezas escaneadas en pallets de salida (más lo registrado en Producción); sin dividir por línea. Aplica en Inicio y Hora por Hora.',
       'Meta del día 765 por defecto, ajustable desde Hora por Hora.',
     ],
-    added: ['Tiempo por pieza (real contra la meta) y proyección al fin del turno, en Hora por Hora y en Inicio.'],
+    added: [
+      'Tiempo por pieza (real contra la meta) y proyección al fin del turno, en Hora por Hora y en Inicio.',
+    ],
   },
   {
     version: '1.3.1',
