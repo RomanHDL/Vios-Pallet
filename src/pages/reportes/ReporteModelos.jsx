@@ -117,7 +117,13 @@ export default function ReporteModelos() {
   const t = data?.totals
   const models = useMemo(() => (data?.models || []).filter((m) => m.produced || m.target || m.rejected), [data])
   const points = useMemo(() => {
-    const all = (data?.byDay || []).map((d) => ({ date: d.date, value: d.total }))
+    const all = (data?.byDay || []).map((d) => ({
+      date: d.date,
+      value: d.total,
+      parts: (data.models || [])
+        .filter((m) => d[m.code] > 0)
+        .map((m) => ({ label: m.code.replace(/"/g, ''), n: d[m.code] })),
+    }))
     return win ? all.slice(-win) : all
   }, [data, win])
   const days = useMemo(() => [...(data?.byDay || [])].reverse(), [data])
@@ -183,6 +189,7 @@ export default function ReporteModelos() {
                   showProjection={showProj}
                   today={today}
                   reference={{ value: t.capacity, label: 'Meta del día' }}
+                  height={340}
                 />
               ) : (
                 <Empty icon={LineChart} title="Todavía no hay producción" />

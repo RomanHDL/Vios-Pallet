@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.15.0',
+    date: '2026-10-08',
+    title: 'Producción diaria con número y modelo por día',
+    added: [
+      'En la gráfica de Producción por modelo, arriba de cada día se ve el total y cuánto fue de cada modelo (EL-32, J0-43, EL-43…); al tocar un punto sale el desglose.',
+    ],
+  },
+  {
     version: '1.14.2',
     date: '2026-10-08',
     title: 'Pallets por marca iguales en todos lados',

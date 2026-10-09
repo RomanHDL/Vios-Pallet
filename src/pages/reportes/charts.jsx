@@ -44,7 +44,10 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
     [points, proj],
   )
 
-  const pad = { l: 44, r: 14, t: 18, b: 30 }
+  // Con desglose por punto (p.parts = [{ label, n }]) se deja lugar arriba para las etiquetas de cada dia.
+  const maxParts = Math.max(0, ...points.map((p) => p.parts?.length || 0))
+  const labeled = points.some((p) => p.parts)
+  const pad = { l: 44, r: 14, t: labeled ? 30 + maxParts * 12 : 18, b: 30 }
   const iw = Math.max(10, width - pad.l - pad.r)
   const ih = height - pad.t - pad.b
   const n = all.length
@@ -144,6 +147,28 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
             <circle key={p.date} cx={x(i)} cy={y(p.value)} r={i === hover ? 5 : 3.5} fill="hsl(var(--card))" stroke="#d97706" strokeWidth="2" strokeDasharray="2 2" />
           ),
         )}
+        {labeled &&
+          all.map((p, i) => {
+            if (p.kind !== 'real' || !p.value) return null
+            // Si los puntos estan muy juntos, solo el total; el desglose queda en el recuadro al tocar.
+            const gap = iw / Math.max(1, n - 1)
+            if (gap < 28) return null
+            const roomy = gap >= 46
+            const parts = roomy ? p.parts || [] : []
+            const top = y(p.value) - 10
+            return (
+              <g key={`lbl-${p.date}`} pointerEvents="none">
+                <text x={x(i)} y={top} textAnchor="middle" fontSize="11.5" fontWeight="800" fill="hsl(var(--foreground))" className="tabular">
+                  {fmtInt(p.value)}
+                </text>
+                {parts.map((m, k) => (
+                  <text key={m.label} x={x(i)} y={top - 13 - k * 12} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="hsl(var(--muted-foreground))" className="tabular">
+                    {m.label} {fmtInt(m.n)}
+                  </text>
+                ))}
+              </g>
+            )
+          })}
         {h && <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} stroke="hsl(var(--muted-foreground))" strokeOpacity="0.4" />}
       </svg>
       {h && (
@@ -155,6 +180,12 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
           <div className="tabular text-[14px] font-extrabold">
             {fmtInt(h.value)} <span className="text-[11.5px] font-semibold text-muted-foreground">{h.kind === 'proj' ? 'proyectado' : 'piezas'}</span>
           </div>
+          {h.parts?.map((m) => (
+            <div key={m.label} className="tabular flex justify-between gap-3 text-[12px]">
+              <span className="font-semibold text-muted-foreground">{m.label}</span>
+              <span className="font-bold">{fmtInt(m.n)}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>
