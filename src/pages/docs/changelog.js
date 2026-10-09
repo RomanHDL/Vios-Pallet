@@ -2,6 +2,18 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.17.0',
+    date: '2026-10-08',
+    title: 'Progreso visual de pallets',
+    added: [
+      'Dashboard de pallets: nueva sección "Progreso visual de pallets" con una tarima de madera por salida iniciada, que se llena con cajas conforme escanean piezas (los lugares que faltan se ven como cajas transparentes).',
+      'Los pallets pendientes van primero (de menor a mayor avance) y siempre se ven; los consolidados rotan cada 10 s en los lugares que sobran. Flechas y botón para pausar.',
+    ],
+    changed: [
+      'Dashboard de pallets: filtros arriba a la derecha, tarjetas con el ícono a la izquierda y panel de Estados con "Sin iniciar".',
+    ],
+  },
+  {
     version: '1.16.1',
     date: '2026-10-08',
     title: 'Corrección: el servidor no arrancaba',

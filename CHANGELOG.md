@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.17.0] — 2026-10-08
+
+### Added
+- `/api/reports/pallets`: `expected`, `valid_out` (seriales únicos de la salida que están en su entrada) y `progress` (0–1) por pallet.
+- `PalletStack` (SVG de tarima con cajas, 18 lugares), `PalletProgress` (carrusel con prioridad a pendientes, 7 lugares máx., rotación 10 s) y `palletView.js` (lógica pura del carrusel).
+
+### Changed
+- Dashboard de pallets: encabezado con filtros a la derecha, tarjetas `Tile`, panel de Estados con "Sin iniciar".
+
 ## [1.16.1] — 2026-10-08
 
 ### Fixed

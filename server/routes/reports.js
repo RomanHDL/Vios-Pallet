@@ -272,7 +272,11 @@ r.get('/reports/pallets', requireAuth(), async (req, res) => {
     select e.id, e.model, e.brand, e.status as entrada_status, e.item_count as pieces_in,
            e.created_at, e.closed_at,
            s.id as salida_id, s.status as salida_status, s.missing_count, s.extras_count, s.closed_at as salida_closed_at,
+           s.created_at as salida_created_at, s.expected_item_count,
            (select count(*)::int from pallet_items si where si.pallet_id = s.id) as pieces_out,
+           (select count(distinct si.code)::int from pallet_items si
+              where si.pallet_id = s.id
+                and exists (select 1 from pallet_items ei where ei.pallet_id = e.id and ei.code = si.code)) as valid_out,
            (select count(*)::int from pallet_items ei where ei.pallet_id = e.id) as live_in
     from pallets e
     left join pallets s on s.linked_pallet_id = e.id
@@ -285,7 +289,19 @@ r.get('/reports/pallets', requireAuth(), async (req, res) => {
     else if (!x.salida_id) state = 'sin_salida'
     else if (x.salida_status === 'abierto') state = 'en_proceso'
     else if (x.missing_count > 0) state = 'con_faltantes'
-    return { ...x, pieces_in: x.entrada_status === 'abierto' ? x.live_in : x.pieces_in, state }
+    const piecesIn = x.entrada_status === 'abierto' ? x.live_in : x.pieces_in
+    // Progreso de salida (Progreso visual de pallets): piezas validas unicas de la salida (que estan en su
+    // entrada) / piezas esperadas (las de la entrada). Entre 0 y 1; sin esperadas = 0.
+    const expected = x.salida_id ? x.expected_item_count || x.live_in || piecesIn || 0 : 0
+    const valid = x.salida_id ? Math.min(x.valid_out || 0, expected) : 0
+    return {
+      ...x,
+      pieces_in: piecesIn,
+      state,
+      expected,
+      valid_out: valid,
+      progress: expected > 0 ? valid / expected : 0,
+    }
   })
   const count = (s) => out.filter((x) => x.state === s).length
   res.json({

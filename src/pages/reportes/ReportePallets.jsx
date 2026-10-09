@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Loader2,
+  MoreVertical,
   Package,
   PackageX,
   ScanBarcode,
@@ -13,11 +14,38 @@ import {
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Badge, Button, Card, CardHeader, Empty, ErrorBox, Input, PageHeader, Spinner, Stat, Table, Td, Th } from '@/components/ui'
+import { Badge, Button, Card, CardHeader, Empty, ErrorBox, Input, PageHeader, Spinner, Table, Td, Th } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
 import { cn, fmtDateTime, fmtInt } from '@/lib/utils'
 import { BackLink, BrandControl, PeriodControls, periodText, usePeriod } from './common'
+import { PalletProgress } from './PalletProgress'
+
+const TILE_TONE = {
+  default: { icon: 'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300', value: 'text-foreground' },
+  blue: { icon: 'bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300', value: 'text-blue-600 dark:text-blue-400' },
+  violet: { icon: 'bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300', value: 'text-violet-600 dark:text-violet-400' },
+  amber: { icon: 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300', value: 'text-amber-600 dark:text-amber-400' },
+  red: { icon: 'bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-300', value: 'text-red-600 dark:text-red-400' },
+  green: { icon: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300', value: 'text-emerald-600 dark:text-emerald-400' },
+}
+
+// Tarjeta del resumen: icono a la izquierda, etiqueta, valor y explicacion.
+function Tile({ label, value, hint, icon: Icon, tone = 'default' }) {
+  const t = TILE_TONE[tone]
+  return (
+    <div className="card flex items-start gap-3 p-4">
+      <span className={cn('grid h-11 w-11 shrink-0 place-items-center rounded-full', t.icon)}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+        <p className={cn('tabular mt-1 text-[24px] font-extrabold leading-none tracking-tight sm:text-[28px]', t.value)}>{value}</p>
+        <p className="mt-1.5 text-[12.5px] text-muted-foreground">{hint}</p>
+      </div>
+    </div>
+  )
+}
 
 const STATES = {
   escaneando: { label: 'Escaneando', tone: 'blue', icon: ScanBarcode },
@@ -147,12 +175,13 @@ export default function ReportePallets() {
         back={<BackLink to="/reportes" label="Reportes" />}
         title="Dashboard de pallets"
         subtitle={`Entrada → salida · ${periodText(p.from, p.to)}${p.isToday ? ' · se actualiza cada 30 s' : ''}`}
+        actions={
+          <Card className="flex w-full flex-col gap-3 p-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
+            <PeriodControls p={p} options={['hoy', 'semana', 'rango']} />
+            <BrandControl value={brand} onChange={setBrand} />
+          </Card>
+        }
       />
-
-      <Card className="flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-4">
-        <PeriodControls p={p} options={['hoy', 'semana', 'rango']} />
-        <BrandControl value={brand} onChange={setBrand} />
-      </Card>
 
       <ErrorBox error={error} />
 
@@ -160,26 +189,29 @@ export default function ReportePallets() {
         <Spinner />
       ) : data ? (
         <>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Pallets" value={fmtInt(t.total)} icon={Package} hint="Entradas del periodo" />
-            <Stat label="Escaneando" value={fmtInt(t.escaneando)} icon={ScanBarcode} tone="blue" hint="Entrada abierta" />
-            <Stat label="Sin salida" value={fmtInt(t.sin_salida)} icon={PackageX} tone={t.sin_salida ? 'amber' : 'default'} hint="Entrada cerrada" />
-            <Stat label="En proceso" value={fmtInt(t.en_proceso)} icon={Timer} tone="violet" hint="Salida abierta" />
-            <Stat label="Con faltantes" value={fmtInt(t.con_faltantes)} icon={AlertTriangle} tone={t.con_faltantes ? 'red' : 'default'} hint="Salida cerrada incompleta" />
-            <Stat label="Consolidado" value={fmtInt(t.consolidado)} icon={CheckCircle2} tone="green" hint="Salida completa" />
-            <Stat
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Tile label="Pallets" value={fmtInt(t.total)} icon={Package} hint="Entradas del periodo" />
+            <Tile label="Escaneando" value={fmtInt(t.escaneando)} icon={ScanBarcode} tone="blue" hint="Entrada abierta" />
+            <Tile label="Sin salida" value={fmtInt(t.sin_salida)} icon={PackageX} tone={t.sin_salida ? 'amber' : 'default'} hint="Entrada cerrada" />
+            <Tile label="En proceso" value={fmtInt(t.en_proceso)} icon={Timer} tone="violet" hint="Salida abierta" />
+            <Tile label="Con faltantes" value={fmtInt(t.con_faltantes)} icon={AlertTriangle} tone={t.con_faltantes ? 'red' : 'default'} hint="Salida cerrada incompleta" />
+            <Tile label="Consolidado" value={fmtInt(t.consolidado)} icon={CheckCircle2} tone="green" hint="Salida completa" />
+            <Tile
               label="Piezas"
+              icon={Package}
               value={
-                <span className="text-[22px] sm:text-[28px]">
+                <>
                   {fmtInt(t.piecesIn)}
-                  <span className="text-[16px] text-muted-foreground"> → </span>
+                  <span className="text-muted-foreground"> → </span>
                   {fmtInt(t.piecesOut)}
-                </span>
+                </>
               }
               hint="Entrada → salida"
             />
-            <Stat label="Faltantes" value={fmtInt(t.missing)} icon={AlertTriangle} tone={t.missing ? 'red' : 'default'} hint="Piezas no encontradas" />
+            <Tile label="Faltantes" value={fmtInt(t.missing)} icon={AlertTriangle} tone={t.missing ? 'red' : 'default'} hint="Piezas no encontradas" />
           </div>
+
+          <PalletProgress pallets={data.pallets} />
 
           <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
             <Card className="min-w-0">
@@ -265,8 +297,8 @@ export default function ReportePallets() {
                           </Td>
                           <Td className="whitespace-nowrap text-muted-foreground">{fmtDateTime(x.created_at)}</Td>
                           <Td className="p-0">
-                            <Link to={`/pallets/${x.id}`} className="grid place-items-center px-2 py-3 text-muted-foreground" aria-label={`Ver pallet ${x.id}`}>
-                              <ChevronRight className="h-4 w-4" />
+                            <Link to={`/pallets/${x.id}`} className="grid place-items-center px-2 py-3 text-muted-foreground hover:text-foreground" aria-label={`Ver pallet ${x.id}`}>
+                              <MoreVertical className="h-4 w-4" />
                             </Link>
                           </Td>
                         </tr>
@@ -283,12 +315,13 @@ export default function ReportePallets() {
               <SerialSearch />
               <Card className="p-4 sm:p-5">
                 <h3 className="text-[14px] font-bold">Estados</h3>
-                <ul className="mt-3 space-y-2 text-[13px] text-muted-foreground">
-                  <li className="flex items-start gap-2"><StateBadge state="escaneando" /> entrada todavía abierta.</li>
-                  <li className="flex items-start gap-2"><StateBadge state="sin_salida" /> entrada cerrada, falta escanear salida.</li>
-                  <li className="flex items-start gap-2"><StateBadge state="en_proceso" /> salida abierta.</li>
-                  <li className="flex items-start gap-2"><StateBadge state="con_faltantes" /> salida cerrada con piezas faltantes.</li>
-                  <li className="flex items-start gap-2"><StateBadge state="consolidado" /> salida cerrada completa.</li>
+                <ul className="mt-3 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[13px] text-muted-foreground">
+                  <li className="contents"><StateBadge state="consolidado" /><span>Pallet completo (100%).</span></li>
+                  <li className="contents"><StateBadge state="en_proceso" /><span>Salida abierta, pallet en llenado.</span></li>
+                  <li className="contents"><StateBadge state="escaneando" /><span>Entrada todavía abierta.</span></li>
+                  <li className="contents"><Badge tone="gray" dot>Sin iniciar</Badge><span>Salida abierta, aún no se escanea ninguna pieza.</span></li>
+                  <li className="contents"><StateBadge state="sin_salida" /><span>Entrada cerrada, falta escanear salida.</span></li>
+                  <li className="contents"><StateBadge state="con_faltantes" /><span>Salida cerrada con piezas no encontradas.</span></li>
                 </ul>
               </Card>
             </div>
