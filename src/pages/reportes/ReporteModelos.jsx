@@ -2,10 +2,60 @@ import { Award, CalendarCheck, Factory, Info, LineChart, Gauge, PackageCheck, Tv
 import { useMemo, useState } from 'react'
 import { todayPlant } from '@shared/shift.js'
 import { Card, CardHeader, Empty, ErrorBox, PageHeader, Progress, Segmented, Spinner, Stat, Table, Td, Th } from '@/components/ui'
+import { BrandSplit } from '@/components/BrandSplit'
 import { useApi } from '@/lib/hooks'
 import { cn, fmtInt, fmtPct, fmtYmd } from '@/lib/utils'
 import { Legend, TrendChart } from './charts'
 import { BackLink, BrandControl, pctTone } from './common'
+
+// Numeros de un dia (por defecto hoy): total contra la meta, piezas por modelo y HY / SILO.
+function DayPanel({ data, day, setDay, today }) {
+  const row = data.byDay.find((d) => d.date === day)
+  const total = row?.total || 0
+  const goal = data.totals.capacity
+  const perModel = data.models.map((m) => ({ code: m.code, n: row?.[m.code] || 0 })).filter((m) => m.n > 0)
+  return (
+    <Card>
+      <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3 sm:px-5">
+        <div className="mr-auto">
+          <h3 className="text-[16px] font-extrabold">{day === today ? 'Hoy' : 'Día'} · {fmtYmd(day)}</h3>
+          <p className="text-[12.5px] text-muted-foreground">Producción de ese día (salidas cerradas + por línea)</p>
+        </div>
+        <input
+          type="date"
+          value={day}
+          max={today}
+          onChange={(e) => e.target.value && setDay(e.target.value)}
+          className="field h-10 w-[160px] text-[14px]"
+          aria-label="Día"
+        />
+      </div>
+      <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div>
+          <p className="text-[12.5px] font-bold uppercase tracking-wide text-muted-foreground">Producido</p>
+          <p className="mt-1 flex items-baseline gap-2">
+            <span className="tabular text-[40px] font-extrabold leading-none">{fmtInt(total)}</span>
+            <span className="text-[15px] font-semibold text-muted-foreground">/ {fmtInt(goal)} meta</span>
+            <span className={cn('ml-auto text-[18px] font-extrabold', total >= goal ? 'text-emerald-600' : 'text-red-600')}>
+              {fmtPct(goal ? total / goal : null)}
+            </span>
+          </p>
+          <Progress value={goal ? total / goal : 0} tone={total >= goal ? 'green' : 'primary'} className="mt-3" />
+          {perModel.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {perModel.map((m) => (
+                <li key={m.code} className="rounded-lg bg-muted px-2.5 py-1 text-[13px] font-semibold">
+                  {m.code} <span className="tabular font-extrabold">{fmtInt(m.n)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <BrandSplit brands={row?.brands || [{ brand: 'HY', pieces: 0, pallets: 0 }, { brand: 'SILO', pieces: 0, pallets: 0 }]} />
+      </div>
+    </Card>
+  )
+}
 
 function ModelCard({ m }) {
   return (
@@ -62,6 +112,7 @@ export default function ReporteModelos() {
   const [showProj, setShowProj] = useState(true)
   const { data, error, loading } = useApi('/reports/models', { query: { brand } })
   const today = todayPlant()
+  const [day, setDay] = useState(today)
 
   const t = data?.totals
   const models = useMemo(() => (data?.models || []).filter((m) => m.produced || m.target || m.rejected), [data])
@@ -87,6 +138,8 @@ export default function ReporteModelos() {
         <Spinner />
       ) : data ? (
         <>
+          <DayPanel data={data} day={day} setDay={setDay} today={today} />
+
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             <Stat label="Producido" value={fmtInt(t.produced)} icon={Factory} tone="blue" hint="Total acumulado" />
             <Stat label="Rechazados" value={fmtInt(t.rejected)} icon={XCircle} tone={t.rejected ? 'red' : 'default'} hint="Producidos y rechazados" />

@@ -5,7 +5,7 @@ import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
 import { models } from '../schema.js'
 import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
-import { brandSplit, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
+import { BRANDS, brandSplit, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -118,9 +118,20 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
   const { goal: capacity } = await shiftGoal(todayPlant(), 'T1')
   const produced = await closedExitItems(req.query.brand ? clean(req.query.brand, 20) : null)
   const dailyMap = new Map()
+  // Por dia y marca: piezas y pallets (para "los numeros de ese dia" arriba del reporte).
+  const brandDay = new Map()
+  const brandRow = (d, b) => {
+    const k = `${d}|${b}`
+    if (!brandDay.has(k)) brandDay.set(k, { pieces: 0, pallets: new Set() })
+    return brandDay.get(k)
+  }
   for (const x of produced) {
-    const k = `${shiftOf(new Date(x.at)).shiftDate}|${x.model}`
+    const d = shiftOf(new Date(x.at)).shiftDate
+    const k = `${d}|${x.model}`
     dailyMap.set(k, (dailyMap.get(k) || 0) + 1)
+    const b = brandRow(d, x.brand)
+    b.pieces++
+    if (x.pallet) b.pallets.add(x.pallet)
   }
   // Historico de PalletScan (antes de VIOS): se suma por dia y modelo a lo de VIOS.
   const brandQ = req.query.brand ? clean(req.query.brand, 20) : null
@@ -131,6 +142,10 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     const k = `${h.date}|${h.model}`
     dailyMap.set(k, (dailyMap.get(k) || 0) + h.pieces)
   }
+  const historyBrand = await rows(sql`
+    select date, brand, sum(pieces)::int as pieces from production_history
+    where ${brandQ ? sql`brand = ${brandQ}` : sql`true`} group by 1, 2`)
+  for (const h of historyBrand) brandRow(h.date, h.brand).pieces += h.pieces
   const daily = [...dailyMap].map(([k, n]) => {
     const [shift_date, model] = k.split('|')
     return { shift_date, model, n }
@@ -158,6 +173,10 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       row[m.code] = daily.find((x) => x.shift_date === d && x.model === m.code)?.n || 0
       row.total += row[m.code]
     }
+    row.brands = BRANDS.map((brand) => {
+      const b = brandDay.get(`${d}|${brand}`)
+      return { brand, pieces: b?.pieces || 0, pallets: b ? b.pallets.size : 0 }
+    })
     return row
   })
   const modelsOut = allModels.map((m) => {

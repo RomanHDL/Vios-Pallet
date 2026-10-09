@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.14.0',
+    date: '2026-10-08',
+    title: 'Números del día en Producción por modelo',
+    added: [
+      'Arriba de Producción por modelo: los números del día (hoy o el que elijas): producido contra meta, piezas por modelo y HY / SILO en piezas y pallets.',
+    ],
+  },
+  {
     version: '1.13.0',
     date: '2026-10-08',
     title: 'Producción por marca (HY / SILO)',
