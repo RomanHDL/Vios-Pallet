@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.19.0',
+    date: '2026-10-08',
+    title: 'Accesos directos al entrar',
+    added: [
+      'La pantalla de entrada tiene 4 accesos: Entrada, Salida y Producción por línea abren directo su pantalla; Admin pide la contraseña del administrador y abre Control de Pallet.',
+    ],
+  },
+  {
     version: '1.18.0',
     date: '2026-10-08',
     title: 'Control de Pallet para administrador',

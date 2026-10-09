@@ -1,20 +1,46 @@
-import { ArrowRight, ChevronLeft, Lock, UserRound } from 'lucide-react'
+import { ArrowDownToLine, ArrowRight, ArrowUpFromLine, ChevronLeft, Factory, Lock, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button, ErrorBox } from '@/components/ui'
 import { useSession } from '@/lib/session'
 
 // Entrada (2026-10-07, a peticion explicita del usuario: "que nomas le des clic en entrar y de volada"):
 // boton "Entrar" con la cuenta compartida Planta. Despues ("quiero que quites el login... que solo sea un
 // boton de entrar y ya"): la pantalla es solo el boton; el formulario del administrador se abre con /?admin.
+// 2026-10-08: 4 accesos directos. Entrada / Salida / Produccion por linea entran con Planta y abren su pantalla;
+// Admin pide la contrasena del administrador.
 const ADMIN_FORM = new URLSearchParams(window.location.search).has('admin')
+
+const SHORTCUTS = [
+  { key: 'entrada', title: 'Entrada', hint: 'Registrar pallets recibidos', to: '/pallets/entrada', icon: ArrowDownToLine, tone: 'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300' },
+  { key: 'salida', title: 'Salida', hint: 'Confirmar pallets despachados', to: '/pallets/salida', icon: ArrowUpFromLine, tone: 'bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300' },
+  { key: 'lineas', title: 'Producción por línea', hint: 'Escanear TV y caja', to: '/pallets/lineas', icon: Factory, tone: 'bg-teal-100 text-teal-600 dark:bg-teal-500/20 dark:text-teal-300' },
+  { key: 'admin', title: 'Admin', hint: 'Pide contraseña', icon: ShieldCheck, tone: 'bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-slate-200' },
+]
 
 export default function Login() {
   const { login, enter } = useSession()
+  const navigate = useNavigate()
   const [withUser, setWithUser] = useState(ADMIN_FORM)
-  const [username, setUsername] = useState('')
+  const [going, setGoing] = useState(null)
+  const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+
+  async function go(s) {
+    if (s.key === 'admin') {
+      setError(null)
+      setWithUser(true)
+      return
+    }
+    setGoing(s.key)
+    await run(async () => {
+      await enter()
+      navigate(s.to)
+    })
+    setGoing(null)
+  }
 
   async function run(fn) {
     setBusy(true)
@@ -30,7 +56,10 @@ export default function Login() {
 
   const submit = (e) => {
     e.preventDefault()
-    run(() => login(username.trim(), password.trim()))
+    run(async () => {
+      await login(username.trim(), password.trim())
+      navigate('/pallets')
+    })
   }
 
   return (
@@ -65,7 +94,31 @@ export default function Login() {
             <>
               <h2 className="text-[28px] font-extrabold tracking-tight">Bienvenido</h2>
               <p className="mt-1 text-[14.5px] text-muted-foreground">Control de pallets, producción y calidad VIOS.</p>
-              <Button size="lg" className="mt-8 h-16 w-full text-[18px]" loading={busy} onClick={() => run(enter)} autoFocus>
+              <div className="mt-7 grid grid-cols-2 gap-3">
+                {SHORTCUTS.map((s) => {
+                  const Icon = s.icon
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => go(s)}
+                      disabled={busy}
+                      className="card flex min-h-[132px] flex-col items-start gap-2.5 p-4 text-left transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md disabled:opacity-60"
+                    >
+                      <span className={`grid h-11 w-11 place-items-center rounded-xl ${s.tone}`}>
+                        <Icon className="h-[22px] w-[22px]" />
+                      </span>
+                      <span>
+                        <span className="block text-[15px] font-bold leading-tight">{s.title}</span>
+                        <span className="mt-0.5 block text-[12.5px] text-muted-foreground">
+                          {going === s.key ? 'Entrando…' : s.hint}
+                        </span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+              <Button size="lg" className="mt-4 h-14 w-full text-[17px]" loading={busy && !going} disabled={busy} onClick={() => run(enter)}>
                 Entrar <ArrowRight className="h-5 w-5" />
               </Button>
               <ErrorBox error={error} className="mt-4" />
@@ -83,20 +136,14 @@ export default function Login() {
                 <ChevronLeft className="h-4 w-4" /> Volver
               </button>
               <h2 className="text-[26px] font-extrabold tracking-tight">Administrador</h2>
-              <p className="mt-1 text-[14px] text-muted-foreground">Entra con tu usuario.</p>
+              <p className="mt-1 text-[14px] text-muted-foreground">Escribe la contraseña del administrador.</p>
               <div className="mt-7 space-y-4">
-                <label className="block">
-                  <span className="label">Usuario</span>
-                  <div className="relative">
-                    <UserRound className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
-                    <input className="field h-12 pl-10" value={username} onChange={(e) => setUsername(e.target.value)} autoCapitalize="none" autoComplete="username" autoFocus required />
-                  </div>
-                </label>
+                <input type="hidden" value={username} autoComplete="username" readOnly onChange={(e) => setUsername(e.target.value)} />
                 <label className="block">
                   <span className="label">Contraseña</span>
                   <div className="relative">
                     <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
-                    <input className="field h-12 pl-10" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+                    <input className="field h-12 pl-10" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" autoFocus required />
                   </div>
                 </label>
                 <ErrorBox error={error} />
