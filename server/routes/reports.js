@@ -131,7 +131,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     dailyMap.set(k, (dailyMap.get(k) || 0) + 1)
     brandRow(d, x.brand).pieces++
   }
-  for (const p of await palletsByDay()) brandRow(p.date, p.brand).pallets += p.n
+  for (const p of await palletsByDay(req.query.brand ? clean(req.query.brand, 20) : null)) brandRow(p.date, p.brand).pallets += p.n
   // Historico de PalletScan (antes de VIOS): se suma por dia y modelo a lo de VIOS.
   const brandQ = req.query.brand ? clean(req.query.brand, 20) : null
   const history = await rows(sql`

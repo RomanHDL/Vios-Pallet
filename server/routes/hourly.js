@@ -6,7 +6,7 @@ import { pace, shiftWindow } from '../../shared/pace.js'
 import { hourOfShift, SHIFTS, shiftOf } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
-import { GOAL_SCOPE, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
+import { BRANDS, GOAL_SCOPE, rawBrandCount, shiftAdjustments, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
 import { hourlyGoals } from '../schema.js'
 import { bad, clean, isYmd, rows } from '../util.js'
 
@@ -49,6 +49,7 @@ r.get('/hourly', requireAuth(), async (req, res) => {
     perHour,
     total: output.length,
     brands: await shiftBrandSplit(shiftDate, shift),
+    adjustments: await shiftAdjustments(shiftDate, shift),
     lastAt: output.at(-1)?.at || null,
     lastScanAt: last || null,
     pace: pace({ shiftDate, shift, count: output.length, goal, firstAt: output[0]?.at, now }),
@@ -109,6 +110,24 @@ r.put('/hourly/goal', requireAuth(['supervisor']), async (req, res) => {
       set: { goal, updatedBy: req.user.id, updatedAt: new Date() },
     })
   res.json({ ok: true })
+})
+
+// Ajuste por marca: "SILO hoy se hicieron 23". Guarda la diferencia contra lo escaneado del turno; piezas vacio = quitar.
+r.put('/hourly/brand-count', requireAuth(['supervisor']), async (req, res) => {
+  const { shiftDate, shift } = params(req.body || {})
+  const brand = String(req.body?.brand || '')
+  if (!BRANDS.includes(brand)) throw bad('Marca inválida.')
+  const raw = await rawBrandCount(shiftDate, shift, brand)
+  const clear = req.body?.pieces === null || req.body?.pieces === ''
+  const pieces = Math.round(Number(req.body?.pieces))
+  if (!clear && (!Number.isInteger(pieces) || pieces < 0 || pieces > 100000)) throw bad('Cantidad inválida.')
+  const delta = clear ? 0 : pieces - raw
+  await rows(sql`
+    insert into production_adjustments (shift_date, shift, brand, delta, updated_by)
+    values (${shiftDate}, ${shift}, ${brand}, ${delta}, ${req.user.id})
+    on conflict (shift_date, shift, brand) do update set delta = excluded.delta,
+      updated_by = excluded.updated_by, updated_at = now()`)
+  res.json({ ok: true, brand, raw, delta, pieces: raw + delta })
 })
 
 export default r

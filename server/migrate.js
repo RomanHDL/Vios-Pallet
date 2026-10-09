@@ -119,6 +119,15 @@ CREATE TABLE IF NOT EXISTS plans (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (shift_date, shift, line)
 );
+CREATE TABLE IF NOT EXISTS production_adjustments (
+  shift_date text NOT NULL,
+  shift text NOT NULL,
+  brand text NOT NULL,
+  delta integer NOT NULL,
+  updated_by integer,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (shift_date, shift, brand)
+);
 CREATE TABLE IF NOT EXISTS hourly_goals (
   shift_date text NOT NULL,
   shift text NOT NULL,

@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.16.0',
+    date: '2026-10-08',
+    title: 'Ajuste de producción por marca',
+    added: [
+      'Hora x Hora: un supervisor puede tocar "Ajustar" en HY o SILO y capturar cuántas piezas se hicieron de verdad en el turno. El ajuste cambia el total en Hora x Hora, Inicio y Reportes, y se puede quitar.',
+    ],
+    fixed: [
+      'Producción por modelo con filtro de marca ya no muestra pallets de la otra marca.',
+    ],
+  },
+  {
     version: '1.15.1',
     date: '2026-10-08',
     title: 'Sin "Personal del turno" en Reportes',

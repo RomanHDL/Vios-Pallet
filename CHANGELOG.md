@@ -3,6 +3,14 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.16.0] — 2026-10-08
+
+### Added
+- Tabla `production_adjustments` y `PUT /api/hourly/brand-count` (supervisor): ajuste por turno y marca; un ajuste negativo quita las últimas piezas de esa marca del turno, uno positivo agrega piezas sin serial. `/api/hourly` devuelve `adjustments`.
+
+### Fixed
+- `palletsByDay(brand)` respeta el filtro de marca.
+
 ## [1.15.1] — 2026-10-08
 
 ### Removed

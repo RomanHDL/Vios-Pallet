@@ -49,39 +49,83 @@ const firstTimes = (startIso, endIso, brand) => sql`
     ${startIso ? sql`and x.at >= ${startIso}` : sql``} ${endIso ? sql`and x.at < ${endIso}` : sql``}
   order by serial, at`
 
-// [{ serial, at }] del turno, ordenado por hora.
+// Ajustes manuales por turno y marca (tabla production_adjustments): "SILO hoy se hicieron 23". Un ajuste
+// negativo quita las ultimas piezas de esa marca en el turno; uno positivo agrega piezas sin serial.
+async function produced(startIso, endIso, brand = null) {
+  const list = await rows(firstTimes(startIso, endIso, brand))
+  const adj = await rows(sql`
+    select shift_date, shift, brand, delta, updated_at from production_adjustments
+    where delta <> 0 ${brand ? sql`and brand = ${brand}` : sql``}`)
+  if (!adj.length) return list.sort((a, b) => new Date(a.at) - new Date(b.at))
+  const keyOf = (x) => {
+    const s = shiftOf(new Date(x.at))
+    return `${s.shiftDate}|${s.shift}|${x.brand}`
+  }
+  const drop = new Set()
+  const extra = []
+  for (const a of adj) {
+    const w = shiftWindow(a.shift_date, a.shift)
+    if ((startIso && w.end <= new Date(startIso)) || (endIso && w.start >= new Date(endIso))) continue
+    const k = `${a.shift_date}|${a.shift}|${a.brand}`
+    const group = list.filter((x) => keyOf(x) === k).sort((x, y) => new Date(y.at) - new Date(x.at))
+    if (a.delta < 0) for (const x of group.slice(0, -a.delta)) drop.add(x.serial)
+    else {
+      const at = new Date(Math.min(Math.max(new Date(a.updated_at), w.start), w.end - 1))
+      const model = group[0]?.model || null
+      for (let i = 0; i < a.delta; i++)
+        extra.push({ serial: `AJUSTE-${k}-${i}`, at: at.toISOString(), model, brand: a.brand, pallet: null })
+    }
+  }
+  return [...list.filter((x) => !drop.has(x.serial)), ...extra].sort((a, b) => new Date(a.at) - new Date(b.at))
+}
+
+// Ajuste vigente de un turno: { HY: delta, SILO: delta }.
+export async function shiftAdjustments(shiftDate, shift) {
+  const list = await rows(
+    sql`select brand, delta from production_adjustments where shift_date = ${shiftDate} and shift = ${shift}`,
+  )
+  return Object.fromEntries(list.map((x) => [x.brand, x.delta]))
+}
+
+// Piezas reales (sin ajuste) de una marca en un turno.
+export async function rawBrandCount(shiftDate, shift, brand) {
+  const { start, end } = shiftWindow(shiftDate, shift)
+  const [{ n }] = await rows(
+    sql`select count(*)::int n from (${firstTimes(start.toISOString(), end.toISOString(), brand)}) t`,
+  )
+  return n
+}
+
+// [{ serial, at, brand }] del turno, ordenado por hora.
 export async function shiftOutput(shiftDate, shift) {
   const { start, end } = shiftWindow(shiftDate, shift)
-  return rows(
-    sql`select serial, at, brand from (${firstTimes(start.toISOString(), end.toISOString())}) t order by at`,
-  )
+  return produced(start.toISOString(), end.toISOString())
 }
 
 export const BRANDS = ['HY', 'SILO']
 
 // Produccion dividida por marca entre dos instantes: [{ brand, pieces, pallets }] (HY y SILO siempre).
-// Piezas = mismo conteo que el total (una vez por serial); pallets = salidas cerradas con piezas en el rango.
+// Piezas = mismo conteo que el total (una vez por serial, con ajustes); pallets = salidas cerradas en el rango.
 export async function brandSplit(startIso, endIso) {
-  const pieces = await rows(sql`
-    select brand, count(*)::int n from (${firstTimes(startIso, endIso)}) t group by brand`)
+  const list = await produced(startIso, endIso)
   const pallets = await rows(sql`
     select brand, count(distinct pallet)::int n from ${PRODUCED} x
     where pallet is not null and x.at >= ${startIso} and x.at < ${endIso} group by brand`)
-  const names = [...new Set([...BRANDS, ...pieces.map((x) => x.brand), ...pallets.map((x) => x.brand)])]
+  const names = [...new Set([...BRANDS, ...list.map((x) => x.brand), ...pallets.map((x) => x.brand)])]
   return names
     .filter(Boolean)
     .map((brand) => ({
       brand,
-      pieces: pieces.find((x) => x.brand === brand)?.n || 0,
+      pieces: list.filter((x) => x.brand === brand).length,
       pallets: pallets.find((x) => x.brand === brand)?.n || 0,
     }))
 }
 
 // Pallets de salida cerrados por dia de turno y marca: [{ date, brand, n }] (mismo criterio que brandSplit).
-export async function palletsByDay() {
+export async function palletsByDay(brand = null) {
   return rows(sql`
     select ${shiftDay(sql`x.at`)}::text as date, brand, count(distinct pallet)::int n from ${PRODUCED} x
-    where pallet is not null group by 1, 2`)
+    where pallet is not null ${brand ? sql`and x.brand = ${brand}` : sql``} group by 1, 2`)
 }
 
 // Division por marca de un turno.
@@ -92,8 +136,10 @@ export async function shiftBrandSplit(shiftDate, shift) {
 
 // Piezas por turno entre dos fechas de turno: { 'YYYY-MM-DD|T1': n }. `brand` opcional.
 export async function outputByShift(from, to, brand = null) {
-  const list = await rows(
-    firstTimes(shiftWindow(from, 'T1').start.toISOString(), shiftWindow(to, 'T2').end.toISOString(), brand),
+  const list = await produced(
+    shiftWindow(from, 'T1').start.toISOString(),
+    shiftWindow(to, 'T2').end.toISOString(),
+    brand,
   )
   const count = {}
   for (const x of list) {
@@ -104,23 +150,9 @@ export async function outputByShift(from, to, brand = null) {
   return count
 }
 
-// Todas las piezas producidas, una por serial: [{ serial, at, model, brand }].
+// Todas las piezas producidas, una por serial (con ajustes): [{ serial, at, model, brand }].
 export async function closedExitItems(brand = null) {
-  return rows(firstTimes(null, null, brand))
-}
-
-// ¿Ya se produjo este serial? Salida cerrada o escaneo por linea (tabla production).
-export async function producedInfo(serial) {
-  const [exit] = await rows(sql`
-    select p.id as pallet_id, p.model, p.brand, i.scanned_at as at
-    from pallet_items i join pallets p on p.id = i.pallet_id
-    where i.code = ${serial} and p.type = 'salida' and p.status = 'cerrado'
-    order by i.scanned_at limit 1`)
-  if (exit) return { source: 'salida', ...exit }
-  const [reg] = await rows(
-    sql`select line, model, brand, registered_at as at from production where serial = ${serial}`,
-  )
-  return reg ? { source: 'registro', ...reg } : null
+  return produced(null, null, brand)
 }
 
 // Meta del turno: la ultima capturada (sigue vigente los dias siguientes) o 765.

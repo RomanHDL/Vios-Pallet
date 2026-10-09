@@ -4,7 +4,7 @@
 import { shiftOf } from '@shared/shift.js'
 import { Gauge, Maximize2, Minimize2, Target, TrendingUp } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Button, Card, ErrorBox, Input, Segmented, Spinner, useToast } from '@/components/ui'
+import { Button, Card, Dialog, ErrorBox, Input, Segmented, Spinner, useToast } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
 import { useSession } from '@/lib/session'
@@ -124,6 +124,75 @@ function GoalControl({ data, editable, onSaved }) {
   )
 }
 
+// Ajuste por marca: el supervisor captura cuantas piezas se hicieron de verdad en el turno.
+function AdjustDialog({ target, adjustment, shiftDate, shift, onClose, onSaved }) {
+  const toast = useToast()
+  const [value, setValue] = useState('')
+  const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    if (target) setValue(String(target.pieces))
+  }, [target])
+  const raw = target ? target.pieces - adjustment : 0
+  async function save(pieces) {
+    setSaving(true)
+    try {
+      await api('/hourly/brand-count', {
+        method: 'PUT',
+        body: { shiftDate, shift, brand: target.brand, pieces },
+      })
+      toast(pieces === null ? 'Ajuste quitado' : `${target.brand}: ${pieces} piezas en el turno`)
+      onSaved()
+    } catch (e) {
+      toast(e.message, 'error')
+    } finally {
+      setSaving(false)
+    }
+  }
+  return (
+    <Dialog
+      open={Boolean(target)}
+      onClose={() => !saving && onClose()}
+      title={target ? `Ajustar ${target.brand}` : ''}
+      footer={
+        <>
+          {adjustment !== 0 && (
+            <Button variant="outline" onClick={() => save(null)} disabled={saving} className="mr-auto">
+              Quitar ajuste
+            </Button>
+          )}
+          <Button variant="outline" onClick={onClose} disabled={saving}>
+            Cancelar
+          </Button>
+          <Button onClick={() => save(Number(value))} loading={saving} disabled={value === '' || Number(value) < 0}>
+            Guardar
+          </Button>
+        </>
+      }
+    >
+      {target && (
+        <div className="space-y-3 text-[14px]">
+          <p>
+            Piezas de {target.brand} que de verdad se hicieron en este turno. Escaneadas:{' '}
+            <b className="tabular">{fmtInt(raw)}</b>.
+          </p>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="h-12 text-[20px] font-bold"
+            autoFocus
+          />
+          <p className="text-[12.5px] text-muted-foreground">
+            Cambia el total del turno en Hora x Hora, Inicio y Reportes.
+          </p>
+        </div>
+      )}
+    </Dialog>
+  )
+}
+
 export default function HoraPorHora() {
   const { user } = useSession()
   const now = shiftOf()
@@ -165,6 +234,7 @@ export default function HoraPorHora() {
     }
   }
 
+  const [adjust, setAdjust] = useState(null)
   const built = data && buildSlots(data)
   const editable = canDo(user, ['supervisor'])
 
@@ -262,7 +332,25 @@ export default function HoraPorHora() {
           </div>
         )}
 
-        {data && <BrandSplit brands={data.brands} big={full} />}
+        {data && (
+          <BrandSplit
+            brands={data.brands}
+            big={full}
+            adjustments={data.adjustments}
+            onAdjust={editable && !full ? setAdjust : undefined}
+          />
+        )}
+        <AdjustDialog
+          target={adjust}
+          adjustment={adjust ? data?.adjustments?.[adjust.brand] || 0 : 0}
+          shiftDate={shiftDate}
+          shift={shift}
+          onClose={() => setAdjust(null)}
+          onSaved={() => {
+            setAdjust(null)
+            reload(true)
+          }}
+        />
 
         {/* Tarjeta de la grafica */}
         <Card className={cn('overflow-hidden', full && 'flex min-h-0 flex-1 flex-col')}>
