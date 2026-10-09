@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.20.0] — 2026-10-08
+
+### Changed
+- `shared/areas.js`: áreas `entrada` / `salida` / `lineas` de la cuenta Planta. `POST /api/auth/guest` exige `area` y la guarda en la cookie; middleware en `/api` rechaza (403) escrituras fuera del área; `AreaGuard` y menú por área en el cliente. Sesiones de Planta sin área quedan inválidas. Se quitó el botón "Entrar".
+
 ## [1.19.0] — 2026-10-08
 
 ### Added

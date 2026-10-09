@@ -11,6 +11,7 @@ import {
 } from '../auth.js'
 import { db } from '../db.js'
 import { users } from '../schema.js'
+import { isArea } from '../../shared/areas.js'
 import { GUEST_USERNAME } from '../seed.js'
 import { bad, clean, conflict, isUniqueViolation, notFound } from '../util.js'
 
@@ -30,11 +31,14 @@ r.post('/auth/login', async (req, res) => {
 // Entrada directa (boton "Entrar", a peticion del usuario: "que nomas le des clic en entrar"):
 // sesion con la cuenta compartida "Planta". Siempre activa: la pantalla de inicio es solo ese boton
 // (2026-10-07, "quiero que quites el login... que solo sea un boton de entrar").
-r.post('/auth/guest', async (_req, res) => {
+// 2026-10-08: se entra por area (Entrada / Salida / Produccion por linea); la sesion queda limitada a esa area.
+r.post('/auth/guest', async (req, res) => {
+  const area = req.body?.area
+  if (!isArea(area)) throw bad('Elige tu área de trabajo.')
   const [u] = await db.select().from(users).where(eq(users.username, GUEST_USERNAME))
   if (!u || !u.active) return res.status(403).json({ error: 'La cuenta Planta está desactivada.' })
-  issueSession(res, u)
-  res.json({ user: publicUser(u) })
+  issueSession(res, u, area)
+  res.json({ user: { ...publicUser(u), area } })
 })
 
 r.post('/auth/logout', (_req, res) => {

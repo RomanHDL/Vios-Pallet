@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import cookieParser from 'cookie-parser'
 import express from 'express'
+import { areaAllowsWrite } from '../shared/areas.js'
+import { readUser } from './auth.js'
 import { migrate } from './migrate.js'
 import authRoutes from './routes/auth.js'
 import catalogRoutes from './routes/catalogs.js'
@@ -25,6 +27,14 @@ app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }))
+// Areas de la cuenta Planta: solo las acciones de su area (las lecturas no se limitan).
+app.use('/api', async (req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next()
+  const user = await readUser(req).catch(() => null)
+  if (user?.area && !areaAllowsWrite(user.area, req.method, req.path))
+    return res.status(403).json({ error: 'Esta acción no es de tu área de trabajo.' })
+  next()
+})
 for (const r of [
   authRoutes,
   catalogRoutes,

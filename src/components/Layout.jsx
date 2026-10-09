@@ -1,5 +1,7 @@
 // PC: menu lateral fijo. Celular: barra superior + navegacion inferior (pulgar).
 import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
   BarChart3,
   ClipboardCheck,
   Clock3,
@@ -18,6 +20,19 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { shiftLabel, shiftOf } from '@shared/shift.js'
 import { useSession } from '@/lib/session'
 import { cn, fmtYmd, ROLE_LABEL } from '@/lib/utils'
+
+// Menu de cada area de la cuenta Planta (shared/areas.js).
+const AREA_NAV = {
+  entrada: [
+    { to: '/pallets/entrada', label: 'Entrada', icon: ArrowDownToLine },
+    { to: '/calidad', label: 'Calidad', icon: ClipboardCheck },
+  ],
+  salida: [
+    { to: '/pallets/salida', label: 'Salida', icon: ArrowUpFromLine },
+    { to: '/calidad', label: 'Calidad', icon: ClipboardCheck },
+  ],
+  lineas: [{ to: '/pallets/lineas', label: 'Producción por línea', icon: Factory }],
+}
 
 export const NAV = [
   { to: '/', label: 'Inicio', icon: Home, end: true },
@@ -78,6 +93,8 @@ export function Layout() {
   const [dark, setDark] = useTheme()
   const { pathname } = useLocation()
   const isAdmin = user?.role === 'admin'
+  const area = user?.area || null
+  const nav = area ? AREA_NAV[area] : NAV
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [pathname])
@@ -95,7 +112,7 @@ export function Layout() {
         <Logo />
         <ShiftChip className="mt-4 self-start text-white/85" />
         <nav className="mt-6 flex flex-col gap-1">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.end} className={sideLink}>
               <n.icon className="h-[18px] w-[18px]" />
               {n.label}
@@ -107,10 +124,12 @@ export function Layout() {
               Administración
             </NavLink>
           )}
-          <NavLink to="/ayuda" className={sideLink}>
-            <CircleHelp className="h-[18px] w-[18px]" />
-            Ayuda
-          </NavLink>
+          {!area && (
+            <NavLink to="/ayuda" className={sideLink}>
+              <CircleHelp className="h-[18px] w-[18px]" />
+              Ayuda
+            </NavLink>
+          )}
         </nav>
         <div className="mt-auto space-y-2">
           <button type="button" onClick={() => setDark((d) => !d)} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[14px] font-semibold text-white/75 hover:bg-white/10 hover:text-white">
@@ -118,13 +137,15 @@ export function Layout() {
             {dark ? 'Modo claro' : 'Modo oscuro'}
           </button>
           <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-3">
-            <NavLink to="/perfil" className="flex min-w-0 flex-1 items-center gap-3">
+            <NavLink to={area ? AREA_NAV[area][0].to : '/perfil'} className="flex min-w-0 flex-1 items-center gap-3">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white text-[13px] font-bold text-navy">
                 {initials(user?.name)}
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[13.5px] font-semibold text-white">{user?.name}</span>
-                <span className="block text-[11.5px] text-white/60">{ROLE_LABEL[user?.role]}</span>
+                <span className="block text-[11.5px] text-white/60">
+                  {area ? `Área: ${AREA_NAV[area][0].label}` : ROLE_LABEL[user?.role]}
+                </span>
               </span>
             </NavLink>
             <button type="button" onClick={logout} className="grid h-9 w-9 place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white" aria-label="Salir">
@@ -138,15 +159,23 @@ export function Layout() {
       <header className="no-print sticky top-0 z-30 flex items-center justify-between gap-2 bg-navy px-4 pb-3 pt-[max(.75rem,env(safe-area-inset-top))] lg:hidden">
         <Logo />
         <div className="flex items-center gap-1">
-          <NavLink to="/ayuda" className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Ayuda">
-            <CircleHelp className="h-5 w-5" />
-          </NavLink>
+          {!area && (
+            <NavLink to="/ayuda" className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Ayuda">
+              <CircleHelp className="h-5 w-5" />
+            </NavLink>
+          )}
           <button type="button" onClick={() => setDark((d) => !d)} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Cambiar tema">
             {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </button>
-          <NavLink to={isAdmin ? '/admin' : '/perfil'} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Cuenta">
-            {isAdmin ? <Settings className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
-          </NavLink>
+          {area ? (
+            <button type="button" onClick={logout} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Salir">
+              <LogOut className="h-5 w-5" />
+            </button>
+          ) : (
+            <NavLink to={isAdmin ? '/admin' : '/perfil'} className="grid h-10 w-10 place-items-center rounded-xl text-white/80 hover:bg-white/10" aria-label="Cuenta">
+              {isAdmin ? <Settings className="h-5 w-5" /> : <UserRound className="h-5 w-5" />}
+            </NavLink>
+          )}
         </div>
       </header>
 
@@ -157,8 +186,11 @@ export function Layout() {
       </main>
 
       {/* Celular: navegacion inferior */}
-      <nav className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t bg-card/95 backdrop-blur lg:hidden">
-        {NAV.map((n) => (
+      <nav
+        className="no-print safe-bottom fixed inset-x-0 bottom-0 z-30 grid border-t bg-card/95 backdrop-blur lg:hidden"
+        style={{ gridTemplateColumns: `repeat(${nav.length}, minmax(0, 1fr))` }}
+      >
+        {nav.map((n) => (
           <NavLink
             key={n.to}
             to={n.to}

@@ -36,8 +36,9 @@ export function SessionProvider({ children }) {
     const d = await api('/auth/login', { method: 'POST', body: { username, password } })
     setUser(d.user)
   }
-  const enter = async () => {
-    const d = await api('/auth/guest', { method: 'POST' })
+  // Entrar con la cuenta Planta en un area de trabajo (entrada | salida | lineas).
+  const enter = async (area) => {
+    const d = await api('/auth/guest', { method: 'POST', body: { area } })
     setUser(d.user)
   }
   const logout = async () => {

@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.20.0',
+    date: '2026-10-08',
+    title: 'Áreas de trabajo',
+    changed: [
+      'Ya no hay botón "Entrar": se entra por área. Entrada solo ve entrada de pallets y Calidad; Salida solo salida y Calidad; Producción por línea solo su estación. Admin (con contraseña) ve todo.',
+      'El servidor también limita las acciones de cada área (por ejemplo, desde Entrada no se puede registrar una salida).',
+    ],
+  },
+  {
     version: '1.19.0',
     date: '2026-10-08',
     title: 'Accesos directos al entrar',

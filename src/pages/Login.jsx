@@ -1,4 +1,4 @@
-import { ArrowDownToLine, ArrowRight, ArrowUpFromLine, ChevronLeft, Factory, Lock, ShieldCheck } from 'lucide-react'
+import { ArrowDownToLine, ArrowUpFromLine, ChevronLeft, Factory, Lock, ShieldCheck } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, ErrorBox } from '@/components/ui'
@@ -7,8 +7,8 @@ import { useSession } from '@/lib/session'
 // Entrada (2026-10-07, a peticion explicita del usuario: "que nomas le des clic en entrar y de volada"):
 // boton "Entrar" con la cuenta compartida Planta. Despues ("quiero que quites el login... que solo sea un
 // boton de entrar y ya"): la pantalla es solo el boton; el formulario del administrador se abre con /?admin.
-// 2026-10-08: 4 accesos directos. Entrada / Salida / Produccion por linea entran con Planta y abren su pantalla;
-// Admin pide la contrasena del administrador.
+// 2026-10-08: 4 accesos, sin boton "Entrar" general. Entrada / Salida / Produccion por linea entran con Planta
+// limitada a su area (shared/areas.js); Admin pide la contrasena del administrador y ve todo.
 const ADMIN_FORM = new URLSearchParams(window.location.search).has('admin')
 
 const SHORTCUTS = [
@@ -36,7 +36,7 @@ export default function Login() {
     }
     setGoing(s.key)
     await run(async () => {
-      await enter()
+      await enter(s.key)
       navigate(s.to)
     })
     setGoing(null)
@@ -93,7 +93,7 @@ export default function Login() {
           {!withUser ? (
             <>
               <h2 className="text-[28px] font-extrabold tracking-tight">Bienvenido</h2>
-              <p className="mt-1 text-[14.5px] text-muted-foreground">Control de pallets, producción y calidad VIOS.</p>
+              <p className="mt-1 text-[14.5px] text-muted-foreground">Elige tu área de trabajo.</p>
               <div className="mt-7 grid grid-cols-2 gap-3">
                 {SHORTCUTS.map((s) => {
                   const Icon = s.icon
@@ -118,9 +118,6 @@ export default function Login() {
                   )
                 })}
               </div>
-              <Button size="lg" className="mt-4 h-14 w-full text-[17px]" loading={busy && !going} disabled={busy} onClick={() => run(enter)}>
-                Entrar <ArrowRight className="h-5 w-5" />
-              </Button>
               <ErrorBox error={error} className="mt-4" />
             </>
           ) : (

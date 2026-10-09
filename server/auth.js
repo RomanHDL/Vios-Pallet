@@ -23,10 +23,11 @@ const SECRET = loadSecret()
 
 const sign = (payload) => createHmac('sha256', SECRET).update(payload).digest('base64url')
 
-export function issueSession(res, user) {
-  const payload = Buffer.from(JSON.stringify({ uid: user.id, exp: Date.now() + MAX_AGE_MS })).toString(
-    'base64url',
-  )
+// `area` (solo cuenta Planta): entrada | salida | lineas. Limita paginas y acciones (shared/areas.js).
+export function issueSession(res, user, area = null) {
+  const payload = Buffer.from(
+    JSON.stringify({ uid: user.id, exp: Date.now() + MAX_AGE_MS, ...(area ? { area } : {}) }),
+  ).toString('base64url')
   res.cookie(COOKIE, `${payload}.${sign(payload)}`, {
     httpOnly: true,
     sameSite: 'lax',
@@ -56,7 +57,9 @@ export async function readUser(req) {
   if (!data.uid || data.exp < Date.now()) return null
   const [u] = await db.select().from(users).where(eq(users.id, data.uid))
   if (!u || !u.active) return null
-  return publicUser(u)
+  // La cuenta Planta (usuario 'planta', ver seed.js) solo entra por area: una sesion vieja sin area ya no vale.
+  if (u.username === 'planta' && !data.area) return null
+  return { ...publicUser(u), area: data.area || null }
 }
 
 export function publicUser(u) {
