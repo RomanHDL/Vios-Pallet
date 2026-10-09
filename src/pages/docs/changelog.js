@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.20.2',
+    date: '2026-10-08',
+    title: 'Contraseña de admin: más tolerante',
+    fixed: ['ADMIN_INITIAL_PASSWORD se aplica sin espacios ni comillas alrededor, y crea el usuario admin si no existía.'],
+  },
+  {
     version: '1.20.1',
     date: '2026-10-08',
     title: 'Contraseña de admin desde Coolify',

@@ -81,13 +81,27 @@ export async function ensureSeed() {
 // Si ADMIN_INITIAL_PASSWORD (Coolify) cambia, se aplica a "admin" una vez por valor distinto (2026-10-08: Roman
 // cambio la variable y esperaba que sirviera). Solo se guarda una huella HMAC del valor, nunca la contrasena.
 async function applyAdminEnvPassword() {
-  const pw = process.env.ADMIN_INITIAL_PASSWORD
+  // Sin espacios ni comillas alrededor: la pantalla de entrada tambien quita los espacios de lo que se escribe.
+  const pw = String(process.env.ADMIN_INITIAL_PASSWORD || '')
+    .trim()
+    .replace(/^(['"])(.*)\1$/, '$2')
   if (!pw) return
   const fp = createHmac('sha256', process.env.SESSION_SECRET || 'vios-pallet').update(pw).digest('hex').slice(0, 24)
-  const key = `admin_env_password:${fp}`
+  const key = `admin_env_password:v2:${fp}`
   const { rows: done } = await db.execute(sql`select 1 from sync_flags where key = ${key}`)
   if (done.length) return
-  await db.update(users).set({ passwordHash: await hashPassword(pw) }).where(eq(users.username, 'admin'))
+  const passwordHash = await hashPassword(pw)
+  const updated = await db
+    .update(users)
+    .set({ passwordHash, active: true, role: 'admin' })
+    .where(eq(users.username, 'admin'))
+    .returning({ id: users.id })
+  if (!updated.length)
+    await db.insert(users).values({ username: 'admin', name: 'Administrador', role: 'admin', passwordHash })
   await db.execute(sql`insert into sync_flags (key) values (${key}) on conflict do nothing`)
-  console.log('Contraseña de "admin" actualizada desde ADMIN_INITIAL_PASSWORD.')
+  console.log(
+    updated.length
+      ? 'Contraseña de "admin" actualizada desde ADMIN_INITIAL_PASSWORD.'
+      : 'No existía el usuario "admin": se creó con ADMIN_INITIAL_PASSWORD.',
+  )
 }
