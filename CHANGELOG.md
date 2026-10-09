@@ -3,6 +3,14 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.25.0] — 2026-10-09
+
+### Added
+- `GET /api/production/history?days=30` (solo admin): piezas por `shift_date`, turno y línea.
+
+### Changed
+- `ProduccionLineas`: no-admin sigue `shiftOf()` cada 30 s (sin `ShiftPicker`); admin ve historial `DayHistory`.
+
 ## [1.24.0] — 2026-10-09
 
 ### Changed

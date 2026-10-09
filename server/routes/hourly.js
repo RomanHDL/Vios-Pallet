@@ -97,6 +97,27 @@ r.get('/production/by-line', requireAuth(), async (req, res) => {
   })
 })
 
+// Historial dia por dia de Produccion por linea (solo admin): piezas por fecha de turno, turno y linea.
+// Los escaneos nunca se borran; la pantalla de la linea solo muestra el turno en curso.
+r.get('/production/history', requireAuth([]), async (req, res) => {
+  const days = Math.min(Math.max(Number(req.query.days) || 30, 1), 365)
+  const list = await rows(sql`
+    select shift_date, shift, line, count(*)::int pieces,
+      count(distinct model)::int models, min(registered_at) as first_at, max(registered_at) as last_at
+    from production
+    where shift_date >= to_char((now() at time zone 'America/Monterrey')::date - ${days}::int, 'YYYY-MM-DD')
+    group by 1, 2, 3 order by 1 desc, 2 desc, 3`)
+  const byShift = new Map()
+  for (const x of list) {
+    const k = `${x.shift_date}|${x.shift}`
+    if (!byShift.has(k)) byShift.set(k, { shiftDate: x.shift_date, shift: x.shift, total: 0, lines: [] })
+    const g = byShift.get(k)
+    g.total += x.pieces
+    g.lines.push({ line: x.line, pieces: x.pieces, models: x.models, firstAt: x.first_at, lastAt: x.last_at })
+  }
+  res.json({ days, shifts: [...byShift.values()] })
+})
+
 // Cambiar la meta del turno (desde esa fecha en adelante).
 r.put('/hourly/goal', requireAuth(['supervisor']), async (req, res) => {
   const { shiftDate, shift } = params(req.body || {})

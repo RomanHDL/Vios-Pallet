@@ -3,8 +3,8 @@
 // 2026-10-09: sin "Editar personal" ni filtro de marca (el personal ya es automatico: 1 por area).
 // Estos escaneos tambien suman a la produccion del turno (Inicio / Hora x Hora), junto con las salidas cerradas.
 import { shiftOf } from '@shared/shift.js'
-import { Factory, ScanBarcode } from 'lucide-react'
-import { useState } from 'react'
+import { Factory, History, ScanBarcode } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button, Card, Empty, ErrorBox, Spinner } from '@/components/ui'
 import { useApi } from '@/lib/hooks'
 import { useCatalogs, useSession } from '@/lib/session'
@@ -143,7 +143,21 @@ function LineCard({ l, total }) {
 export default function ProduccionLineas() {
   const { user } = useSession()
   const cat = useCatalogs()
+  const isAdmin = user?.role === 'admin'
   const [sel, setSel] = useState(shiftOf)
+  // El area de la linea siempre ve el turno en curso: a las 7:00 am (Turno 1) y 10:00 pm (Turno 2) la pantalla
+  // cambia sola y arranca en 0. Las piezas no se borran: quedan guardadas con su fecha y turno (historial admin).
+  useEffect(() => {
+    if (isAdmin) return
+    const tick = () =>
+      setSel((cur) => {
+        const now = shiftOf()
+        return now.shiftDate === cur.shiftDate && now.shift === cur.shift ? cur : now
+      })
+    tick()
+    const t = setInterval(tick, 30000)
+    return () => clearInterval(t)
+  }, [isAdmin])
   const [st, setSt] = useState(EMPTY_STATION)
   const { data, error, loading, reload } = useApi('/production/by-line', {
     query: { ...sel },
@@ -156,7 +170,7 @@ export default function ProduccionLineas() {
       cat.models.some((m) => m.code === st.model) &&
       cat.lines.some((l) => l.name === st.line),
   )
-  const showRest = !canScan || ready
+  const showRest = !canScan || ready || isAdmin
   const live = data && data.current.shiftDate === sel.shiftDate && data.current.shift === sel.shift
   const withLine = data?.lines.filter((l) => l.line) || []
 
@@ -167,7 +181,7 @@ export default function ProduccionLineas() {
           <BackLink />
           <h1 className="text-[22px] font-extrabold tracking-tight sm:text-[26px]">Producción por línea</h1>
         </div>
-        <ShiftPicker shiftDate={sel.shiftDate} shift={sel.shift} onChange={setSel} />
+        {isAdmin && <ShiftPicker shiftDate={sel.shiftDate} shift={sel.shift} onChange={setSel} />}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-navy px-5 py-4 text-white">
@@ -215,6 +229,62 @@ export default function ProduccionLineas() {
           </div>
         )
       )}
+
+      {isAdmin && <DayHistory onPick={setSel} />}
     </div>
+  )
+}
+
+// Historial dia por dia (solo admin): piezas por turno y linea. Tocar un turno lo abre arriba.
+function DayHistory({ onPick }) {
+  const { data, error } = useApi('/production/history', { query: { days: 30 }, refreshMs: 60000 })
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex items-center gap-3 border-b px-4 py-3.5 sm:px-5">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-muted">
+          <History className="h-5 w-5" />
+        </span>
+        <div>
+          <h3 className="text-[16px] font-extrabold leading-tight">Historial día por día</h3>
+          <p className="text-[12.5px] text-muted-foreground">Piezas escaneadas por turno y línea · últimos 30 días</p>
+        </div>
+      </div>
+      <ErrorBox error={error} className="m-4" />
+      {!data ? (
+        <Spinner />
+      ) : !data.shifts.length ? (
+        <Empty icon={History} title="Sin producción por línea en los últimos 30 días" />
+      ) : (
+        <ul className="divide-y">
+          {data.shifts.map((s) => (
+            <li key={`${s.shiftDate}|${s.shift}`}>
+              <button
+                type="button"
+                onClick={() => {
+                  onPick({ shiftDate: s.shiftDate, shift: s.shift })
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 sm:grid-cols-[150px_90px_minmax(0,1fr)_auto] sm:px-5"
+              >
+                <span className="font-bold">{fmtYmd(s.shiftDate)}</span>
+                <span className="hidden text-[13px] font-semibold text-muted-foreground sm:block">
+                  {s.shift === 'T1' ? 'Turno 1' : 'Turno 2'}
+                </span>
+                <span className="col-span-2 row-start-2 flex flex-wrap gap-1.5 sm:col-span-1 sm:row-start-auto">
+                  {s.lines.map((l) => (
+                    <span key={l.line} className="rounded-lg bg-muted px-2 py-0.5 text-[12.5px] font-semibold">
+                      {l.line} <b className="tabular">{fmtInt(l.pieces)}</b>
+                    </span>
+                  ))}
+                </span>
+                <span className="tabular row-start-1 text-right text-[18px] font-extrabold sm:row-start-auto">
+                  {fmtInt(s.total)} <span className="text-[12px] font-medium text-muted-foreground">pzs</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   )
 }

@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.25.0',
+    date: '2026-10-09',
+    title: 'Producción por línea: turno en curso e historial',
+    changed: [
+      'El área de Producción por línea siempre ve el turno en curso, sin selector de fecha: la pantalla arranca en 0 sola a las 7:00 am (Turno 1) y a las 10:00 pm (Turno 2). Las piezas no se borran.',
+    ],
+    added: ['Admin: "Historial día por día" en Producción por línea con las piezas por turno y línea de los últimos 30 días; tocar un día lo abre arriba.'],
+  },
+  {
     version: '1.24.0',
     date: '2026-10-09',
     title: 'Producción por línea: primero la configuración',
