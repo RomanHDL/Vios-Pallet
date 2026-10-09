@@ -3,6 +3,14 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.24.0] — 2026-10-09
+
+### Changed
+- `ProduccionLineas`: selección de estación vacía al abrir (sin `vp:station`), resto de la página oculto hasta completarla; sin `StaffDialog` ni filtro de marca; tarjeta de línea sin personas.
+
+### Added
+- `StartOverLink` en Entrada / Salida.
+
 ## [1.23.1] — 2026-10-08
 
 ### Changed

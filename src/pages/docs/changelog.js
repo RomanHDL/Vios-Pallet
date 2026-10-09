@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.24.0',
+    date: '2026-10-09',
+    title: 'Producción por línea: primero la configuración',
+    changed: [
+      'Producción por línea: al abrir, primero se elige Marca, Modelo y Línea; ya completo sale la estación de escaneo y el avance. Se quitaron "Editar personal" y el filtro Todos / HY / SILO (el personal ya es automático).',
+    ],
+    added: ['Entrada y Salida: botón "Inicio de entrada" / "Inicio de salida" para regresar a escanear otro ID desde un pallet abierto.'],
+  },
+  {
     version: '1.23.1',
     date: '2026-10-08',
     title: 'Áreas sin enlaces de regreso',

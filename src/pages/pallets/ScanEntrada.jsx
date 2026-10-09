@@ -18,6 +18,7 @@ import {
   StatusBadge,
   useScanFeedback,
   useSerialQueue,
+  StartOverLink,
 } from './shared'
 
 export default function ScanEntrada() {
@@ -182,7 +183,7 @@ export default function ScanEntrada() {
   return (
     <div>
       <PageHeader
-        back={<BackLink />}
+        back={stage === 'id' || stage === 'loading' ? <BackLink /> : <StartOverLink onClick={startOver} label="Inicio de entrada" />}
         title="Entrada de pallet"
         subtitle={
           stage === 'scan'

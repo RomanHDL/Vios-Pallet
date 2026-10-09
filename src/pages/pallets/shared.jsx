@@ -66,6 +66,20 @@ export function BackLink({ to = '/pallets', label = 'Pallets' }) {
   )
 }
 
+// Regresar a la pantalla donde se escanea el ID (Entrada / Salida), desde un pallet abierto.
+export function StartOverLink({ onClick, label }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="no-print -ml-1 mb-1 inline-flex h-9 items-center gap-1 rounded-xl border border-input bg-card px-3 text-[14px] font-semibold shadow-sm hover:bg-muted"
+    >
+      <ChevronLeft className="h-4 w-4" />
+      {label}
+    </button>
+  )
+}
+
 export function TypeBadge({ type }) {
   return type === 'salida' ? <Badge tone="violet">Salida</Badge> : <Badge tone="blue">Entrada</Badge>
 }

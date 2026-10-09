@@ -1,12 +1,12 @@
-// Produccion por linea (diseno de PalletScan). Arriba la estacion: Marca -> Modelo -> Linea y se escanea
-// serial de TV + caja (deben coincidir). Abajo el avance por linea con su personal ("Editar personal").
+// Produccion por linea (diseno de PalletScan). Al abrir, primero se elige Marca -> Modelo -> Linea; ya completo,
+// sale la estacion para escanear serial de TV + caja (deben coincidir) y abajo el avance por linea.
+// 2026-10-09: sin "Editar personal" ni filtro de marca (el personal ya es automatico: 1 por area).
 // Estos escaneos tambien suman a la produccion del turno (Inicio / Hora x Hora), junto con las salidas cerradas.
 import { shiftOf } from '@shared/shift.js'
-import { Factory, Plus, ScanBarcode, Trash2, Users } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Button, Card, Dialog, Empty, ErrorBox, Segmented, Spinner, useToast } from '@/components/ui'
-import { api } from '@/lib/api'
-import { useApi, useStored } from '@/lib/hooks'
+import { Factory, ScanBarcode } from 'lucide-react'
+import { useState } from 'react'
+import { Button, Card, Empty, ErrorBox, Spinner } from '@/components/ui'
+import { useApi } from '@/lib/hooks'
 import { useCatalogs, useSession } from '@/lib/session'
 import { canDo, cn, fmtAgo, fmtInt, fmtYmd } from '@/lib/utils'
 import { ShiftPicker } from '../produccion/common'
@@ -17,128 +17,11 @@ const RANGE = { T1: '07:00 a.m. – 10:00 p.m.', T2: '10:00 p.m. – 07:00 a.m.'
 const fmt1 = (v) =>
   v === null || v === undefined ? '—' : v.toLocaleString('es-MX', { maximumFractionDigits: 1 })
 
-function StaffDialog({ open, onClose, sel, data, onSaved }) {
-  const toast = useToast()
-  const { lines } = useCatalogs()
-  const [rows, setRows] = useState([])
-  const [add, setAdd] = useState('')
-  const [busy, setBusy] = useState(false)
+// Al abrir la pantalla la seleccion empieza vacia: primero se llena Marca, Modelo y Linea.
+export const EMPTY_STATION = { line: '', model: '', brand: '' }
 
-  // Al abrir: lineas con personal o produccion en el turno.
-  useEffect(() => {
-    if (!open) return
-    setRows(
-      data.lines
-        .filter((l) => l.line)
-        .map((l) => ({ line: l.line, people: l.people ? String(l.people) : '' })),
-    )
-    setAdd('')
-  }, [open, data])
-
-  const free = lines.filter((l) => !rows.some((r) => r.line === l.name))
-
-  async function save() {
-    setBusy(true)
-    try {
-      // Las lineas quitadas quedan en 0 personas.
-      const body = Object.fromEntries(lines.map((l) => [l.name, 0]))
-      for (const r of rows) body[r.line] = Number(r.people || 0)
-      await api('/staffing', { method: 'PUT', body: { ...sel, lines: body } })
-      toast('Personal guardado')
-      onSaved()
-      onClose()
-    } catch (e) {
-      toast(e.message, 'error')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Personal del turno"
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button loading={busy} onClick={save}>
-            Guardar
-          </Button>
-        </>
-      }
-    >
-      <p className="-mt-1 mb-3 text-[13px] text-muted-foreground">
-        {sel.shift === 'T1' ? 'Turno 1' : 'Turno 2'} · {fmtYmd(sel.shiftDate)}
-      </p>
-      {rows.length ? (
-        <ul className="space-y-2">
-          {rows.map((r, i) => (
-            <li key={r.line} className="flex items-center gap-2">
-              <span className="min-w-0 flex-1 truncate text-[15px] font-bold">{r.line}</span>
-              <input
-                className="field h-11 w-24 text-right text-[16px] font-bold tabular"
-                inputMode="numeric"
-                placeholder="0"
-                value={r.people}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/[^\d]/g, '').slice(0, 4)
-                  setRows((rs) => rs.map((x, j) => (j === i ? { ...x, people: v } : x)))
-                }}
-                aria-label={`Personas en ${r.line}`}
-              />
-              <span className="text-[13px] text-muted-foreground">pers.</span>
-              <button
-                type="button"
-                onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
-                className="grid h-10 w-10 place-items-center rounded-lg text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                aria-label={`Quitar ${r.line}`}
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="py-3 text-center text-[14px] text-muted-foreground">
-          Agrega las líneas activas en este turno
-        </p>
-      )}
-      <div className="mt-4 flex gap-2 border-t pt-4">
-        <select
-          className="field h-11 flex-1"
-          value={add}
-          onChange={(e) => setAdd(e.target.value)}
-          aria-label="Línea a agregar"
-        >
-          <option value="">{free.length ? 'Elige una línea…' : 'Todas las líneas ya están'}</option>
-          {free.map((l) => (
-            <option key={l.id} value={l.name}>
-              {l.name}
-            </option>
-          ))}
-        </select>
-        <Button
-          variant="outline"
-          disabled={!add}
-          onClick={() => {
-            setRows((rs) => [...rs, { line: add, people: '' }])
-            setAdd('')
-          }}
-        >
-          <Plus className="h-4 w-4" /> Agregar
-        </Button>
-      </div>
-    </Dialog>
-  )
-}
-
-// Estacion: se elige en orden Marca -> Modelo -> Linea; despues se escanea TV + caja. Se recuerda en el equipo.
-function Station({ onRegistered }) {
+function Station({ st, setSt, onRegistered }) {
   const cat = useCatalogs()
-  const [st, setSt] = useStored('vp:station', { line: '', model: '', brand: '' })
   const [open, setOpen] = useState(true)
   const brand = cat.brands.some((b) => b.code === st?.brand) ? st.brand : ''
   const model = cat.models.find((m) => m.code === st?.model)
@@ -241,15 +124,11 @@ function LineCard({ l, total }) {
           style={{ width: `${share * 100}%` }}
         />
       </div>
-      <dl className="mt-3 grid grid-cols-3 gap-2 text-center">
+      <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
         <div className="rounded-xl bg-muted/50 px-2 py-2">
-          <dt className="text-[11px] font-semibold uppercase text-muted-foreground">Personas</dt>
-          <dd className="tabular text-[17px] font-extrabold">{l.people ?? '—'}</dd>
-        </div>
-        <div className="rounded-xl bg-muted/50 px-2 py-2">
-          <dt className="text-[11px] font-semibold uppercase text-muted-foreground">Pzs/pers.</dt>
+          <dt className="text-[11px] font-semibold uppercase text-muted-foreground">Del turno</dt>
           <dd className="tabular text-[17px] font-extrabold text-emerald-700 dark:text-emerald-300">
-            {fmt1(l.perPerson)}
+            {fmt1(share * 100)}%
           </dd>
         </div>
         <div className="rounded-xl bg-muted/50 px-2 py-2">
@@ -263,13 +142,21 @@ function LineCard({ l, total }) {
 
 export default function ProduccionLineas() {
   const { user } = useSession()
+  const cat = useCatalogs()
   const [sel, setSel] = useState(shiftOf)
-  const [brand, setBrand] = useState('')
-  const [editing, setEditing] = useState(false)
+  const [st, setSt] = useState(EMPTY_STATION)
   const { data, error, loading, reload } = useApi('/production/by-line', {
-    query: { ...sel, brand },
+    query: { ...sel },
     refreshMs: 20000,
   })
+  const canScan = canDo(user, ['supervisor', 'operador'])
+  // Mientras no se elija Marca, Modelo y Linea solo se ve la estacion (lo primero que se llena).
+  const ready = Boolean(
+    cat.brands.some((b) => b.code === st.brand) &&
+      cat.models.some((m) => m.code === st.model) &&
+      cat.lines.some((l) => l.name === st.line),
+  )
+  const showRest = !canScan || ready
   const live = data && data.current.shiftDate === sel.shiftDate && data.current.shift === sel.shift
   const withLine = data?.lines.filter((l) => l.line) || []
 
@@ -299,43 +186,24 @@ export default function ProduccionLineas() {
         </span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Segmented
-          value={brand}
-          onChange={setBrand}
-          options={[
-            { value: '', label: 'Todos' },
-            { value: 'HY', label: 'HY' },
-            { value: 'SILO', label: 'SILO' },
-          ]}
-        />
-        {canDo(user, ['supervisor']) && data && (
-          <Button onClick={() => setEditing(true)}>
-            <Users className="h-4 w-4" /> Editar personal
-          </Button>
-        )}
-      </div>
+      {canScan && <Station st={st} setSt={setSt} onRegistered={() => reload(true)} />}
 
-      {data && (
+      {showRest && data && (
         <p className="text-[14.5px] text-muted-foreground">
-          <b className="text-primary">{fmtInt(data.people)}</b> persona{data.people === 1 ? '' : 's'} ·{' '}
-          <b className="text-primary">{fmtInt(withLine.length)}</b> línea{withLine.length === 1 ? '' : 's'}{' '}
-          registrada
+          <b className="text-primary">{fmtInt(withLine.length)}</b> línea{withLine.length === 1 ? '' : 's'} registrada
           {withLine.length === 1 ? '' : 's'} · <b className="text-foreground">{fmtInt(data.total)}</b> pieza
           {data.total === 1 ? '' : 's'} en el turno
         </p>
       )}
 
-      {canDo(user, ['supervisor', 'operador']) && <Station onRegistered={() => reload(true)} />}
-
       <ErrorBox error={error} />
 
-      {loading && !data ? (
+      {!showRest ? null : loading && !data ? (
         <Spinner />
       ) : data && !data.lines.length ? (
         <Card>
           <Empty icon={Factory} title="Sin líneas activas en este turno">
-            Aparecerán aquí en cuanto se escanee producción en una línea o se capture el personal.
+            Aparecerán aquí en cuanto se escanee producción en una línea.
           </Empty>
         </Card>
       ) : (
@@ -346,16 +214,6 @@ export default function ProduccionLineas() {
             ))}
           </div>
         )
-      )}
-
-      {data && (
-        <StaffDialog
-          open={editing}
-          onClose={() => setEditing(false)}
-          sel={sel}
-          data={data}
-          onSaved={() => reload(true)}
-        />
       )}
     </div>
   )
