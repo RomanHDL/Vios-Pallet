@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.18.0',
+    date: '2026-10-08',
+    title: 'Control de Pallet para administrador',
+    added: [
+      'Pallets (solo administrador): recorrido Entrada → Producción por línea → Salida con pallets activos por etapa, filtro por turno, resumen operativo, flujo del pallet y pallets detenidos con umbrales que configura el administrador.',
+    ],
+    changed: ['La cuenta Planta conserva su vista de Pallets sin cambios.'],
+  },
+  {
     version: '1.17.0',
     date: '2026-10-08',
     title: 'Progreso visual de pallets',

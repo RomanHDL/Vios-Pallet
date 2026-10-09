@@ -5,6 +5,7 @@ import express from 'express'
 import { migrate } from './migrate.js'
 import authRoutes from './routes/auth.js'
 import catalogRoutes from './routes/catalogs.js'
+import flowRoutes from './routes/flow.js'
 import hourlyRoutes from './routes/hourly.js'
 import palletRoutes from './routes/pallets.js'
 import productionRoutes from './routes/production.js'
@@ -32,6 +33,7 @@ for (const r of [
   qualityRoutes,
   reportRoutes,
   hourlyRoutes,
+  flowRoutes,
 ])
   app.use('/api', r)
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Ruta no encontrada.' }))

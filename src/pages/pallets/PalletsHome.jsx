@@ -5,10 +5,20 @@ import { MenuCard } from '@/components/MenuCard'
 import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Spinner } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
+import { useSession } from '@/lib/session'
 import { fmtAgo, fmtDateTime, fmtInt } from '@/lib/utils'
+import PalletsAdmin from './PalletsAdmin'
 import { StatusBadge, TypeBadge, normPallet, resumePath } from './shared'
 
+// Administrador: vista de recorrido Entrada -> Produccion por linea -> Salida. Los demas (cuenta Planta):
+// la vista operativa de siempre, sin cambios.
 export default function PalletsHome() {
+  const { user } = useSession()
+  if (user?.role === 'admin') return <PalletsAdmin FindSerial={FindSerial} />
+  return <PalletsOperativo />
+}
+
+function PalletsOperativo() {
   const summary = useApi('/pallets/summary', { refreshMs: 15000 })
   const open = useApi('/pallets', { query: { status: 'abierto' }, refreshMs: 15000 })
   const list = (open.data?.pallets || []).map(normPallet)

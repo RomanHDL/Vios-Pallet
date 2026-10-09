@@ -119,6 +119,12 @@ CREATE TABLE IF NOT EXISTS plans (
   updated_at timestamptz NOT NULL DEFAULT now(),
   PRIMARY KEY (shift_date, shift, line)
 );
+CREATE TABLE IF NOT EXISTS pallet_stage_thresholds (
+  stage text PRIMARY KEY,
+  minutes integer,
+  updated_by integer,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
 CREATE TABLE IF NOT EXISTS production_adjustments (
   shift_date text NOT NULL,
   shift text NOT NULL,

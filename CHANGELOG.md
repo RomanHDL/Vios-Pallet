@@ -3,6 +3,12 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.18.0] — 2026-10-08
+
+### Added
+- `GET /api/pallet-flow` y `PUT /api/pallet-flow/thresholds` (solo admin): etapa de cada pallet activo (salida abierta → salida; entrada cerrada con piezas escaneadas en `production` por serial exacto → producción; resto → entrada), filtro por turno de inicio de etapa, detenidos según umbral por etapa.
+- Tabla `pallet_stage_thresholds` (migración no destructiva). Vista `PalletsAdmin` en `/pallets` para rol admin.
+
 ## [1.17.0] — 2026-10-08
 
 ### Added
