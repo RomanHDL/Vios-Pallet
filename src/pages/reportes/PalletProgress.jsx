@@ -36,11 +36,16 @@ function useSlots() {
 }
 
 const STATE_UI = {
+  escaneando: { label: 'Escaneando entrada', icon: Clock3, chip: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300', bar: 'bg-blue-500', pct: 'text-blue-600 dark:text-blue-400' },
+  sin_salida: { label: 'Sin salida', icon: TriangleAlert, chip: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300', bar: 'bg-amber-500', pct: 'text-amber-600 dark:text-amber-400' },
   en_proceso: { label: 'En proceso', icon: Clock3, chip: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300', bar: 'bg-gradient-to-r from-violet-600 to-blue-600', pct: 'text-violet-700 dark:text-violet-300' },
   sin_iniciar: { label: 'Sin iniciar', icon: Clock3, chip: 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300', bar: 'bg-slate-400', pct: 'text-slate-500 dark:text-slate-400' },
   con_faltantes: { label: 'Con faltantes', icon: TriangleAlert, chip: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300', bar: 'bg-red-500', pct: 'text-red-600 dark:text-red-400' },
   consolidado: { label: 'Consolidado', icon: CheckCircle2, chip: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300', bar: 'bg-emerald-600', pct: 'text-emerald-600 dark:text-emerald-400' },
 }
+
+const fmtDay = (iso) =>
+  new Date(iso).toLocaleDateString('es-MX', { timeZone: 'America/Monterrey', day: '2-digit', month: 'short' }).replace('.', '')
 
 function uiState(p) {
   if (p.state === 'en_proceso' && p.valid_out === 0) return 'sin_iniciar'
@@ -55,7 +60,7 @@ function PalletCard({ p, fixed }) {
   const Icon = s.icon
   return (
     <Link
-      to={`/pallets/${p.salida_id}`}
+      to={`/pallets/${p.salida_id || p.id}`}
       className={cn(
         'pallet-card group flex min-w-0 flex-col rounded-2xl border p-3 transition hover:-translate-y-0.5 hover:shadow-md',
         pending
@@ -71,6 +76,11 @@ function PalletCard({ p, fixed }) {
           <p className="truncate text-[12.5px] text-muted-foreground">
             {p.model} · {p.brand}
           </p>
+          {p.carried && (
+            <p className="truncate text-[11.5px] font-semibold text-amber-600 dark:text-amber-400">
+              Pendiente desde el {fmtDay(p.created_at)}
+            </p>
+          )}
         </div>
         {pending && <Pin className="mt-0.5 h-4 w-4 shrink-0 fill-current text-violet-600 dark:text-violet-400" />}
       </div>
@@ -184,8 +194,8 @@ export function PalletProgress({ pallets }) {
             ))}
           </div>
         ) : (
-          <Empty icon={Layers} title="Sin salidas iniciadas en este periodo">
-            El pallet aparece aquí en cuanto escanean su ID para iniciar la salida.
+          <Empty icon={Layers} title="Sin pallets en este periodo">
+            Los pallets pendientes de cualquier día aparecen aquí hasta que se cierran.
           </Empty>
         )}
       </div>

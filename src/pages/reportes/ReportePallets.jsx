@@ -190,7 +190,7 @@ export default function ReportePallets() {
       ) : data ? (
         <>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <Tile label="Pallets" value={fmtInt(t.total)} icon={Package} hint="Entradas del periodo" />
+            <Tile label="Pallets" value={fmtInt(t.total)} icon={Package} hint="Del periodo + pendientes" />
             <Tile label="Escaneando" value={fmtInt(t.escaneando)} icon={ScanBarcode} tone="blue" hint="Entrada abierta" />
             <Tile label="Sin salida" value={fmtInt(t.sin_salida)} icon={PackageX} tone={t.sin_salida ? 'amber' : 'default'} hint="Entrada cerrada" />
             <Tile label="En proceso" value={fmtInt(t.en_proceso)} icon={Timer} tone="violet" hint="Salida abierta" />

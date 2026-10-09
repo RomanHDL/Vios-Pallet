@@ -4,7 +4,8 @@ export const isPending = (p) => p.state !== 'consolidado'
 
 // Orden: pendientes de menor a mayor avance; consolidados del mas reciente al mas viejo.
 export function orderPallets(list) {
-  const withExit = list.filter((p) => p.salida_id)
+  // Todos los pallets del tablero: los que no tienen salida (entrada abierta o sin salida) tambien son pendientes.
+  const withExit = list
   const pending = withExit
     .filter(isPending)
     .sort((a, b) => a.progress - b.progress || String(a.salida_created_at).localeCompare(String(b.salida_created_at)))

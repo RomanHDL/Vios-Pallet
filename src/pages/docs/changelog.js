@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.22.0',
+    date: '2026-10-08',
+    title: 'Pallets pendientes siempre a la vista',
+    changed: [
+      'Dashboard de pallets: los pallets con el proceso sin terminar (entrada abierta, entrada sin salida o salida abierta) salen siempre, de cualquier día, fijos en Progreso visual de pallets y en la tabla, hasta que se cierran. Los terminados solo salen en su periodo.',
+    ],
+  },
+  {
     version: '1.21.0',
     date: '2026-10-08',
     title: 'Personal = áreas de trabajo',

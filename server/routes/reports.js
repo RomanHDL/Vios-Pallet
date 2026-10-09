@@ -285,7 +285,12 @@ r.get('/reports/pallets', requireAuth(), async (req, res) => {
     from pallets e
     left join pallets s on s.linked_pallet_id = e.id
     where e.type = 'entrada' and ${brandCond(req.query, sql`e.brand`)}
-      and (e.created_at at time zone 'America/Monterrey')::date between ${from}::date and ${to}::date
+      and (
+        (e.created_at at time zone 'America/Monterrey')::date between ${from}::date and ${to}::date
+        -- 2026-10-08 (Roman): los pallets con su proceso sin terminar salen siempre, de cualquier dia, hasta
+        -- cerrarse: entrada abierta, entrada sin salida o salida abierta.
+        or e.status = 'abierto' or s.id is null or s.status = 'abierto'
+      )
     order by e.created_at desc`)
   const out = list.map((x) => {
     let state = 'consolidado'
@@ -296,12 +301,15 @@ r.get('/reports/pallets', requireAuth(), async (req, res) => {
     const piecesIn = x.entrada_status === 'abierto' ? x.live_in : x.pieces_in
     // Progreso de salida (Progreso visual de pallets): piezas validas unicas de la salida (que estan en su
     // entrada) / piezas esperadas (las de la entrada). Entre 0 y 1; sin esperadas = 0.
-    const expected = x.salida_id ? x.expected_item_count || x.live_in || piecesIn || 0 : 0
+    const expected = x.salida_id ? x.expected_item_count || x.live_in || piecesIn || 0 : piecesIn || 0
     const valid = x.salida_id ? Math.min(x.valid_out || 0, expected) : 0
+    const day = String(x.created_at instanceof Date ? x.created_at.toISOString() : x.created_at)
+    const createdDay = new Date(day).toLocaleDateString('en-CA', { timeZone: 'America/Monterrey' })
     return {
       ...x,
       pieces_in: piecesIn,
       state,
+      carried: createdDay < from,
       expected,
       valid_out: valid,
       progress: expected > 0 ? valid / expected : 0,
