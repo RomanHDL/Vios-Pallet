@@ -37,7 +37,7 @@ const SECTIONS = [
       'Producción muestra el turno en curso: piezas de pallets de salida cerrados contra la meta del día (765 por defecto, se cambia en Hora x Hora).',
       'Desde último scan: tiempo desde la última pieza escaneada en una salida (amarillo > 10 min, rojo > 30 min). Por hora: piezas por hora al ritmo del turno. Promedio / unidad: cada cuánto sale una pieza.',
       'Proyección turno: piezas al terminar el turno si se sigue al mismo ritmo; en el turno de día también se muestra cuántas serían con tiempo extra (hasta las 22:00).',
-      'Abajo está la producción por hora; "Hora x Hora" abre el tablero completo. El personal por línea se captura en Reportes → Personal del turno.',
+      'Abajo está la producción por hora; "Hora x Hora" abre el tablero completo. El personal por línea se captura en Pallets → Producción por línea.',
     ],
   },
   {
@@ -66,7 +66,7 @@ const SECTIONS = [
     steps: [
       'Reporte del día: Plan, Real, Delta (Real − Plan; rojo = faltó) y Recovery (plan + lo que faltó en el turno anterior), por turno y por línea. Se puede imprimir.',
       'Producción por modelo: producido, rechazado y neto contra los objetivos MTY y Texas, con gráfica diaria y proyección de 5 días hábiles.',
-      'Personal y productividad: piezas de salidas cerradas del turno entre las personas del turno (se capturan en Reportes → Personal del turno).',
+      'Personal y productividad: piezas de salidas cerradas del turno entre las personas del turno (se capturan en Pallets → Producción por línea).',
       'Dashboard de pallets: estado de cada pallet (escaneando, sin salida, en proceso, con faltantes, consolidado).',
     ],
   },

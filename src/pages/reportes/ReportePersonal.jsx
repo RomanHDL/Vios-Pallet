@@ -77,7 +77,7 @@ export default function ReportePersonal() {
       ) : data && !rows.length ? (
         <Card>
           <Empty icon={Users} title="Sin personal ni producción en este periodo">
-            El personal se captura por línea y turno en Reportes → Personal del turno.
+            El personal se captura por línea en Pallets → Producción por línea.
           </Empty>
         </Card>
       ) : data ? (

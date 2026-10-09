@@ -26,7 +26,6 @@ import LineaDetalle from './pages/produccion/LineaDetalle'
 import Lineas from './pages/produccion/Lineas'
 import ProduccionHistorial from './pages/produccion/ProduccionHistorial'
 import ProduccionHome from './pages/produccion/ProduccionHome'
-import PlanPersonal from './pages/produccion/PlanPersonal'
 import Registro from './pages/produccion/Registro'
 import ReporteDia from './pages/reportes/ReporteDia'
 import ReporteModelos from './pages/reportes/ReporteModelos'
@@ -58,8 +57,8 @@ export default function App() {
         <Route path="produccion/lineas" element={<Lineas />} />
         <Route path="produccion/lineas/:line" element={<LineaDetalle />} />
         <Route path="produccion/historial" element={<ProduccionHistorial />} />
-        <Route path="produccion/plan" element={<Navigate to="/reportes/personal-turno" replace />} />
-        <Route path="reportes/personal-turno" element={<PlanPersonal />} />
+        <Route path="produccion/plan" element={<Navigate to="/pallets/lineas" replace />} />
+        <Route path="reportes/personal-turno" element={<Navigate to="/pallets/lineas" replace />} />
 
         <Route path="hora-por-hora" element={<HoraPorHora />} />
 

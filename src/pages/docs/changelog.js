@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.15.1',
+    date: '2026-10-08',
+    title: 'Sin "Personal del turno" en Reportes',
+    changed: [
+      'Se quitó el apartado Personal del turno de Reportes. El personal se sigue capturando por línea en Pallets → Producción por línea.',
+    ],
+  },
+  {
     version: '1.15.0',
     date: '2026-10-08',
     title: 'Producción diaria con número y modelo por día',
