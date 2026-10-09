@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.14.1] — 2026-10-08
+
+### Fixed
+- Pallet con entrada de otro día: las teles agregadas a la entrada en otro día cuentan a la hora de creación de la entrada.
+
 ## [1.14.0] — 2026-10-08
 
 ### Added

@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.14.1',
+    date: '2026-10-08',
+    title: 'Pallet de ayer cuenta completo en ayer',
+    fixed: [
+      'Un pallet cuya entrada es de ayer cuenta completo en ayer, aunque se le hayan agregado teles hoy.',
+    ],
+  },
+  {
     version: '1.14.0',
     date: '2026-10-08',
     title: 'Números del día en Producción por modelo',

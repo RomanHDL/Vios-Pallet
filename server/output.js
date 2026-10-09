@@ -16,12 +16,15 @@ const shiftDay = (col) => sql`((${col} at time zone 'America/Monterrey') - inter
 
 // Todas las piezas producidas: salidas cerradas + escaneo por linea. Columnas: serial, at, model, brand.
 // 2026-10-08 (Roman): no cuentan las piezas de un pallet de entrada que aun no tiene salida cerrada, y un pallet
-// cuya entrada es de otro dia cuenta en el dia de su entrada ("los pallets de ayer" no suman a hoy, van a ayer).
+// cuya entrada es de otro dia cuenta completo en el dia de su entrada ("los pallets de ayer" no suman a hoy, van a
+// ayer), aunque alguna tele se haya agregado a la entrada despues.
 const PRODUCED = sql`(
   select * from (
     select i.code as serial,
       case when e.id is not null and ${shiftDay(sql`e.created_at`)} <> ${shiftDay(sql`i.scanned_at`)}
-        then coalesce(ei.scanned_at, e.created_at) else i.scanned_at end as at,
+        then (case when ${shiftDay(sql`ei.scanned_at`)} = ${shiftDay(sql`e.created_at`)} then ei.scanned_at
+          else e.created_at end)
+        else i.scanned_at end as at,
       p.model, p.brand, p.id as pallet
     from pallet_items i join pallets p on p.id = i.pallet_id
     left join pallets e on e.id = p.linked_pallet_id and e.type = 'entrada'
