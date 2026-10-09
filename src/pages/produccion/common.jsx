@@ -1,4 +1,6 @@
 // Piezas compartidas de Produccion / Calidad: enlace de regreso, selector de turno y KPIs por linea.
+import { areaAllowsPage } from '@shared/areas.js'
+import { useSession } from '@/lib/session'
 import { AlertTriangle, ChevronLeft, Clock, Gauge, TrendingUp, Users } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { shiftOf, SHIFTS } from '@shared/shift.js'
@@ -6,6 +8,9 @@ import { Progress, Segmented } from '@/components/ui'
 import { cn, fmtInt, fmtPct } from '@/lib/utils'
 
 export function BackLink({ to, children }) {
+  // Areas de trabajo (Entrada / Salida / Linea): sin enlaces a paginas que no son de su area.
+  const { user } = useSession()
+  if (user?.area && !areaAllowsPage(user.area, to)) return null
   return (
     <Link
       to={to}

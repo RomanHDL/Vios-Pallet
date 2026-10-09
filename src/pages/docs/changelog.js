@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.23.1',
+    date: '2026-10-08',
+    title: 'Áreas sin enlaces de regreso',
+    changed: ['En Entrada, Salida y Producción por línea ya no salen los enlaces "Pallets" / "Inicio" de arriba (no son de su área).'],
+  },
+  {
     version: '1.23.0',
     date: '2026-10-08',
     title: 'Pendientes en Entrada y Salida',

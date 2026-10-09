@@ -1,4 +1,6 @@
 // Piezas compartidas por las pantallas de Pallets.
+import { areaAllowsPage } from '@shared/areas.js'
+import { useSession } from '@/lib/session'
 import { ChevronLeft, Search } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -50,6 +52,9 @@ export const resumePath = (p) =>
     : `/pallets/entrada?id=${p.id}`
 
 export function BackLink({ to = '/pallets', label = 'Pallets' }) {
+  // Areas de trabajo (Entrada / Salida / Linea): sin enlaces a paginas que no son de su area.
+  const { user } = useSession()
+  if (user?.area && !areaAllowsPage(user.area, to)) return null
   return (
     <Link
       to={to}

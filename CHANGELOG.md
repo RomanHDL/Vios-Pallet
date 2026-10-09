@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.23.1] — 2026-10-08
+
+### Changed
+- `BackLink` (pallets y producción/calidad) no se muestra si su destino no es del área de la sesión.
+
 ## [1.23.0] — 2026-10-08
 
 ### Added
