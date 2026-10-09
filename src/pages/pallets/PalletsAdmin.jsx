@@ -300,9 +300,6 @@ export default function PalletsAdmin({ FindSerial }) {
           <p className="mt-0.5 text-[14px] text-muted-foreground">Entrada, producción por línea y salida de pallets</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <HeaderLink to="/pallets/lineas" icon={Factory}>
-            Producción por línea
-          </HeaderLink>
           <HeaderLink to="/pallets/historial" icon={History}>
             Historial
           </HeaderLink>

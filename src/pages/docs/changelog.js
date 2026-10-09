@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.20.3',
+    date: '2026-10-08',
+    title: 'Control de Pallet sin botón repetido',
+    changed: ['Vista de administrador: se quitó el botón "Producción por línea" de arriba; ya está la tarjeta entre Entrada y Salida.'],
+  },
+  {
     version: '1.20.2',
     date: '2026-10-08',
     title: 'Contraseña de admin: más tolerante',

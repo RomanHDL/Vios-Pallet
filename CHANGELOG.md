@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.20.3] — 2026-10-08
+
+### Changed
+- `PalletsAdmin`: sin el enlace de encabezado a Producción por línea (queda la tarjeta del flujo).
+
 ## [1.20.2] — 2026-10-08
 
 ### Fixed
