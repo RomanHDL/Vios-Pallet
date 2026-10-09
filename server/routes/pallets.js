@@ -45,6 +45,46 @@ r.get('/pallets/summary', requireAuth(), async (_req, res) => {
   res.json({ entradaAbiertos: by.entrada || 0, salidaAbiertos: by.salida || 0 })
 })
 
+// Pendientes de cada area (Entrada / Salida), de cualquier dia.
+r.get('/pallets/pending', requireAuth(), async (req, res) => {
+  const area = req.query.area === 'salida' ? 'salida' : 'entrada'
+  const list =
+    area === 'entrada'
+      ? await rows(sql`
+          select e.id, e.model, e.brand, e.created_at as since, 'entrada_abierta' as kind,
+            (select count(*)::int from pallet_items i where i.pallet_id = e.id) as total, 0 as done
+          from pallets e where e.type = 'entrada' and e.status = 'abierto' order by e.created_at`)
+      : await rows(sql`
+          select e.id, e.model, e.brand,
+            coalesce(s.created_at, e.closed_at, e.created_at) as since,
+            case when s.id is null then 'sin_salida' else 'salida_abierta' end as kind,
+            coalesce(s.expected_item_count, e.item_count,
+              (select count(*)::int from pallet_items i where i.pallet_id = e.id)) as total,
+            (select count(*)::int from pallet_items i where i.pallet_id = s.id) as done
+          from pallets e left join pallets s on s.linked_pallet_id = e.id and s.type = 'salida'
+          where e.type = 'entrada' and e.status = 'cerrado' and (s.id is null or s.status = 'abierto')
+          order by since`)
+  res.json({ area, pallets: list })
+})
+
+// Un escaneo a la vez por serial: si dos pantallas escanean la misma tele al mismo tiempo en pallets distintos,
+// la segunda espera a la primera y sus revisiones ya la ven (no puede quedar en dos pallets).
+const codeLocks = new Map()
+async function withCodeLock(key, fn) {
+  const prev = codeLocks.get(key) || Promise.resolve()
+  let release
+  const mine = new Promise((r) => (release = r))
+  const chain = prev.then(() => mine)
+  codeLocks.set(key, chain)
+  await prev
+  try {
+    return await fn()
+  } finally {
+    release()
+    if (codeLocks.get(key) === chain) codeLocks.delete(key)
+  }
+}
+
 // Lista / historial. Filtros: type, status, missing=1, q (id), from/to (YYYY-MM-DD, fecha de creacion en MTY).
 r.get('/pallets', requireAuth(), async (req, res) => {
   const { type, status, missing, q, from, to } = req.query
@@ -215,6 +255,10 @@ r.post('/pallets/:id/items', requireAuth(), async (req, res) => {
   const c = code(req.body?.code)
   if (!c) throw bad('Código vacío.')
   if (c === p.id || c === p.linkedPalletId) throw bad('Ese es el ID del pallet, no una pieza.')
+  return withCodeLock(c, () => addItem(req, res, p, c))
+})
+
+async function addItem(req, res, p, c) {
   // En una salida, la pieza que ya venia en su entrada pasa aunque sea de otro modelo ("tele diferente").
   let hit = null
   if (p.type === 'salida')
@@ -272,7 +316,7 @@ r.post('/pallets/:id/items', requireAuth(), async (req, res) => {
         where i.code = ${c} and x.type = 'entrada' and i.pallet_id <> ${p.id}`)
     ).map((x) => x.pallet_id)
   res.status(201).json({ code: c, count: n, extra, different, otherPallets })
-})
+}
 
 // Quitar una pieza escaneada (corregir error) mientras el pallet esta abierto.
 r.delete('/pallets/:id/items/:code', requireAuth(), async (req, res) => {

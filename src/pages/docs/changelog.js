@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.23.0',
+    date: '2026-10-08',
+    title: 'Pendientes en Entrada y Salida',
+    added: [
+      'Entrada: lista "Pendientes por dar entrada" (entradas abiertas). Salida: "Pendientes por dar salida" (pallets sin salida y salidas abiertas). De cualquier día; tocar uno lo retoma.',
+    ],
+    fixed: [
+      'Si dos pantallas escanean la misma tele al mismo tiempo en pallets distintos, ya no puede quedar en los dos: la segunda se rechaza.',
+    ],
+  },
+  {
     version: '1.22.0',
     date: '2026-10-08',
     title: 'Pallets pendientes siempre a la vista',

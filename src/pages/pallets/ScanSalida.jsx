@@ -27,6 +27,7 @@ import {
 import { api } from '@/lib/api'
 import { useSession } from '@/lib/session'
 import { cn, feedback, fmtInt } from '@/lib/utils'
+import { PendingPallets } from './PendingPallets'
 import { RemoveItemDialog, ScannedList } from './ScannedList'
 import {
   BackLink,
@@ -230,6 +231,7 @@ export default function ScanSalida() {
           )}
         </Card>
       )}
+      {stage === 'id' && <PendingPallets area="salida" />}
 
       {stage === 'scan' && pallet && rec && (
         <div className="grid gap-5 lg:grid-cols-2 lg:items-start">

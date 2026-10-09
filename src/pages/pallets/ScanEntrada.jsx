@@ -7,6 +7,7 @@ import { api } from '@/lib/api'
 import { useStored } from '@/lib/hooks'
 import { useCatalogs, useSession } from '@/lib/session'
 import { feedback, fmtInt } from '@/lib/utils'
+import { PendingPallets } from './PendingPallets'
 import { RemoveItemDialog, ScannedList } from './ScannedList'
 import {
   BackLink,
@@ -225,6 +226,7 @@ export default function ScanEntrada() {
           )}
         </Card>
       )}
+      {stage === 'id' && <PendingPallets area="entrada" />}
 
       {stage === 'setup' && (
         <NewPalletSetup id={newId} onCancel={startOver} onCreated={(id) => openPallet(id)} />
