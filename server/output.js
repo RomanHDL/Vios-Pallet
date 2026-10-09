@@ -155,6 +155,20 @@ export async function closedExitItems(brand = null) {
   return produced(null, null, brand)
 }
 
+// ¿Ya se produjo este serial? Salida cerrada o escaneo por linea (tabla production).
+export async function producedInfo(serial) {
+  const [exit] = await rows(sql`
+    select p.id as pallet_id, p.model, p.brand, i.scanned_at as at
+    from pallet_items i join pallets p on p.id = i.pallet_id
+    where i.code = ${serial} and p.type = 'salida' and p.status = 'cerrado'
+    order by i.scanned_at limit 1`)
+  if (exit) return { source: 'salida', ...exit }
+  const [reg] = await rows(
+    sql`select line, model, brand, registered_at as at from production where serial = ${serial}`,
+  )
+  return reg ? { source: 'registro', ...reg } : null
+}
+
 // Meta del turno: la ultima capturada (sigue vigente los dias siguientes) o 765.
 export async function shiftGoal(shiftDate, shift) {
   const [manual] = await rows(sql`

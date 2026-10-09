@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.16.1] — 2026-10-08
+
+### Fixed
+- `server/output.js`: se restauró `producedInfo` (borrado por error en 1.16.0; `quality.js` lo importa y el servidor no arrancaba → 502).
+
 ## [1.16.0] — 2026-10-08
 
 ### Added

@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.16.1',
+    date: '2026-10-08',
+    title: 'Corrección: el servidor no arrancaba',
+    fixed: ['La versión 1.16.0 dejaba el sitio en 502 al iniciar; ya arranca normal.'],
+  },
+  {
     version: '1.16.0',
     date: '2026-10-08',
     title: 'Ajuste de producción por marca',
