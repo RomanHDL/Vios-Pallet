@@ -1,9 +1,9 @@
 // Datos iniciales: catalogos de PalletScan y un administrador.
 // Contrasena inicial del admin: ADMIN_INITIAL_PASSWORD si existe; si no, al azar. En local se guarda en
 // data/initial-admin.txt; en produccion (sin disco persistente) se escribe una sola vez en el log.
-import { randomBytes } from 'node:crypto'
+import { createHmac, randomBytes } from 'node:crypto'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { hashPassword } from './auth.js'
 import { db } from './db.js'
 import { brands, defects, lines, models, users } from './schema.js'
@@ -75,4 +75,19 @@ export async function ensureSeed() {
       console.log('Administrador creado. Credenciales iniciales en data/initial-admin.txt')
     }
   }
+  await applyAdminEnvPassword()
+}
+
+// Si ADMIN_INITIAL_PASSWORD (Coolify) cambia, se aplica a "admin" una vez por valor distinto (2026-10-08: Roman
+// cambio la variable y esperaba que sirviera). Solo se guarda una huella HMAC del valor, nunca la contrasena.
+async function applyAdminEnvPassword() {
+  const pw = process.env.ADMIN_INITIAL_PASSWORD
+  if (!pw) return
+  const fp = createHmac('sha256', process.env.SESSION_SECRET || 'vios-pallet').update(pw).digest('hex').slice(0, 24)
+  const key = `admin_env_password:${fp}`
+  const { rows: done } = await db.execute(sql`select 1 from sync_flags where key = ${key}`)
+  if (done.length) return
+  await db.update(users).set({ passwordHash: await hashPassword(pw) }).where(eq(users.username, 'admin'))
+  await db.execute(sql`insert into sync_flags (key) values (${key}) on conflict do nothing`)
+  console.log('Contraseña de "admin" actualizada desde ADMIN_INITIAL_PASSWORD.')
 }

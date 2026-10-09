@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.20.1] — 2026-10-08
+
+### Fixed
+- `seed.js`: `ADMIN_INITIAL_PASSWORD` se aplica a `admin` cuando cambia de valor (huella HMAC en `sync_flags`); antes solo servía al crear el usuario.
+
 ## [1.20.0] — 2026-10-08
 
 ### Changed

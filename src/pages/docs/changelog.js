@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.20.1',
+    date: '2026-10-08',
+    title: 'Contraseña de admin desde Coolify',
+    fixed: ['Si se cambia ADMIN_INITIAL_PASSWORD en Coolify, la contraseña de admin se actualiza al reiniciar (una vez por valor nuevo).'],
+  },
+  {
     version: '1.20.0',
     date: '2026-10-08',
     title: 'Áreas de trabajo',
