@@ -52,11 +52,15 @@ const PRODUCED = sql`(
 )`
 
 // Una fila por serial (la primera vez que se produjo), dentro de [desde, hasta) y marca opcional.
+// 2026-10-09: la primera vez se busca en TODA la historia y luego se filtra el rango; antes se buscaba dentro del
+// rango y una tele de un pallet de otro dia escaneada hoy en linea contaba en los dos dias (Hora x Hora 276 vs
+// Reporte por modelo 258).
 const firstTimes = (startIso, endIso, brand) => sql`
-  select distinct on (serial) serial, at, model, brand, pallet from ${PRODUCED} x
-  where ${brand ? sql`x.brand = ${brand}` : sql`true`}
-    ${startIso ? sql`and x.at >= ${startIso}` : sql``} ${endIso ? sql`and x.at < ${endIso}` : sql``}
-  order by serial, at`
+  select * from (
+    select distinct on (serial) serial, at, model, brand, pallet from ${PRODUCED} x order by serial, at
+  ) f
+  where ${brand ? sql`f.brand = ${brand}` : sql`true`}
+    ${startIso ? sql`and f.at >= ${startIso}` : sql``} ${endIso ? sql`and f.at < ${endIso}` : sql``}`
 
 // Ajustes manuales por turno y marca (tabla production_adjustments): "SILO hoy se hicieron 23". Un ajuste
 // negativo quita las ultimas piezas de esa marca en el turno; uno positivo agrega piezas sin serial.

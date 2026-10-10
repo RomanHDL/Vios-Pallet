@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.26.1',
+    date: '2026-10-09',
+    title: 'Mismo total en Hora x Hora y reportes',
+    fixed: [
+      'Una tele de un pallet de otro día escaneada hoy en línea ya no cuenta en los dos días: cuenta una sola vez, en el día en que se produjo primero. Hora x Hora, Inicio y el Reporte por modelo dan el mismo total.',
+    ],
+  },
+  {
     version: '1.26.0',
     date: '2026-10-09',
     title: 'HY y SILO por modelo',
