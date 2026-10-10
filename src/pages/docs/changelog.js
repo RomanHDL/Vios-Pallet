@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.33.0',
+    date: '2026-10-10',
+    title: 'Administración rediseñada',
+    changed: [
+      'Administración: indicadores (usuarios activos, elementos de catálogo, roles, último cambio registrado), panel Usuarios con accesos y altas recientes, panel Catálogos con accesos a cada catálogo y dona de elementos, y Ayuda y soporte con el Manual.',
+    ],
+    added: ['"Nuevo usuario" abre directo el alta y cada acceso de catálogo abre su pestaña.'],
+  },
+  {
     version: '1.32.0',
     date: '2026-10-10',
     title: 'Personal y productividad rediseñado',

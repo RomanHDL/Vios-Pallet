@@ -174,7 +174,8 @@ function UsuariosInner() {
   const { user: me } = useSession()
   const { data, error, loading, reload } = useApi('/users')
   const [q, setQ] = useState('')
-  const [creating, setCreating] = useState(false)
+  // ?nuevo=1 (Administracion -> Nuevo usuario) abre el alta al entrar.
+  const [creating, setCreating] = useState(() => new URLSearchParams(window.location.search).has('nuevo'))
   const [editing, setEditing] = useState(null)
 
   const list = useMemo(() => {

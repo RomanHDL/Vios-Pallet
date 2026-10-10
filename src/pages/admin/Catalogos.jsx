@@ -194,7 +194,11 @@ function AddForm({ kind, def, onChanged, onClose }) {
 
 function CatalogosInner() {
   const { catalogs, reloadCatalogs } = useSession()
-  const [kind, setKind] = useState('lines')
+  // ?tipo=models (Administracion -> accesos de catalogos) abre esa pestaña.
+  const [kind, setKind] = useState(() => {
+    const t = new URLSearchParams(window.location.search).get('tipo')
+    return KINDS[t] ? t : 'lines'
+  })
   const [adding, setAdding] = useState(false)
   const def = KINDS[kind]
   const items = catalogs?.[kind] || []

@@ -354,7 +354,9 @@ export function Donut({ parts, total, unit, size = 168 }) {
                 strokeDasharray={`${Math.max(0, len - 2)} ${c}`}
                 strokeDashoffset={-acc}
                 style={{ transition: 'stroke-dasharray .5s ease' }}
-              />
+              >
+                {p.title && <title>{p.title}</title>}
+              </circle>
             )
             acc += len
             return el

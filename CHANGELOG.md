@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.33.0] — 2026-10-10
+
+### Added
+- `GET /api/admin/last-change` (solo admin): último registro con fecha entre altas de usuarios, `hourly_goals`, `production_adjustments` y `pallet_stage_thresholds`. No hay bitácora de auditoría.
+- `Usuarios?nuevo=1` abre el alta; `Catalogos?tipo=lines|models|brands|defects` abre la pestaña. `Donut` acepta `title` por segmento (tooltip).
+
+### Changed
+- `AdminHome` rediseñado (datos de `/users`, `/catalogs`, `/admin/last-change`).
+
 ## [1.32.0] — 2026-10-10
 
 ### Added

@@ -1,5 +1,6 @@
-import { asc, eq } from 'drizzle-orm'
+import { asc, eq, sql } from 'drizzle-orm'
 import { Router } from 'express'
+import { isArea } from '../../shared/areas.js'
 import {
   checkPassword,
   clearSession,
@@ -11,7 +12,6 @@ import {
 } from '../auth.js'
 import { db } from '../db.js'
 import { users } from '../schema.js'
-import { isArea } from '../../shared/areas.js'
 import { GUEST_USERNAME } from '../seed.js'
 import { bad, clean, conflict, isUniqueViolation, notFound } from '../util.js'
 
@@ -67,6 +67,19 @@ r.post('/auth/password', requireAuth(), async (req, res) => {
 r.get('/users', requireAuth(['admin']), async (_req, res) => {
   const list = await db.select().from(users).orderBy(asc(users.name))
   res.json({ users: list.map((u) => ({ ...publicUser(u), active: u.active, createdAt: u.createdAt })) })
+})
+
+// Ultimo cambio administrativo registrado (Administracion, 2026-10-10). No hay bitacora: solo se consideran los
+// registros que guardan fecha (alta de usuarios, meta del turno, ajustes de produccion, umbrales de pallets).
+r.get('/admin/last-change', requireAuth(['admin']), async (_req, res) => {
+  const { rows } = await db.execute(sql`
+    select * from (
+      select created_at as at, 'Alta de usuario' as what, name as detail from users where username <> ${GUEST_USERNAME}
+      union all select updated_at, 'Meta del turno', shift_date || ' ' || shift from hourly_goals
+      union all select updated_at, 'Ajuste de producción', shift_date || ' ' || shift || ' ' || brand from production_adjustments
+      union all select updated_at, 'Umbral de pallets detenidos', stage from pallet_stage_thresholds
+    ) x order by at desc limit 1`)
+  res.json({ last: rows[0] || null })
 })
 
 r.post('/users', requireAuth(['admin']), async (req, res) => {
