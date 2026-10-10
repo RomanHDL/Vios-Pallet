@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.26.0',
+    date: '2026-10-09',
+    title: 'HY y SILO por modelo',
+    added: [
+      'Reporte de Producción por modelo: cada modelo muestra sus piezas de HY y de SILO por separado (por ejemplo EL-32" 76 = HY 56 · SILO 20), en el día y en las tarjetas de modelo.',
+    ],
+    fixed: [
+      'La marca de cada pieza es la que se eligió al escanearla en Producción por línea, aunque su pallet traiga marcas mezcladas. Los pallets se siguen contando con la marca del pallet.',
+    ],
+  },
+  {
     version: '1.25.1',
     date: '2026-10-09',
     title: 'Las piezas de línea cuentan al momento',

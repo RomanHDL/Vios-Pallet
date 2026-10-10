@@ -18,6 +18,9 @@ const shiftDay = (col) => sql`((${col} at time zone 'America/Monterrey') - inter
 // 2026-10-08 (Roman): no cuentan las piezas (de salida) de un pallet de entrada que aun no tiene salida cerrada, y un pallet
 // cuya entrada es de otro dia cuenta completo en el dia de su entrada ("los pallets de ayer" no suman a hoy, van a
 // ayer), aunque alguna tele se haya agregado a la entrada despues.
+// 2026-10-09 (Roman): un pallet puede traer marcas mezcladas (953902: EL-32 20 SILO + 56 HY). La marca y el modelo
+// de cada pieza son los que se eligieron al escanearla en Produccion por linea; si no paso por linea, los del pallet.
+// Los pallets se cuentan con la marca del pallet (pallet_brand).
 const PRODUCED = sql`(
   select * from (
     select i.code as serial,
@@ -25,10 +28,14 @@ const PRODUCED = sql`(
         then (case when ${shiftDay(sql`ei.scanned_at`)} = ${shiftDay(sql`e.created_at`)} then ei.scanned_at
           else e.created_at end)
         else i.scanned_at end as at,
-      p.model, p.brand, p.id as pallet
+      coalesce(pl.model, p.model) as model, coalesce(pl.brand, p.brand) as brand, p.id as pallet,
+      p.brand as pallet_brand
     from pallet_items i join pallets p on p.id = i.pallet_id
     left join pallets e on e.id = p.linked_pallet_id and e.type = 'entrada'
     left join pallet_items ei on ei.pallet_id = e.id and ei.code = i.code
+    left join lateral (
+      select pr.model, pr.brand from production pr where pr.serial = i.code order by pr.registered_at limit 1
+    ) pl on true
     where p.type = 'salida' and p.status = 'cerrado'
       and not exists (
         select 1 from pallet_items ei2 join pallets e2 on e2.id = ei2.pallet_id
@@ -39,13 +46,8 @@ const PRODUCED = sql`(
       )
     union all
     -- 2026-10-09 (Roman, "por que no esta aumentando"): el escaneo en linea ya es produccion, aunque su pallet
-    -- todavia no tenga salida cerrada. Marca y modelo los del pallet de entrada si la tele viene de uno.
-    select pr.serial, pr.registered_at, coalesce(pe.model, pr.model), coalesce(pe.brand, pr.brand), null
-    from production pr
-    left join lateral (
-      select e.model, e.brand from pallet_items ei join pallets e on e.id = ei.pallet_id
-      where e.type = 'entrada' and ei.code = pr.serial order by e.created_at desc limit 1
-    ) pe on true
+    -- todavia no tenga salida cerrada.
+    select serial, registered_at, model, brand, null, null from production
   ) u
 )`
 
@@ -118,8 +120,8 @@ export const BRANDS = ['HY', 'SILO']
 export async function brandSplit(startIso, endIso) {
   const list = await produced(startIso, endIso)
   const pallets = await rows(sql`
-    select brand, count(distinct pallet)::int n from ${PRODUCED} x
-    where pallet is not null and x.at >= ${startIso} and x.at < ${endIso} group by brand`)
+    select pallet_brand as brand, count(distinct pallet)::int n from ${PRODUCED} x
+    where pallet is not null and x.at >= ${startIso} and x.at < ${endIso} group by pallet_brand`)
   const names = [...new Set([...BRANDS, ...list.map((x) => x.brand), ...pallets.map((x) => x.brand)])]
   return names.filter(Boolean).map((brand) => ({
     brand,
@@ -131,8 +133,9 @@ export async function brandSplit(startIso, endIso) {
 // Pallets de salida cerrados por dia de turno y marca: [{ date, brand, n }] (mismo criterio que brandSplit).
 export async function palletsByDay(brand = null) {
   return rows(sql`
-    select ${shiftDay(sql`x.at`)}::text as date, brand, count(distinct pallet)::int n from ${PRODUCED} x
-    where pallet is not null ${brand ? sql`and x.brand = ${brand}` : sql``} group by 1, 2`)
+    select ${shiftDay(sql`x.at`)}::text as date, pallet_brand as brand, count(distinct pallet)::int n
+    from ${PRODUCED} x
+    where pallet is not null ${brand ? sql`and x.pallet_brand = ${brand}` : sql``} group by 1, 2`)
 }
 
 // Division por marca de un turno.

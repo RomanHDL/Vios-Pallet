@@ -3,6 +3,14 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.26.0] — 2026-10-09
+
+### Added
+- `/reports/models`: `byDay[].split[model] = { HY, SILO }` y `models[].brands`; `ReporteModelos` los muestra.
+
+### Fixed
+- `PRODUCED`: marca/modelo por pieza = los de `production` (escaneo por línea) si existe, si no los del pallet; conteo de pallets por `pallet_brand`. Revierte la marca del pallet de entrada de 1.25.1.
+
 ## [1.25.1] — 2026-10-09
 
 ### Fixed

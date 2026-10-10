@@ -1,11 +1,23 @@
 import { sql } from 'drizzle-orm'
 import { Router } from 'express'
+import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
 import { addDays, isWorkday, shiftOf, todayPlant } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
+import {
+  areaActivity,
+  BRANDS,
+  brandSplit,
+  closedExitItems,
+  GOAL_SCOPE,
+  outputByShift,
+  palletsByDay,
+  shiftBrandSplit,
+  shiftGoal,
+  shiftOutput,
+  WORK_AREAS,
+} from '../output.js'
 import { models } from '../schema.js'
-import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
-import { areaActivity, BRANDS, brandSplit, WORK_AREAS, palletsByDay, closedExitItems, GOAL_SCOPE, outputByShift, shiftBrandSplit, shiftGoal, shiftOutput } from '../output.js'
 import { clean, isYmd, rows } from '../util.js'
 
 const r = Router()
@@ -15,8 +27,7 @@ function range(q, defDays = 0) {
   const from = isYmd(q.from) ? q.from : addDays(to, -defDays)
   return from <= to ? { from, to } : { from: to, to: from }
 }
-const brandCond = (q, col = sql`brand`) =>
-  q.brand ? sql`${col} = ${clean(q.brand, 20)}` : sql`true`
+const brandCond = (q, col = sql`brand`) => (q.brand ? sql`${col} = ${clean(q.brand, 20)}` : sql`true`)
 
 function eachDay(from, to) {
   const out = []
@@ -92,7 +103,10 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
   }
   // Recovery: faltante del turno anterior (con plan) que se arrastra.
   for (let i = 0; i < shifts.length; i++) {
-    const before = shifts.slice(0, i).reverse().find((x) => x.plan > 0)
+    const before = shifts
+      .slice(0, i)
+      .reverse()
+      .find((x) => x.plan > 0)
     const carry = before ? Math.max(0, -before.delta) : 0
     shifts[i].carryOver = carry
     shifts[i].recoveryPlan = shifts[i].plan + carry
@@ -109,7 +123,10 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
   totals.delta = totals.processed - totals.plan
   totals.pct = totals.plan ? totals.processed / totals.plan : null
   // Division por marca (pallets y piezas) del rango.
-  const brands = await brandSplit(shiftWindow(from, 'T1').start.toISOString(), shiftWindow(to, 'T2').end.toISOString())
+  const brands = await brandSplit(
+    shiftWindow(from, 'T1').start.toISOString(),
+    shiftWindow(to, 'T2').end.toISOString(),
+  )
   res.json({ from, to, shifts: inRange, totals, brands })
 })
 
@@ -123,6 +140,12 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
   const dailyMap = new Map()
   // Por dia y marca: piezas y pallets (para "los numeros de ese dia" arriba del reporte).
   const brandDay = new Map()
+  // Por dia, modelo y marca (2026-10-09: "EL-32 SILO 20 + EL-32 HY 56 = 76").
+  const splitMap = new Map()
+  const addSplit = (d, model, brand, n) => {
+    const k = `${d}|${model}|${brand}`
+    splitMap.set(k, (splitMap.get(k) || 0) + n)
+  }
   const brandRow = (d, b) => {
     const k = `${d}|${b}`
     if (!brandDay.has(k)) brandDay.set(k, { pieces: 0, pallets: 0 })
@@ -133,8 +156,10 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     const k = `${d}|${x.model}`
     dailyMap.set(k, (dailyMap.get(k) || 0) + 1)
     brandRow(d, x.brand).pieces++
+    addSplit(d, x.model, x.brand, 1)
   }
-  for (const p of await palletsByDay(req.query.brand ? clean(req.query.brand, 20) : null)) brandRow(p.date, p.brand).pallets += p.n
+  for (const p of await palletsByDay(req.query.brand ? clean(req.query.brand, 20) : null))
+    brandRow(p.date, p.brand).pallets += p.n
   // Historico de PalletScan (antes de VIOS): se suma por dia y modelo a lo de VIOS.
   const brandQ = req.query.brand ? clean(req.query.brand, 20) : null
   const history = await rows(sql`
@@ -145,9 +170,24 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     dailyMap.set(k, (dailyMap.get(k) || 0) + h.pieces)
   }
   const historyBrand = await rows(sql`
-    select date, brand, sum(pieces)::int as pieces from production_history
-    where ${brandQ ? sql`brand = ${brandQ}` : sql`true`} group by 1, 2`)
-  for (const h of historyBrand) brandRow(h.date, h.brand).pieces += h.pieces
+    select date, model, brand, sum(pieces)::int as pieces from production_history
+    where ${brandQ ? sql`brand = ${brandQ}` : sql`true`} group by 1, 2, 3`)
+  for (const h of historyBrand) {
+    brandRow(h.date, h.brand).pieces += h.pieces
+    addSplit(h.date, h.model, h.brand, h.pieces)
+  }
+  const splitOf = (model, d = null) =>
+    Object.fromEntries(
+      BRANDS.map((b) => [
+        b,
+        [...splitMap]
+          .filter(([k]) => {
+            const [kd, km, kb] = k.split('|')
+            return km === model && kb === b && (d === null || kd === d)
+          })
+          .reduce((a, [, n]) => a + n, 0),
+      ]),
+    )
   const daily = [...dailyMap].map(([k, n]) => {
     const [shift_date, model] = k.split('|')
     return { shift_date, model, n }
@@ -175,6 +215,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       row[m.code] = daily.find((x) => x.shift_date === d && x.model === m.code)?.n || 0
       row.total += row[m.code]
     }
+    row.split = Object.fromEntries(allModels.map((m) => [m.code, splitOf(m.code, d)]))
     row.brands = BRANDS.map((brand) => {
       const b = brandDay.get(`${d}|${brand}`)
       return { brand, pieces: b?.pieces || 0, pallets: b?.pallets || 0 }
@@ -196,21 +237,21 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       target,
       pct: target ? net / target : null,
       remaining: Math.max(0, target - net),
+      brands: splitOf(m.code),
     }
   })
   const totals = byDay.map((x) => x.total)
   const sum = totals.reduce((a, x) => a + x, 0)
   // Proyeccion: regresion lineal de los ultimos 10 dias con produccion, topada a 2 turnos de meta.
   const recent = totals.slice(-10)
-  let projection = []
+  const projection = []
   if (recent.length >= 2) {
     const n = recent.length
     const xs = recent.map((_, i) => i)
     const mx = (n - 1) / 2
     const my = recent.reduce((a, y) => a + y, 0) / n
     const slope =
-      xs.reduce((a, x, i) => a + (x - mx) * (recent[i] - my), 0) /
-      xs.reduce((a, x) => a + (x - mx) ** 2, 0)
+      xs.reduce((a, x, i) => a + (x - mx) * (recent[i] - my), 0) / xs.reduce((a, x) => a + (x - mx) ** 2, 0)
     let d = todayPlant()
     let k = 1
     while (projection.length < 5) {
@@ -238,7 +279,11 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       pieces: history.reduce((a, h) => a + h.pieces, 0),
       rejected: history.reduce((a, h) => a + h.rejected, 0),
       from: history.map((h) => h.date).sort()[0] || null,
-      to: history.map((h) => h.date).sort().at(-1) || null,
+      to:
+        history
+          .map((h) => h.date)
+          .sort()
+          .at(-1) || null,
     },
   })
 })
@@ -341,7 +386,9 @@ r.get('/dashboard', requireAuth(), async (_req, res) => {
   const output = await shiftOutput(shiftDate, shift)
   const produced = output.length
   const { goal } = await shiftGoal(shiftDate, shift)
-  const [{ n: rejected }] = await rows(sql`select count(*)::int n from rejections where shift_date = ${shiftDate}`)
+  const [{ n: rejected }] = await rows(
+    sql`select count(*)::int n from rejections where shift_date = ${shiftDate}`,
+  )
   const open = await rows(sql`select type, count(*)::int n from pallets where status = 'abierto' group by 1`)
   const [{ n: withMissing }] = await rows(sql`
     select count(*)::int n from pallets where type = 'salida' and missing_count > 0
