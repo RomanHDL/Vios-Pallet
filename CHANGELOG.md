@@ -3,6 +3,14 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.32.0] — 2026-10-10
+
+### Added
+- `/reports/staffing?brand=`: `outputByShift(..., brand)` y `areaActivity(from, to, brand)` (Entrada/Salida = marca del pallet; línea = marca del escaneo).
+
+### Changed
+- `ReportePersonal` rediseñado (`reportes/personal/charts.jsx`: `Sparkline`, `TrendDual`, `Donut`, `smoothPath` sin sobrepasos). Una consulta de staffing cubre periodo, periodo anterior y 14 días; por hora usa `/reports/day` (`hours`). Exportar = CSV en el navegador con los filtros aplicados.
+
 ## [1.31.0] — 2026-10-10
 
 ### Changed

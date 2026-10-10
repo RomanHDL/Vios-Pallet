@@ -194,14 +194,17 @@ export const WORK_AREAS = [
   { key: 'lineas', label: 'Producción por línea' },
   { key: 'salida', label: 'Salida' },
 ]
-export async function areaActivity(from, to) {
+// `brand` opcional (2026-10-10, Personal y productividad): Entrada/Salida = marca del pallet; linea = marca elegida
+// al escanear.
+export async function areaActivity(from, to, brand = null) {
   const start = shiftWindow(from, 'T1').start.toISOString()
   const end = shiftWindow(to, 'T2').end.toISOString()
   const list = await rows(sql`
     select p.type as area, i.scanned_at as at from pallet_items i join pallets p on p.id = i.pallet_id
-    where i.scanned_at >= ${start} and i.scanned_at < ${end}
+    where i.scanned_at >= ${start} and i.scanned_at < ${end} ${brand ? sql`and p.brand = ${brand}` : sql``}
     union all
-    select 'lineas', registered_at from production where registered_at >= ${start} and registered_at < ${end}`)
+    select 'lineas', registered_at from production where registered_at >= ${start} and registered_at < ${end}
+      ${brand ? sql`and brand = ${brand}` : sql``}`)
   const out = {}
   for (const x of list) {
     const { shiftDate, shift } = shiftOf(new Date(x.at))

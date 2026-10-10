@@ -283,8 +283,9 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
 r.get('/reports/staffing', requireAuth(), async (req, res) => {
   const { from, to } = range(req.query, 6)
   // Personas = areas de trabajo (Entrada, Produccion por linea, Salida) con escaneos en el turno, 1 por area.
-  const count = await outputByShift(from, to)
-  const activity = await areaActivity(from, to)
+  const brand = req.query.brand ? clean(req.query.brand, 20) : null
+  const count = await outputByShift(from, to, brand)
+  const activity = await areaActivity(from, to, brand)
   const keys = new Set([...Object.keys(activity), ...Object.keys(count)])
   const list = [...keys]
     .filter((k) => k.slice(0, 10) >= from && k.slice(0, 10) <= to)

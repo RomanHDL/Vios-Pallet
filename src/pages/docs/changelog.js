@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.32.0',
+    date: '2026-10-10',
+    title: 'Personal y productividad rediseñado',
+    changed: [
+      'Personal y productividad: 4 indicadores con minigráficas de los últimos 14 días, tendencia de producción con piezas producidas y piezas por persona (por hora, día o turno), Trabajo por área en dona (escaneos de cada área), Rendimiento por área y Detalle por turno con estatus y Exportar a CSV. Mismas definiciones de siempre.',
+    ],
+    added: [
+      'Filtro HY / SILO en Personal y productividad (producción y escaneos de cada área con su marca real).',
+    ],
+  },
+  {
     version: '1.31.0',
     date: '2026-10-10',
     title: 'Inicio rediseñado',
