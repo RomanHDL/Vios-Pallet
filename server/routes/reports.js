@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
 import { Router } from 'express'
 import { DEFAULT_DAILY_GOAL, pace, shiftWindow } from '../../shared/pace.js'
+import { projectProduction } from '../../shared/projection.js'
 import { addDays, isWorkday, shiftOf, todayPlant } from '../../shared/shift.js'
 import { requireAuth } from '../auth.js'
 import { db } from '../db.js'
@@ -45,7 +46,9 @@ function eachDay(from, to) {
 r.get('/reports/day', requireAuth(), async (req, res) => {
   const { from, to } = range(req.query, 0)
   const prev = addDays(from, -7)
-  const count = await outputByShift(prev, to, req.query.brand ? clean(req.query.brand, 20) : null)
+  // Modelo opcional (Centro de reportes, 2026-10-10): solo cambia el Real; el Plan es la meta del turno.
+  const model = req.query.model ? clean(req.query.model, 20) : null
+  const count = await outputByShift(prev, to, req.query.brand ? clean(req.query.brand, 20) : null, model)
   const rej = await rows(sql`
     select shift_date, shift, count(*)::int n from rejections
     where shift_date between ${prev} and ${to} and ${brandCond(req.query)} group by 1, 2`)
@@ -243,25 +246,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
   const totals = byDay.map((x) => x.total)
   const sum = totals.reduce((a, x) => a + x, 0)
   // Proyeccion: regresion lineal de los ultimos 10 dias con produccion, topada a 2 turnos de meta.
-  const recent = totals.slice(-10)
-  const projection = []
-  if (recent.length >= 2) {
-    const n = recent.length
-    const xs = recent.map((_, i) => i)
-    const mx = (n - 1) / 2
-    const my = recent.reduce((a, y) => a + y, 0) / n
-    const slope =
-      xs.reduce((a, x, i) => a + (x - mx) * (recent[i] - my), 0) / xs.reduce((a, x) => a + (x - mx) ** 2, 0)
-    let d = todayPlant()
-    let k = 1
-    while (projection.length < 5) {
-      d = addDays(d, 1)
-      if (!isWorkday(d)) continue
-      const y = Math.round(my + slope * (n - 1 - mx + k))
-      projection.push({ date: d, value: Math.max(0, Math.min(capacity * 2, y)) })
-      k++
-    }
-  }
+  const projection = projectProduction(totals, capacity, todayPlant())
   res.json({
     models: modelsOut,
     byDay,

@@ -1,8 +1,9 @@
 // Piezas compartidas por los reportes (y admin): enlace de regreso, selector de periodo y marca.
-import { ChevronLeft } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+
 import { addDays, todayPlant } from '@shared/shift.js'
+import { ChevronLeft, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Input, Segmented } from '@/components/ui'
 import { useCatalogs } from '@/lib/session'
 import { cn, fmtInt, fmtYmd } from '@/lib/utils'
@@ -22,10 +23,22 @@ export function BackLink({ to, label }) {
 const PERIOD_LABEL = { hoy: 'Hoy', ayer: 'Ayer', semana: 'Semana', rango: 'Rango' }
 
 // Periodo de consulta: hoy / ayer / ultimos 7 dias / rango libre. Fechas en YYYY-MM-DD (planta).
+// Si la URL trae ?from=&to= (Centro de reportes), arranca con ese periodo.
 export function usePeriod(initial = 'hoy') {
   const today = todayPlant()
-  const [period, setPeriod] = useState(initial)
-  const [custom, setCustom] = useState({ from: addDays(today, -6), to: today })
+  const [params] = useSearchParams()
+  const [start] = useState(() => {
+    const from = params.get('from')
+    const to = params.get('to')
+    const ymd = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || '')
+    if (!ymd(from) || !ymd(to)) return null
+    if (from === today && to === today) return { period: 'hoy' }
+    const y = addDays(today, -1)
+    if (from === y && to === y) return { period: 'ayer' }
+    return { period: 'rango', custom: { from, to } }
+  })
+  const [period, setPeriod] = useState(start?.period || initial)
+  const [custom, setCustom] = useState(start?.custom || { from: addDays(today, -6), to: today })
   const { from, to } = useMemo(() => {
     if (period === 'hoy') return { from: today, to: today }
     if (period === 'ayer') return { from: addDays(today, -1), to: addDays(today, -1) }
@@ -90,7 +103,12 @@ export function BrandControl({ value, onChange }) {
 // Diferencia con signo y color: + verde, - rojo.
 export function Delta({ value, className }) {
   if (value === null || value === undefined) return <span className={className}>—</span>
-  const tone = value > 0 ? 'text-emerald-600 dark:text-emerald-400' : value < 0 ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
+  const tone =
+    value > 0
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : value < 0
+        ? 'text-red-600 dark:text-red-400'
+        : 'text-muted-foreground'
   return (
     <span className={cn('tabular font-bold', tone, className)}>
       {value > 0 ? '+' : value < 0 ? '−' : ''}
@@ -99,4 +117,28 @@ export function Delta({ value, className }) {
   )
 }
 
-export const pctTone = (pct) => (pct === null || pct === undefined ? 'primary' : pct >= 1 ? 'green' : pct >= 0.85 ? 'amber' : 'red')
+export const pctTone = (pct) =>
+  pct === null || pct === undefined ? 'primary' : pct >= 1 ? 'green' : pct >= 0.85 ? 'amber' : 'red'
+
+// Valor inicial desde la URL (?brand=HY...), para abrir un reporte con los filtros del Centro de reportes.
+export function useUrlInit(key, fallback = '') {
+  const [params] = useSearchParams()
+  return params.get(key) ?? fallback
+}
+
+// Filtro que llego por la URL y que el reporte no tiene como control propio (modelo, turno): se puede quitar.
+export function FilterChip({ label, onClear }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 py-1 pl-3 pr-1 text-[12.5px] font-semibold text-primary">
+      {label}
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label={`Quitar ${label}`}
+        className="grid h-5 w-5 place-items-center rounded-full hover:bg-primary/15"
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </span>
+  )
+}

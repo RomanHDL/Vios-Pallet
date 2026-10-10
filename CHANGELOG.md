@@ -3,6 +3,17 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.28.0] — 2026-10-10
+
+### Added
+- `ReportesHome` = Centro de reportes (`src/pages/reportes/centro/*`): tarjetas con estado propio en `sessionStorage` (`vios:centro:*`), periodos en `period.js` (día/semana lun–dom/mes, comparación con periodo anterior solo con días cerrados).
+- `PlanRealBars` en `charts.jsx`; `PalletCard` exportado de `PalletProgress`.
+- `/reports/day?model=` (filtra el Real; el Plan sigue siendo la meta del turno). `outputByShift(from, to, brand, model)`.
+- Reportes completos leen filtros de la URL: `from`/`to` (`usePeriod`), `brand`, `model`, `shift`, `win`, `day`, `estado`, `q` (`useUrlInit`, `FilterChip`).
+
+### Changed
+- Proyección movida a `shared/projection.js` (servidor y cliente).
+
 ## [1.27.0] — 2026-10-10
 
 ### Changed

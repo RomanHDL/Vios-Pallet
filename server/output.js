@@ -148,13 +148,14 @@ export async function shiftBrandSplit(shiftDate, shift) {
   return brandSplit(start.toISOString(), end.toISOString())
 }
 
-// Piezas por turno entre dos fechas de turno: { 'YYYY-MM-DD|T1': n }. `brand` opcional.
-export async function outputByShift(from, to, brand = null) {
-  const list = await produced(
+// Piezas por turno entre dos fechas de turno: { 'YYYY-MM-DD|T1': n }. `brand` y `model` opcionales.
+export async function outputByShift(from, to, brand = null, model = null) {
+  const all = await produced(
     shiftWindow(from, 'T1').start.toISOString(),
     shiftWindow(to, 'T2').end.toISOString(),
     brand,
   )
+  const list = model ? all.filter((x) => x.model === model) : all
   const count = {}
   for (const x of list) {
     const { shiftDate, shift } = shiftOf(new Date(x.at))

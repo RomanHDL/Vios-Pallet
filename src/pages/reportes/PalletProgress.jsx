@@ -3,7 +3,17 @@
 // - Si caben, se quedan fijos y solo rotan los consolidados en los lugares que sobran.
 // - Si hay mas pendientes que lugares, rotan solo los pendientes.
 // Rota cada 10 s (se puede pausar); los datos se refrescan sin reiniciar la rotacion.
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, Layers, Pause, Pin, Play, TriangleAlert } from 'lucide-react'
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Layers,
+  Pause,
+  Pin,
+  Play,
+  TriangleAlert,
+} from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Card, Empty } from '@/components/ui'
@@ -36,23 +46,61 @@ function useSlots() {
 }
 
 const STATE_UI = {
-  escaneando: { label: 'Escaneando entrada', icon: Clock3, chip: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300', bar: 'bg-blue-500', pct: 'text-blue-600 dark:text-blue-400' },
-  sin_salida: { label: 'Sin salida', icon: TriangleAlert, chip: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300', bar: 'bg-amber-500', pct: 'text-amber-600 dark:text-amber-400' },
-  en_proceso: { label: 'En proceso', icon: Clock3, chip: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300', bar: 'bg-gradient-to-r from-violet-600 to-blue-600', pct: 'text-violet-700 dark:text-violet-300' },
-  sin_iniciar: { label: 'Sin iniciar', icon: Clock3, chip: 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300', bar: 'bg-slate-400', pct: 'text-slate-500 dark:text-slate-400' },
-  con_faltantes: { label: 'Con faltantes', icon: TriangleAlert, chip: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300', bar: 'bg-red-500', pct: 'text-red-600 dark:text-red-400' },
-  consolidado: { label: 'Consolidado', icon: CheckCircle2, chip: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300', bar: 'bg-emerald-600', pct: 'text-emerald-600 dark:text-emerald-400' },
+  escaneando: {
+    label: 'Escaneando entrada',
+    icon: Clock3,
+    chip: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+    bar: 'bg-blue-500',
+    pct: 'text-blue-600 dark:text-blue-400',
+  },
+  sin_salida: {
+    label: 'Sin salida',
+    icon: TriangleAlert,
+    chip: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    bar: 'bg-amber-500',
+    pct: 'text-amber-600 dark:text-amber-400',
+  },
+  en_proceso: {
+    label: 'En proceso',
+    icon: Clock3,
+    chip: 'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+    bar: 'bg-gradient-to-r from-violet-600 to-blue-600',
+    pct: 'text-violet-700 dark:text-violet-300',
+  },
+  sin_iniciar: {
+    label: 'Sin iniciar',
+    icon: Clock3,
+    chip: 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300',
+    bar: 'bg-slate-400',
+    pct: 'text-slate-500 dark:text-slate-400',
+  },
+  con_faltantes: {
+    label: 'Con faltantes',
+    icon: TriangleAlert,
+    chip: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',
+    bar: 'bg-red-500',
+    pct: 'text-red-600 dark:text-red-400',
+  },
+  consolidado: {
+    label: 'Consolidado',
+    icon: CheckCircle2,
+    chip: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    bar: 'bg-emerald-600',
+    pct: 'text-emerald-600 dark:text-emerald-400',
+  },
 }
 
 const fmtDay = (iso) =>
-  new Date(iso).toLocaleDateString('es-MX', { timeZone: 'America/Monterrey', day: '2-digit', month: 'short' }).replace('.', '')
+  new Date(iso)
+    .toLocaleDateString('es-MX', { timeZone: 'America/Monterrey', day: '2-digit', month: 'short' })
+    .replace('.', '')
 
 function uiState(p) {
   if (p.state === 'en_proceso' && p.valid_out === 0) return 'sin_iniciar'
   return STATE_UI[p.state] ? p.state : 'en_proceso'
 }
 
-function PalletCard({ p, fixed }) {
+export function PalletCard({ p, fixed }) {
   const key = uiState(p)
   const s = STATE_UI[key]
   const pending = isPending(p)
@@ -82,7 +130,9 @@ function PalletCard({ p, fixed }) {
             </p>
           )}
         </div>
-        {pending && <Pin className="mt-0.5 h-4 w-4 shrink-0 fill-current text-violet-600 dark:text-violet-400" />}
+        {pending && (
+          <Pin className="mt-0.5 h-4 w-4 shrink-0 fill-current text-violet-600 dark:text-violet-400" />
+        )}
       </div>
       <div className="mt-1.5 h-[22px]">
         {pending && (
@@ -91,16 +141,29 @@ function PalletCard({ p, fixed }) {
           </span>
         )}
       </div>
-      <PalletStack progress={p.progress} model={p.model} className="mx-auto mt-1 aspect-[150/156] w-full max-w-[150px]" />
+      <PalletStack
+        progress={p.progress}
+        model={p.model}
+        className="mx-auto mt-1 aspect-[150/156] w-full max-w-[150px]"
+      />
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200/80 dark:bg-white/10">
-        <div className={cn('h-full rounded-full transition-[width] duration-700', s.bar)} style={{ width: `${pct}%` }} />
+        <div
+          className={cn('h-full rounded-full transition-[width] duration-700', s.bar)}
+          style={{ width: `${pct}%` }}
+        />
       </div>
-      <span className={cn('mx-auto mt-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold', s.chip)}>
+      <span
+        className={cn(
+          'mx-auto mt-2.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold',
+          s.chip,
+        )}
+      >
         <Icon className="h-3.5 w-3.5" /> {s.label}
       </span>
       <div className="mt-2 flex items-baseline justify-between">
         <span className="tabular text-[14px] font-bold">
-          {fmtInt(p.valid_out)} <span className="font-medium text-muted-foreground">/ {fmtInt(p.expected)}</span>
+          {fmtInt(p.valid_out)}{' '}
+          <span className="font-medium text-muted-foreground">/ {fmtInt(p.expected)}</span>
         </span>
         <span className={cn('tabular text-[14px] font-extrabold', s.pct)}>{pct}%</span>
       </div>
@@ -133,10 +196,12 @@ export function PalletProgress({ pallets }) {
             <Layers className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <h3 className="text-[18px] font-extrabold leading-tight tracking-tight">Progreso visual de pallets</h3>
+            <h3 className="text-[18px] font-extrabold leading-tight tracking-tight">
+              Progreso visual de pallets
+            </h3>
             <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-              Los pallets pendientes siempre permanecen visibles. Los consolidados rotan automáticamente cuando existen más de{' '}
-              {slots} pallets.
+              Los pallets pendientes siempre permanecen visibles. Los consolidados rotan automáticamente
+              cuando existen más de {slots} pallets.
             </p>
           </div>
         </div>
@@ -177,11 +242,17 @@ export function PalletProgress({ pallets }) {
             aria-label={paused ? 'Reanudar rotación' : 'Pausar rotación'}
           >
             <span className="grid h-9 w-9 place-items-center rounded-full border-2 border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400">
-              {paused || !view.rotating ? <Play className="h-4 w-4 fill-current" /> : <Pause className="h-4 w-4 fill-current" />}
+              {paused || !view.rotating ? (
+                <Play className="h-4 w-4 fill-current" />
+              ) : (
+                <Pause className="h-4 w-4 fill-current" />
+              )}
             </span>
             <span className="leading-tight">
               <span className="block text-[11.5px] text-muted-foreground">Rotación automática</span>
-              <span className="block text-[13px] font-bold">{!view.rotating ? 'No hace falta' : paused ? 'En pausa' : `${ROTATE_MS / 1000} s`}</span>
+              <span className="block text-[13px] font-bold">
+                {!view.rotating ? 'No hace falta' : paused ? 'En pausa' : `${ROTATE_MS / 1000} s`}
+              </span>
             </span>
           </button>
         </div>

@@ -35,7 +35,15 @@ const shortDate = (ymd) => fmtYmd(ymd, { dow: false })
  *  projection: [{ date, value }]  (dias futuros estimados)
  *  reference:  { value, label }   (linea horizontal, ej. capacidad)
  */
-export function TrendChart({ points, projection = [], showProjection = true, today, reference, height = 260, className }) {
+export function TrendChart({
+  points,
+  projection = [],
+  showProjection = true,
+  today,
+  reference,
+  height = 260,
+  className,
+}) {
   const [ref, width] = useWidth()
   const [hover, setHover] = useState(null)
   const proj = showProjection ? projection : []
@@ -105,33 +113,95 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
         </defs>
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={pad.l} x2={width - pad.r} y1={y(t)} y2={y(t)} stroke="hsl(var(--border))" strokeDasharray={t ? '3 4' : undefined} />
-            <text x={pad.l - 8} y={y(t) + 4} textAnchor="end" fontSize="11" fill="hsl(var(--muted-foreground))" className="tabular">
+            <line
+              x1={pad.l}
+              x2={width - pad.r}
+              y1={y(t)}
+              y2={y(t)}
+              stroke="hsl(var(--border))"
+              strokeDasharray={t ? '3 4' : undefined}
+            />
+            <text
+              x={pad.l - 8}
+              y={y(t) + 4}
+              textAnchor="end"
+              fontSize="11"
+              fill="hsl(var(--muted-foreground))"
+              className="tabular"
+            >
               {fmtInt(t)}
             </text>
           </g>
         ))}
         {reference?.value > 0 && (
           <g>
-            <line x1={pad.l} x2={width - pad.r} y1={y(reference.value)} y2={y(reference.value)} stroke="#10b981" strokeWidth="1.5" strokeDasharray="6 4" />
-            <text x={width - pad.r} y={y(reference.value) - 5} textAnchor="end" fontSize="11" fontWeight="600" fill="#059669">
+            <line
+              x1={pad.l}
+              x2={width - pad.r}
+              y1={y(reference.value)}
+              y2={y(reference.value)}
+              stroke="#10b981"
+              strokeWidth="1.5"
+              strokeDasharray="6 4"
+            />
+            <text
+              x={width - pad.r}
+              y={y(reference.value) - 5}
+              textAnchor="end"
+              fontSize="11"
+              fontWeight="600"
+              fill="#059669"
+            >
               {reference.label} {fmtInt(reference.value)}
             </text>
           </g>
         )}
         {all.map((p, i) =>
           i % every === 0 || i === n - 1 ? (
-            <text key={p.date} x={x(i)} y={height - 9} textAnchor="middle" fontSize="11" fill="hsl(var(--muted-foreground))">
+            <text
+              key={p.date}
+              x={x(i)}
+              y={height - 9}
+              textAnchor="middle"
+              fontSize="11"
+              fill="hsl(var(--muted-foreground))"
+            >
               {shortDate(p.date)}
             </text>
           ) : null,
         )}
         {areaPath && <path d={areaPath} fill="url(#trend-fill)" />}
-        {linePath && <path d={linePath} fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />}
-        {projPath && <path d={projPath} fill="none" stroke="#d97706" strokeWidth="2" strokeDasharray="6 5" strokeLinecap="round" />}
+        {linePath && (
+          <path
+            d={linePath}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        )}
+        {projPath && (
+          <path
+            d={projPath}
+            fill="none"
+            stroke="#d97706"
+            strokeWidth="2"
+            strokeDasharray="6 5"
+            strokeLinecap="round"
+          />
+        )}
         {hoyX !== null && (
           <g>
-            <line x1={hoyX} x2={hoyX} y1={pad.t - 4} y2={pad.t + ih} stroke="#ef4444" strokeWidth="1.5" strokeDasharray="2 3" />
+            <line
+              x1={hoyX}
+              x2={hoyX}
+              y1={pad.t - 4}
+              y2={pad.t + ih}
+              stroke="#ef4444"
+              strokeWidth="1.5"
+              strokeDasharray="2 3"
+            />
             <rect x={hoyX - 18} y={pad.t - 16} width="36" height="16" rx="8" fill="#ef4444" />
             <text x={hoyX} y={pad.t - 4.5} textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff">
               HOY
@@ -141,10 +211,27 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
         {all.map((p, i) =>
           p.kind === 'real' ? (
             n <= 40 || i === hover ? (
-              <circle key={p.date} cx={x(i)} cy={y(p.value)} r={i === hover ? 5 : 3} fill="hsl(var(--card))" stroke="hsl(var(--primary))" strokeWidth="2" />
+              <circle
+                key={p.date}
+                cx={x(i)}
+                cy={y(p.value)}
+                r={i === hover ? 5 : 3}
+                fill="hsl(var(--card))"
+                stroke="hsl(var(--primary))"
+                strokeWidth="2"
+              />
             ) : null
           ) : (
-            <circle key={p.date} cx={x(i)} cy={y(p.value)} r={i === hover ? 5 : 3.5} fill="hsl(var(--card))" stroke="#d97706" strokeWidth="2" strokeDasharray="2 2" />
+            <circle
+              key={p.date}
+              cx={x(i)}
+              cy={y(p.value)}
+              r={i === hover ? 5 : 3.5}
+              fill="hsl(var(--card))"
+              stroke="#d97706"
+              strokeWidth="2"
+              strokeDasharray="2 2"
+            />
           ),
         )}
         {labeled &&
@@ -158,18 +245,44 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
             const top = y(p.value) - 10
             return (
               <g key={`lbl-${p.date}`} pointerEvents="none">
-                <text x={x(i)} y={top} textAnchor="middle" fontSize="11.5" fontWeight="800" fill="hsl(var(--foreground))" className="tabular">
+                <text
+                  x={x(i)}
+                  y={top}
+                  textAnchor="middle"
+                  fontSize="11.5"
+                  fontWeight="800"
+                  fill="hsl(var(--foreground))"
+                  className="tabular"
+                >
                   {fmtInt(p.value)}
                 </text>
                 {parts.map((m, k) => (
-                  <text key={m.label} x={x(i)} y={top - 13 - k * 12} textAnchor="middle" fontSize="9.5" fontWeight="600" fill="hsl(var(--muted-foreground))" className="tabular">
+                  <text
+                    key={m.label}
+                    x={x(i)}
+                    y={top - 13 - k * 12}
+                    textAnchor="middle"
+                    fontSize="9.5"
+                    fontWeight="600"
+                    fill="hsl(var(--muted-foreground))"
+                    className="tabular"
+                  >
                     {m.label} {fmtInt(m.n)}
                   </text>
                 ))}
               </g>
             )
           })}
-        {h && <line x1={x(hover)} x2={x(hover)} y1={pad.t} y2={pad.t + ih} stroke="hsl(var(--muted-foreground))" strokeOpacity="0.4" />}
+        {h && (
+          <line
+            x1={x(hover)}
+            x2={x(hover)}
+            y1={pad.t}
+            y2={pad.t + ih}
+            stroke="hsl(var(--muted-foreground))"
+            strokeOpacity="0.4"
+          />
+        )}
       </svg>
       {h && (
         <div
@@ -178,7 +291,10 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
         >
           <div className="font-semibold text-muted-foreground">{fmtYmd(h.date)}</div>
           <div className="tabular text-[14px] font-extrabold">
-            {fmtInt(h.value)} <span className="text-[11.5px] font-semibold text-muted-foreground">{h.kind === 'proj' ? 'proyectado' : 'piezas'}</span>
+            {fmtInt(h.value)}{' '}
+            <span className="text-[11.5px] font-semibold text-muted-foreground">
+              {h.kind === 'proj' ? 'proyectado' : 'piezas'}
+            </span>
           </div>
           {h.parts?.map((m) => (
             <div key={m.label} className="tabular flex justify-between gap-3 text-[12px]">
@@ -194,11 +310,25 @@ export function TrendChart({ points, projection = [], showProjection = true, tod
 
 export function Legend({ items, className }) {
   return (
-    <div className={cn('flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] text-muted-foreground', className)}>
+    <div
+      className={cn(
+        'flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] text-muted-foreground',
+        className,
+      )}
+    >
       {items.map((it) => (
         <span key={it.label} className="inline-flex items-center gap-1.5">
           <svg width="22" height="10" aria-hidden="true">
-            <line x1="1" x2="21" y1="5" y2="5" stroke={it.color} strokeWidth="2.5" strokeDasharray={it.dashed ? '4 3' : undefined} strokeLinecap="round" />
+            <line
+              x1="1"
+              x2="21"
+              y1="5"
+              y2="5"
+              stroke={it.color}
+              strokeWidth="2.5"
+              strokeDasharray={it.dashed ? '4 3' : undefined}
+              strokeLinecap="round"
+            />
           </svg>
           {it.label}
         </span>
@@ -230,5 +360,115 @@ export function HBars({ items, format = fmtInt, className }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+/**
+ * Barras agrupadas Plan (azul claro) vs Real (azul marino), con el valor arriba de cada barra.
+ *  groups: [{ key, label, sub, plan, real }]
+ */
+export function PlanRealBars({ groups, height = 220, className }) {
+  const [ref, width] = useWidth(480)
+  const pad = { l: 40, r: 8, t: 22, b: groups.some((g) => g.sub) ? 40 : 26 }
+  const iw = Math.max(10, width - pad.l - pad.r)
+  const ih = height - pad.t - pad.b
+  const max = niceMax(Math.max(1, ...groups.flatMap((g) => [g.plan, g.real])) * 1.08)
+  const y = (v) => pad.t + ih - (v / max) * ih
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(max * f))
+  const slot = iw / Math.max(1, groups.length)
+  const bw = Math.max(4, Math.min(52, slot * 0.32))
+  const showValues = bw >= 14
+  return (
+    <div ref={ref} className={cn('w-full select-none', className)}>
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        width="100%"
+        height={height}
+        role="img"
+        aria-label="Plan contra real"
+        className="block"
+      >
+        {ticks.map((t) => (
+          <g key={t}>
+            <line
+              x1={pad.l}
+              x2={width - pad.r}
+              y1={y(t)}
+              y2={y(t)}
+              stroke="hsl(var(--border))"
+              strokeDasharray={t ? '3 4' : undefined}
+            />
+            <text
+              x={pad.l - 8}
+              y={y(t) + 4}
+              textAnchor="end"
+              fontSize="11"
+              fill="hsl(var(--muted-foreground))"
+              className="tabular"
+            >
+              {fmtInt(t)}
+            </text>
+          </g>
+        ))}
+        {groups.map((g, i) => {
+          const cx = pad.l + slot * i + slot / 2
+          const bars = [
+            { k: 'plan', v: g.plan, x: cx - bw - 2, cls: 'fill-blue-400 dark:fill-blue-900' },
+            { k: 'real', v: g.real, x: cx + 2, cls: 'fill-[hsl(var(--primary))]' },
+          ]
+          return (
+            <g key={g.key}>
+              {bars.map((b) => (
+                <g key={b.k}>
+                  <rect
+                    x={b.x}
+                    y={y(b.v)}
+                    width={bw}
+                    height={Math.max(0, y(0) - y(b.v))}
+                    rx="3"
+                    className={b.cls}
+                  >
+                    <title>{`${b.k === 'plan' ? 'Plan' : 'Real'} ${fmtInt(b.v)}`}</title>
+                  </rect>
+                  {showValues && b.v > 0 && (
+                    <text
+                      x={b.x + bw / 2}
+                      y={y(b.v) - 5}
+                      textAnchor="middle"
+                      fontSize="11"
+                      fontWeight="700"
+                      fill="hsl(var(--foreground))"
+                      className="tabular"
+                    >
+                      {fmtInt(b.v)}
+                    </text>
+                  )}
+                </g>
+              ))}
+              <text
+                x={cx}
+                y={height - (g.sub ? 22 : 8)}
+                textAnchor="middle"
+                fontSize="11.5"
+                fill="hsl(var(--muted-foreground))"
+              >
+                {g.label}
+              </text>
+              {g.sub && (
+                <text
+                  x={cx}
+                  y={height - 8}
+                  textAnchor="middle"
+                  fontSize="10.5"
+                  fill="hsl(var(--muted-foreground))"
+                >
+                  {g.sub}
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+    </div>
   )
 }

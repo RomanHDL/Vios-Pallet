@@ -3,7 +3,7 @@
 // algo en el turno, 1 por area (2026-10-08: "solo son 3 personas, 3 modos de trabajo").
 import { shiftLabel } from '@shared/shift.js'
 import { AlertTriangle, BarChart3, Factory, Gauge, Users } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Badge,
   Card,
@@ -20,7 +20,7 @@ import {
 import { useApi } from '@/lib/hooks'
 import { fmtInt, fmtYmd } from '@/lib/utils'
 import { HBars } from './charts'
-import { BackLink, PeriodControls, periodText, usePeriod } from './common'
+import { BackLink, FilterChip, PeriodControls, periodText, usePeriod, useUrlInit } from './common'
 
 const fmt1 = (v) =>
   v === null || v === undefined ? '—' : v.toLocaleString('es-MX', { maximumFractionDigits: 1 })
@@ -46,8 +46,9 @@ function peopleByLine(rows) {
 
 export default function ReportePersonal() {
   const p = usePeriod('semana')
+  const [shift, setShift] = useState(useUrlInit('shift'))
   const { data, error, loading } = useApi('/reports/staffing', { query: { from: p.from, to: p.to } })
-  const rows = useMemo(() => data?.rows || [], [data])
+  const rows = useMemo(() => (data?.rows || []).filter((r) => !shift || r.shift === shift), [data, shift])
   const lines = useMemo(() => peopleByLine(rows), [rows])
   const recent = useMemo(() => [...rows].reverse(), [rows])
 
@@ -70,8 +71,9 @@ export default function ReportePersonal() {
         subtitle={`Piezas producidas por persona · ${periodText(p.from, p.to)}`}
       />
 
-      <Card className="p-3 sm:p-4">
+      <Card className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4">
         <PeriodControls p={p} />
+        {shift && <FilterChip label={shiftLabel(shift)} onClear={() => setShift('')} />}
       </Card>
 
       <ErrorBox error={error} />
@@ -81,7 +83,8 @@ export default function ReportePersonal() {
       ) : data && !rows.length ? (
         <Card>
           <Empty icon={Users} title="Sin personal ni producción en este periodo">
-            Cada área (Entrada, Producción por línea, Salida) cuenta como 1 persona en los turnos en que escanea.
+            Cada área (Entrada, Producción por línea, Salida) cuenta como 1 persona en los turnos en que
+            escanea.
           </Empty>
         </Card>
       ) : data ? (
@@ -144,7 +147,11 @@ export default function ReportePersonal() {
               </div>
             </Card>
             <Card>
-              <CardHeader icon={Users} title="Trabajo por área" subtitle="Piezas escaneadas en cada área (1 persona por área)" />
+              <CardHeader
+                icon={Users}
+                title="Trabajo por área"
+                subtitle="Piezas escaneadas en cada área (1 persona por área)"
+              />
               <div className="p-4 sm:p-5">
                 {lines.length ? (
                   <HBars
@@ -222,7 +229,9 @@ export default function ReportePersonal() {
                       <Badge tone={r.shift === 'T1' ? 'amber' : 'blue'}>{shiftLabel(r.shift)}</Badge>
                     </Td>
                     <Td className="text-[13px] text-muted-foreground">
-                      {r.lines.length ? r.lines.map((l) => `${l.line}: ${fmtInt(l.pieces)}`).join(' · ') : '—'}
+                      {r.lines.length
+                        ? r.lines.map((l) => `${l.line}: ${fmtInt(l.pieces)}`).join(' · ')
+                        : '—'}
                     </Td>
                     <Td className="tabular text-right">
                       {r.people ?? <span className="text-amber-600 dark:text-amber-400">sin actividad</span>}

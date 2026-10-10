@@ -2,6 +2,18 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.28.0',
+    date: '2026-10-10',
+    title: 'Centro de reportes',
+    added: [
+      'Reportes ahora es el "Centro de reportes": 4 tarjetas con datos reales (Reporte del día, Producción por modelo, Personal y productividad, Dashboard de pallets), cada una con sus propios filtros de Día / Semana / Mes, fecha con flechas, marca y modelo. Cambiar una no cambia las demás y los filtros se conservan al ir y volver.',
+      'Cada tarjeta abre su reporte completo con los mismos filtros (periodo, marca, modelo, turno). Desde Dashboard de pallets se puede buscar un serial y abrir "Ver faltantes" o el historial de pallets.',
+    ],
+    changed: [
+      'Producción por modelo usa la misma proyección en el reporte completo y en la tarjeta. Los modelos de cada marca son los que realmente tienen producción de esa marca.',
+    ],
+  },
+  {
     version: '1.27.0',
     date: '2026-10-10',
     title: 'Nueva pantalla de bienvenida',

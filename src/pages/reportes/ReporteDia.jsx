@@ -1,11 +1,32 @@
-import { BrandSplit } from '@/components/BrandSplit'
+import { shiftLabel } from '@shared/shift.js'
 import { CalendarDays, ChevronDown, HelpCircle, Printer, Target, TrendingUp, XCircle } from 'lucide-react'
 import { useState } from 'react'
-import { shiftLabel } from '@shared/shift.js'
-import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Progress, Spinner, Stat } from '@/components/ui'
+import { BrandSplit } from '@/components/BrandSplit'
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Empty,
+  ErrorBox,
+  PageHeader,
+  Progress,
+  Spinner,
+  Stat,
+} from '@/components/ui'
 import { useApi } from '@/lib/hooks'
 import { cn, fmtInt, fmtPct, fmtYmd } from '@/lib/utils'
-import { BackLink, BrandControl, Delta, PeriodControls, pctTone, periodText, usePeriod } from './common'
+import {
+  BackLink,
+  BrandControl,
+  Delta,
+  FilterChip,
+  PeriodControls,
+  pctTone,
+  periodText,
+  usePeriod,
+  useUrlInit,
+} from './common'
 
 function planSource(lines) {
   const withPlan = lines.filter((l) => l.plan > 0)
@@ -41,7 +62,9 @@ function ShiftRow({ s, open, onToggle }) {
           <Badge tone={s.shift === 'T1' ? 'amber' : 'blue'}>{shiftLabel(s.shift)}</Badge>
           {src && <Badge tone={src.tone}>{src.label}</Badge>}
           {s.rejected > 0 && <Badge tone="red">{fmtInt(s.rejected)} rechazos</Badge>}
-          <ChevronDown className={cn('no-print ml-auto h-5 w-5 text-muted-foreground transition', open && 'rotate-180')} />
+          <ChevronDown
+            className={cn('no-print ml-auto h-5 w-5 text-muted-foreground transition', open && 'rotate-180')}
+          />
         </div>
         <div className="mt-3 grid grid-cols-3 gap-x-3 gap-y-3 sm:grid-cols-6">
           <Metric label="Plan">{fmtInt(s.plan)}</Metric>
@@ -50,7 +73,13 @@ function ShiftRow({ s, open, onToggle }) {
             <Delta value={s.delta} />
           </Metric>
           <Metric label="Cumpl.">
-            <span className={cn(s.pct !== null && (s.pct >= 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'))}>{fmtPct(s.pct)}</span>
+            <span
+              className={cn(
+                s.pct !== null && (s.pct >= 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'),
+              )}
+            >
+              {fmtPct(s.pct)}
+            </span>
           </Metric>
           <Metric label="Recovery" hint={s.carryOver ? `+${fmtInt(s.carryOver)} pendiente` : 'sin pendiente'}>
             {fmtInt(s.recoveryPlan)}
@@ -70,10 +99,15 @@ function ShiftRow({ s, open, onToggle }) {
               <span className="text-right">Pers.</span>
             </div>
             {s.lines.map((l) => (
-              <div key={l.line} className="grid grid-cols-[1fr_repeat(4,minmax(0,52px))] items-center gap-2 border-t px-3 py-2 text-[13.5px] sm:grid-cols-[1fr_repeat(4,90px)]">
+              <div
+                key={l.line}
+                className="grid grid-cols-[1fr_repeat(4,minmax(0,52px))] items-center gap-2 border-t px-3 py-2 text-[13.5px] sm:grid-cols-[1fr_repeat(4,90px)]"
+              >
                 <span className="min-w-0">
                   <span className="block truncate font-semibold">{l.line}</span>
-                  <span className="block text-[11px] text-muted-foreground">{l.plan ? (l.planCaptured ? 'meta capturada' : 'meta del día (765)') : 'sin plan'}</span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {l.plan ? (l.planCaptured ? 'meta capturada' : 'meta del día (765)') : 'sin plan'}
+                  </span>
                 </span>
                 <span className="tabular text-right">{fmtInt(l.plan)}</span>
                 <span className="tabular text-right font-semibold">{fmtInt(l.processed)}</span>
@@ -92,10 +126,11 @@ function ShiftRow({ s, open, onToggle }) {
 
 export default function ReporteDia() {
   const p = usePeriod('hoy')
-  const [brand, setBrand] = useState('')
+  const [brand, setBrand] = useState(useUrlInit('brand'))
+  const [model, setModel] = useState(useUrlInit('model'))
   const [open, setOpen] = useState({})
   const { data, error, loading } = useApi('/reports/day', {
-    query: { from: p.from, to: p.to, brand },
+    query: { from: p.from, to: p.to, brand, model },
     refreshMs: p.isToday ? 60000 : undefined,
   })
   const t = data?.totals
@@ -109,7 +144,7 @@ export default function ReporteDia() {
       <PageHeader
         back={<BackLink to="/reportes" label="Reportes" />}
         title="Reporte del día"
-        subtitle={`Plan vs Real · ${periodText(p.from, p.to)}${brand ? ` · ${brand}` : ''}`}
+        subtitle={`Plan vs Real · ${periodText(p.from, p.to)}${brand ? ` · ${brand}` : ''}${model ? ` · ${model}` : ''}`}
         actions={
           <Button variant="outline" size="sm" className="no-print" onClick={() => window.print()}>
             <Printer className="h-4 w-4" /> Imprimir
@@ -119,7 +154,10 @@ export default function ReporteDia() {
 
       <Card className="no-print flex flex-col gap-3 p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:p-4">
         <PeriodControls p={p} />
-        <BrandControl value={brand} onChange={setBrand} />
+        <div className="flex flex-wrap items-center gap-2">
+          {model && <FilterChip label={`Modelo ${model}`} onClear={() => setModel('')} />}
+          <BrandControl value={brand} onChange={setBrand} />
+        </div>
       </Card>
 
       <ErrorBox error={error} />
@@ -129,8 +167,19 @@ export default function ReporteDia() {
       ) : data ? (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
-            <Stat label="Plan" value={fmtInt(t.plan)} icon={Target} hint={`${shifts.length} turno${shifts.length === 1 ? '' : 's'}`} />
-            <Stat label="Real" value={fmtInt(t.processed)} icon={TrendingUp} tone="blue" hint="Salidas cerradas + por línea" />
+            <Stat
+              label="Plan"
+              value={fmtInt(t.plan)}
+              icon={Target}
+              hint={`${shifts.length} turno${shifts.length === 1 ? '' : 's'}`}
+            />
+            <Stat
+              label="Real"
+              value={fmtInt(t.processed)}
+              icon={TrendingUp}
+              tone="blue"
+              hint="Salidas cerradas + por línea"
+            />
             <Stat
               label="Delta"
               value={<Delta value={t.delta} className="font-extrabold" />}
@@ -194,17 +243,22 @@ export default function ReporteDia() {
                 <h3 className="text-[15px] font-bold">¿Cómo se calcula?</h3>
                 <ul className="mt-2 space-y-1.5 text-muted-foreground">
                   <li>
-                    <b className="text-foreground">Plan:</b> la meta del turno: 765 piezas o la que se capture en Hora por Hora (sigue
-                    vigente los días siguientes). Cuenta en Turno 1 de día hábil; en Turno 2, fines de semana y feriados solo si se trabajó.
+                    <b className="text-foreground">Plan:</b> la meta del turno: 765 piezas o la que se capture
+                    en Hora por Hora (sigue vigente los días siguientes). Cuenta en Turno 1 de día hábil; en
+                    Turno 2, fines de semana y feriados solo si se trabajó.
                   </li>
                   <li>
-                    <b className="text-foreground">Real:</b> piezas de pallets de salida cerrados más las escaneadas (TV + caja) en Producción por línea, en el turno en que se escanearon; cada serie cuenta una vez.
+                    <b className="text-foreground">Real:</b> piezas de pallets de salida cerrados más las
+                    escaneadas (TV + caja) en Producción por línea, en el turno en que se escanearon; cada
+                    serie cuenta una vez.
                   </li>
                   <li>
-                    <b className="text-foreground">Delta:</b> Real − Plan. Negativo (rojo) es lo que faltó; positivo (verde) es lo que se hizo de más.
+                    <b className="text-foreground">Delta:</b> Real − Plan. Negativo (rojo) es lo que faltó;
+                    positivo (verde) es lo que se hizo de más.
                   </li>
                   <li>
-                    <b className="text-foreground">Recovery:</b> Plan + lo que faltó en el turno anterior, para recuperar lo pendiente.
+                    <b className="text-foreground">Recovery:</b> Plan + lo que faltó en el turno anterior,
+                    para recuperar lo pendiente.
                   </li>
                 </ul>
               </div>

@@ -29,7 +29,7 @@ import {
 import { useApi } from '@/lib/hooks'
 import { cn, fmtInt, fmtPct, fmtYmd } from '@/lib/utils'
 import { Legend, TrendChart } from './charts'
-import { BackLink, BrandControl, pctTone } from './common'
+import { BackLink, BrandControl, pctTone, useUrlInit } from './common'
 
 // Numeros de un dia (por defecto hoy): total contra la meta, piezas por modelo y HY / SILO.
 // "HY 56 · SILO 20" de un modelo (solo marcas con piezas).
@@ -197,12 +197,14 @@ const WINDOWS = [
 ]
 
 export default function ReporteModelos() {
-  const [brand, setBrand] = useState('')
-  const [win, setWin] = useState(30)
+  const urlWin = useUrlInit('win')
+  const urlDay = useUrlInit('day')
+  const [brand, setBrand] = useState(useUrlInit('brand'))
+  const [win, setWin] = useState(urlWin === 'todo' ? 0 : urlWin === '14' ? 14 : 30)
   const [showProj, setShowProj] = useState(true)
   const { data, error, loading } = useApi('/reports/models', { query: { brand } })
   const today = todayPlant()
-  const [day, setDay] = useState(today)
+  const [day, setDay] = useState(/^\d{4}-\d{2}-\d{2}$/.test(urlDay) && urlDay <= today ? urlDay : today)
 
   const t = data?.totals
   const models = useMemo(
