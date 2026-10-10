@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.27.0',
+    date: '2026-10-10',
+    title: 'Nueva pantalla de bienvenida',
+    changed: [
+      'Pantalla de bienvenida rediseñada: "Centro de operaciones" con foto de pallets en laptop y "¡Bienvenido!" en celular, con las 4 tarjetas (Entrada, Salida, Producción por línea y Admin). Los accesos funcionan igual y Admin sigue pidiendo contraseña.',
+    ],
+  },
+  {
     version: '1.26.1',
     date: '2026-10-09',
     title: 'Mismo total en Hora x Hora y reportes',

@@ -22,9 +22,20 @@ export default {
       },
       keyframes: {
         flash: { '0%': { opacity: '1' }, '100%': { opacity: '0' } },
-        pop: { '0%': { transform: 'scale(.96)', opacity: '0' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+        pop: {
+          '0%': { transform: 'scale(.96)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        rise: {
+          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '100%': { transform: 'none', opacity: '1' },
+        },
       },
-      animation: { flash: 'flash .7s ease-out forwards', pop: 'pop .18s ease-out' },
+      animation: {
+        flash: 'flash .7s ease-out forwards',
+        pop: 'pop .18s ease-out',
+        rise: 'rise .45s cubic-bezier(.2,.7,.3,1) both',
+      },
     },
   },
   plugins: [],

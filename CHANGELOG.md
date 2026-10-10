@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.27.0] — 2026-10-10
+
+### Changed
+- `Login.jsx`: rediseño visual (hero + tarjetas 2×2 en `lg`, 1 columna abajo); misma lógica de `enter()`/`login()`. Foto `public/img/pallets-hero.webp` recortada de la imagen de referencia. `autoFocus` → `ref` + `useEffect`. Animación `rise` en Tailwind (respeta `prefers-reduced-motion`).
+
 ## [1.26.1] — 2026-10-09
 
 ### Fixed
