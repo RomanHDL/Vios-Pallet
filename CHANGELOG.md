@@ -3,6 +3,13 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.29.0] — 2026-10-10
+
+### Added
+- `CalidadAdmin` (admin y supervisor sin área) y `EstacionRechazo` (resto); `CalidadHome` elige por rol con `isQualityManager`. `/calidad/nuevo` = la estación.
+- `pareto.js` (`computePareto`: incidencias por defecto, orden frecuencia desc + nombre, acumulado con precisión completa, vitales hasta el primero ≥ 80%) y `ParetoChart` (SVG, doble eje, línea 80%, tooltip con toque).
+- Sin cambios de API ni permisos: `GET /rejections`, `GET /rejections/lookup/:serial`, `POST /rejections`, `DELETE /rejections/:id`.
+
 ## [1.28.0] — 2026-10-10
 
 ### Added

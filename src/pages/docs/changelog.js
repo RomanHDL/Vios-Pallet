@@ -2,6 +2,18 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.29.0',
+    date: '2026-10-10',
+    title: 'Calidad: tablero con Pareto y estación de rechazos',
+    added: [
+      'Calidad para administrador y supervisores: indicadores (Rechazos, En producción, Defecto principal, Calidad OK), Defectos más frecuentes, Pareto 80/20 con % acumulado y Rechazos recientes con buscador y filtro (VIOS, históricos, en producción). Filtros de Hoy / 7 / 30 días / Todo, rango de fechas, marca y modelo.',
+      'Calidad para áreas de Planta, Calidad y operadores: estación de registro en 3 pasos (escanear serial, seleccionar defectos, registrar) con información real de la TV y resumen antes de guardar.',
+    ],
+    changed: [
+      'Calidad OK muestra "Sin datos": VIOS no registra las TVs inspeccionadas sin defecto, así que no se calcula restando rechazos a producción.',
+    ],
+  },
+  {
     version: '1.28.0',
     date: '2026-10-10',
     title: 'Centro de reportes',
