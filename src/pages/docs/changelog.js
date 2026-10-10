@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.30.0',
+    date: '2026-10-10',
+    title: 'Reporte del día rediseñado',
+    changed: [
+      'Reporte del día: Centro de desempeño con Plan, Real, Delta, Cumplimiento y Rechazos, y gráfica Real contra Plan (por hora en un día, con la meta por hora de Hora por Hora; por día en semana o rango). A la derecha, Resumen ejecutivo, Producción por tipo y Calidad del día. Los turnos se ven en una línea de tiempo con su detalle y barra de cumplimiento. Mismos cálculos de siempre.',
+      'En los reportes, "Hoy" es la fecha del turno: el Turno 2 después de medianoche sigue contando en el día en que empezó.',
+    ],
+  },
+  {
     version: '1.29.0',
     date: '2026-10-10',
     title: 'Calidad: tablero con Pareto y estación de rechazos',

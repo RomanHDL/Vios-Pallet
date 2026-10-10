@@ -5,7 +5,7 @@
 // contar... ese area es el de produccion por linea".
 import { sql } from 'drizzle-orm'
 import { DEFAULT_DAILY_GOAL, shiftWindow } from '../shared/pace.js'
-import { shiftOf } from '../shared/shift.js'
+import { hourOfShift, SHIFTS, shiftOf } from '../shared/shift.js'
 import { rows } from './util.js'
 
 // Meta total del turno en hourly_goals. Clave nueva: las metas capturadas antes (por linea/plan) ya no aplican.
@@ -163,6 +163,26 @@ export async function outputByShift(from, to, brand = null, model = null) {
     count[k] = (count[k] || 0) + 1
   }
   return count
+}
+
+// Piezas por hora de cada turno de un dia (Reporte del dia, 2026-10-10): { T1: [..15], T2: [..9] }, mismo conteo
+// que Hora por Hora (hora del turno segun hourOfShift). `brand` y `model` opcionales.
+export async function outputByHour(shiftDate, brand = null, model = null) {
+  const all = await produced(
+    shiftWindow(shiftDate, 'T1').start.toISOString(),
+    shiftWindow(shiftDate, 'T2').end.toISOString(),
+    brand,
+  )
+  const out = Object.fromEntries(SHIFTS.map((s) => [s.key, Array.from({ length: s.hours }, () => 0)]))
+  for (const x of all) {
+    if (model && x.model !== model) continue
+    const at = new Date(x.at)
+    const { shiftDate: d, shift } = shiftOf(at)
+    if (d !== shiftDate) continue
+    const h = hourOfShift(at, shift)
+    if (h >= 0 && h < out[shift].length) out[shift][h] += 1
+  }
+  return out
 }
 
 // Personal por turno (2026-10-08, Roman: "solo son 3 personas, 3 modos de trabajo"): cada area de trabajo que

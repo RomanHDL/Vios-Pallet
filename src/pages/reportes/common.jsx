@@ -1,6 +1,6 @@
 // Piezas compartidas por los reportes (y admin): enlace de regreso, selector de periodo y marca.
 
-import { addDays, todayPlant } from '@shared/shift.js'
+import { addDays, shiftOf } from '@shared/shift.js'
 import { ChevronLeft, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -25,7 +25,7 @@ const PERIOD_LABEL = { hoy: 'Hoy', ayer: 'Ayer', semana: 'Semana', rango: 'Rango
 // Periodo de consulta: hoy / ayer / ultimos 7 dias / rango libre. Fechas en YYYY-MM-DD (planta).
 // Si la URL trae ?from=&to= (Centro de reportes), arranca con ese periodo.
 export function usePeriod(initial = 'hoy') {
-  const today = todayPlant()
+  const today = shiftOf().shiftDate // fecha de turno: el Turno 2 despues de medianoche sigue siendo "hoy"
   const [params] = useSearchParams()
   const [start] = useState(() => {
     const from = params.get('from')

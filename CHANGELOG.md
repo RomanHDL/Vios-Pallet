@@ -3,6 +3,13 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.30.0] — 2026-10-10
+
+### Changed
+- `ReporteDia` rediseñado (`reportes/dia/DesempenoChart.jsx`, `reportes/dia/parts.jsx`); plan por hora con `buildSlots` de Hora por Hora; impresión con tabla de turnos.
+- `/reports/day` devuelve `hours` (piezas por hora de T1/T2 cuando `from === to`, `outputByHour`) y `current`.
+- `usePeriod`: "hoy" = `shiftOf().shiftDate`.
+
 ## [1.29.0] — 2026-10-10
 
 ### Added

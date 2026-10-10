@@ -11,6 +11,7 @@ import {
   brandSplit,
   closedExitItems,
   GOAL_SCOPE,
+  outputByHour,
   outputByShift,
   palletsByDay,
   shiftBrandSplit,
@@ -130,7 +131,10 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
     shiftWindow(from, 'T1').start.toISOString(),
     shiftWindow(to, 'T2').end.toISOString(),
   )
-  res.json({ from, to, shifts: inRange, totals, brands })
+  // Un solo dia: piezas por hora de cada turno (grafica del Centro de desempeno).
+  const hours =
+    from === to ? await outputByHour(from, req.query.brand ? clean(req.query.brand, 20) : null, model) : null
+  res.json({ from, to, shifts: inRange, totals, brands, hours, current: shiftOf() })
 })
 
 // Produccion por dia y modelo + objetivos MTY/Texas + proyeccion.
