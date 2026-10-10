@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.31.0',
+    date: '2026-10-10',
+    title: 'Inicio rediseñado',
+    changed: [
+      'Inicio: Producción del turno con HY y SILO a la derecha, proyección y ritmo; 4 indicadores (rechazos, faltantes, entradas y salidas abiertas) y 4 accesos rápidos en filas iguales; abajo Actividad reciente, Estado de la operación y Alertas y seguimientos, los tres del mismo alto.',
+    ],
+    added: [
+      'Estado de la operación (líneas activas con escaneos en el turno, pallets en proceso, tiempo de turno) y Alertas reales: salidas con faltantes, pallets pendientes de turnos anteriores y proyección por debajo de la meta.',
+    ],
+  },
+  {
     version: '1.30.0',
     date: '2026-10-10',
     title: 'Reporte del día rediseñado',

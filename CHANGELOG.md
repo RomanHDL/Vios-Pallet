@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.31.0] — 2026-10-10
+
+### Changed
+- `Home.jsx` rediseñado: paneles inferiores con alto fijo (300 px) y scroll interno; alertas desde `/dashboard` (`withMissing7d`, `pace`) y `/pallets/pending?area=salida` (pendientes anteriores al inicio del turno); líneas activas desde `/production/by-line`. Sin cambios de API.
+
 ## [1.30.0] — 2026-10-10
 
 ### Changed
