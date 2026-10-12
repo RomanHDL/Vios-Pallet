@@ -214,6 +214,17 @@ SELECT * FROM (VALUES
 ) AS v(serial, pallet_id, model, brand, defects, comments, in_production, shift_date, shift, registered_at, source)
 WHERE NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'rejections_hoja_mty');
 INSERT INTO sync_flags (key) VALUES ('rejections_hoja_mty') ON CONFLICT DO NOTHING;
+
+-- 2026-10-11: restaurar el rechazo #32 que se borro por error al probar el permiso de borrado en produccion (antes
+-- de que llegara la regla "solo administradores"). Mismos datos, id, fecha y turno. Una sola vez (sync_flags): si
+-- despues un administrador lo borra a proposito, no vuelve.
+INSERT INTO rejections (id, serial, pallet_id, model, brand, defects, comments, in_production, shift_date, shift,
+  registered_by, registered_at, source)
+SELECT 32, 'EL251043TV16085', '108579', 'EL-43"', 'HY', '["Pantalla Estrellada"]'::jsonb, NULL, false, '2026-10-08', 'T1',
+  1, '2026-10-08T22:37:00.051Z'::timestamptz, 'vios'
+WHERE NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'restore_rejection_32')
+  AND NOT EXISTS (SELECT 1 FROM rejections WHERE id = 32 OR (serial = 'EL251043TV16085' AND registered_at = '2026-10-08T22:37:00.051Z'::timestamptz));
+INSERT INTO sync_flags (key) VALUES ('restore_rejection_32') ON CONFLICT DO NOTHING;
 `
 
 export async function migrate() {

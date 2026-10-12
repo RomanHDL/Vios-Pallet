@@ -14,6 +14,7 @@ Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado 
 
 ### Fixed
 - `CalidadAdmin`: filtros a todo lo ancho en celular.
+- Migración única (`restore_rejection_32`): restaura el rechazo #32 (EL251043TV16085) borrado por error en una prueba de permisos.
 
 ## [1.33.0] — 2026-10-10
 
