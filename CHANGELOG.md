@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.35.0] — 2026-10-12
+
+### Added
+- `/reports/models`: `byDay[].palletSplit[model][brand]` (`palletsByDayModel`) y `models[].active`.
+- `ReporteModelos`: filtro de modelo (`onlyModel`), también por URL `?model=` (lo pasa la tarjeta del Centro de reportes).
+
+### Fixed
+- Tarjetas de modelo: se muestran todos los modelos activos.
+
 ## [1.34.0] — 2026-10-11
 
 ### Added

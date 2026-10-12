@@ -171,6 +171,7 @@ export function ModelosCard({ onUpdate }) {
       subtitle="Avance VIOS HY / SILO contra objetivo MTY + Texas."
       to={linkTo('/reportes/modelos', {
         brand: f.brand,
+        model: f.model,
         win: ['14', '30', 'todo'].includes(f.win) ? f.win : '',
         day: f.anchor !== today ? f.anchor : '',
       })}

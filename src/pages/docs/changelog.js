@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.35.0',
+    date: '2026-10-12',
+    title: 'Producción por modelo: filtro por modelo',
+    added: [
+      'Producción por modelo: botones Todos / EL-32" / J0-43" / EL-43" / EL-50" / J0-50" que filtran todo el reporte (día, HY y SILO con piezas y pallets de ese modelo, indicadores, tarjetas, gráfica con su proyección y tabla). Se combinan con Todos / HY / SILO.',
+    ],
+    fixed: [
+      'Producción por modelo muestra los 5 modelos del catálogo (J0-50" no aparecía por no tener objetivo ni producción).',
+    ],
+  },
+  {
     version: '1.34.0',
     date: '2026-10-11',
     title: 'Permisos de administrador y Calidad en celular',

@@ -1,3 +1,4 @@
+import { projectProduction } from '@shared/projection.js'
 import { todayPlant } from '@shared/shift.js'
 import {
   Award,
@@ -190,6 +191,46 @@ function ModelCard({ m }) {
   )
 }
 
+// Vista de un solo modelo (2026-10-12, Roman: "quiero que haya un boton de todos y mas botones desglosados"): los
+// mismos datos del reporte, pero contando solo ese modelo (con la marca elegida arriba). HY/SILO con sus piezas y
+// pallets de ese modelo; la proyeccion es la misma formula sobre la serie del modelo.
+function onlyModel(data, model, today) {
+  if (!data || !model) return data
+  const m = data.models.find((x) => x.code === model)
+  const byDay = data.byDay
+    .map((d) => ({
+      date: d.date,
+      [model]: d[model] || 0,
+      total: d[model] || 0,
+      split: { [model]: d.split?.[model] },
+      brands: ['HY', 'SILO'].map((b) => ({
+        brand: b,
+        pieces: d.split?.[model]?.[b] || 0,
+        pallets: d.palletSplit?.[model]?.[b] || 0,
+      })),
+    }))
+    .filter((d) => d.total > 0)
+  const totals = byDay.map((d) => d.total)
+  const sum = totals.reduce((a, x) => a + x, 0)
+  const rejected = m?.rejected || 0
+  return {
+    ...data,
+    models: m ? [m] : [],
+    byDay,
+    history: null,
+    projection: projectProduction(totals, data.totals.capacity, today),
+    totals: {
+      ...data.totals,
+      produced: sum,
+      rejected,
+      net: sum - rejected,
+      avgPerDay: byDay.length ? Math.round(sum / byDay.length) : 0,
+      bestDay: totals.length ? Math.max(...totals) : 0,
+      daysWithProduction: byDay.length,
+    },
+  }
+}
+
 const WINDOWS = [
   { value: 14, label: '14 días' },
   { value: 30, label: '30 días' },
@@ -202,13 +243,20 @@ export default function ReporteModelos() {
   const [brand, setBrand] = useState(useUrlInit('brand'))
   const [win, setWin] = useState(urlWin === 'todo' ? 0 : urlWin === '14' ? 14 : 30)
   const [showProj, setShowProj] = useState(true)
-  const { data, error, loading } = useApi('/reports/models', { query: { brand } })
+  const [model, setModel] = useState(useUrlInit('model'))
+  const { data: raw, error, loading } = useApi('/reports/models', { query: { brand } })
   const today = todayPlant()
+  const data = useMemo(() => onlyModel(raw, model, today), [raw, model, today])
+  // Botones de modelo: todos los activos del catalogo y cualquiera con produccion.
+  const modelButtons = useMemo(
+    () => (raw?.models || []).filter((m) => m.active !== false || m.produced).map((m) => m.code),
+    [raw],
+  )
   const [day, setDay] = useState(/^\d{4}-\d{2}-\d{2}$/.test(urlDay) && urlDay <= today ? urlDay : today)
 
   const t = data?.totals
   const models = useMemo(
-    () => (data?.models || []).filter((m) => m.produced || m.target || m.rejected),
+    () => (data?.models || []).filter((m) => m.active !== false || m.produced || m.rejected),
     [data],
   )
   const points = useMemo(() => {
@@ -229,9 +277,20 @@ export default function ReporteModelos() {
       <PageHeader
         back={<BackLink to="/reportes" label="Reportes" />}
         title="Producción por modelo"
-        subtitle={`VIOS ${brand || 'HY / SILO'} · acumulado contra objetivo`}
+        subtitle={`VIOS ${brand || 'HY / SILO'}${model ? ` · ${model}` : ''} · acumulado contra objetivo`}
         actions={<BrandControl value={brand} onChange={setBrand} />}
       />
+
+      {modelButtons.length > 0 && (
+        <Card className="no-print flex flex-wrap items-center gap-3 p-3 sm:px-4">
+          <span className="text-[13px] font-semibold text-muted-foreground">Modelo / pulgadas</span>
+          <Segmented
+            value={model}
+            onChange={setModel}
+            options={[{ value: '', label: 'Todos' }, ...modelButtons.map((c) => ({ value: c, label: c }))]}
+          />
+        </Card>
+      )}
 
       <ErrorBox error={error} />
 
@@ -285,7 +344,7 @@ export default function ReporteModelos() {
           </div>
 
           {models.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
               {models.map((m) => (
                 <ModelCard key={m.code} m={m} />
               ))}

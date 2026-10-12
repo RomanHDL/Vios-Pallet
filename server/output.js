@@ -142,6 +142,14 @@ export async function palletsByDay(brand = null) {
     where pallet is not null ${brand ? sql`and x.pallet_brand = ${brand}` : sql``} group by 1, 2`)
 }
 
+// Pallets por dia, marca del pallet y modelo de sus piezas (Reporte por modelo con filtro de modelo, 2026-10-12).
+export async function palletsByDayModel(brand = null) {
+  return rows(sql`
+    select ${shiftDay(sql`x.at`)}::text as date, pallet_brand as brand, model, count(distinct pallet)::int n
+    from ${PRODUCED} x
+    where pallet is not null ${brand ? sql`and x.pallet_brand = ${brand}` : sql``} group by 1, 2, 3`)
+}
+
 // Division por marca de un turno.
 export async function shiftBrandSplit(shiftDate, shift) {
   const { start, end } = shiftWindow(shiftDate, shift)

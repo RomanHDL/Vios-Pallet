@@ -14,6 +14,7 @@ import {
   outputByHour,
   outputByShift,
   palletsByDay,
+  palletsByDayModel,
   shiftBrandSplit,
   shiftGoal,
   shiftOutput,
@@ -215,6 +216,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     if (row) row.n += h.rejected
     else rejectedIn.push({ model: h.model, n: h.rejected })
   }
+  const palletModel = await palletsByDayModel(brandQ)
   const days = [...new Set(daily.map((x) => x.shift_date))].sort()
   const byDay = days.map((d) => {
     const row = { date: d, total: 0 }
@@ -223,6 +225,19 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       row.total += row[m.code]
     }
     row.split = Object.fromEntries(allModels.map((m) => [m.code, splitOf(m.code, d)]))
+    row.palletSplit = Object.fromEntries(
+      allModels.map((m) => [
+        m.code,
+        Object.fromEntries(
+          BRANDS.map((b) => [
+            b,
+            palletModel
+              .filter((x) => x.date === d && x.model === m.code && x.brand === b)
+              .reduce((a, x) => a + x.n, 0),
+          ]),
+        ),
+      ]),
+    )
     row.brands = BRANDS.map((brand) => {
       const b = brandDay.get(`${d}|${brand}`)
       return { brand, pieces: b?.pieces || 0, pallets: b?.pallets || 0 }
@@ -236,6 +251,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     const target = m.targetMty + m.targetTexas
     return {
       code: m.code,
+      active: m.active,
       produced,
       rejected,
       net,
