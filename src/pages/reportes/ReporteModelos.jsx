@@ -144,9 +144,16 @@ function ModelCard({ m }) {
           {m.target ? fmtPct(m.pct) : 'sin objetivo'}
         </span>
       </div>
-      <p className="tabular mt-0.5 text-[26px] font-extrabold leading-tight">{fmtInt(m.net)}</p>
+      <p className="tabular mt-0.5 text-[26px] font-extrabold leading-tight">{fmtInt(m.produced)}</p>
       <p className="text-[11.5px] text-muted-foreground">
-        neto{m.rejected ? ` (−${fmtInt(m.rejected)} rechazadas)` : ''}
+        {m.rejected ? (
+          <>
+            neto <b className="tabular text-foreground">{fmtInt(m.net)}</b>{' '}
+            <span className="text-red-600 dark:text-red-400">(−{fmtInt(m.rejected)} rechazadas)</span>
+          </>
+        ) : (
+          'producidas · sin rechazos'
+        )}
       </p>
       <Progress value={m.pct} tone={pctTone(m.pct)} className="mt-2 h-1.5" />
       <div className="mt-1 flex justify-between text-[11.5px] text-muted-foreground">
@@ -177,10 +184,11 @@ function ModelCard({ m }) {
             >
               {b}
             </p>
-            <p className="tabular text-[15px] font-extrabold leading-tight">{fmtInt(net(b))}</p>
+            <p className="tabular text-[15px] font-extrabold leading-tight">{fmtInt(m.brands?.[b] || 0)}</p>
             {m.rejectedBrands?.[b] > 0 && (
-              <p className="text-[10px] text-red-600 dark:text-red-400">
-                −{fmtInt(m.rejectedBrands[b])} rech.
+              <p className="text-[10px] text-muted-foreground">
+                neto <b className="text-foreground">{fmtInt(net(b))}</b>{' '}
+                <span className="text-red-600 dark:text-red-400">(−{fmtInt(m.rejectedBrands[b])})</span>
               </p>
             )}
           </div>

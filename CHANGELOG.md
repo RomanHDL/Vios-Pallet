@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.38.1] — 2026-10-12
+
+### Changed
+- `ModelCard`: número grande = `produced`; neto y rechazados abajo. El enlace de la tarjeta del Centro de reportes ya no manda `day`.
+
 ## [1.38.0] — 2026-10-12
 
 ### Changed

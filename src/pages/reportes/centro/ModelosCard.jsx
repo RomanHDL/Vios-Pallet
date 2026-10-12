@@ -173,7 +173,6 @@ export function ModelosCard({ onUpdate }) {
         brand: f.brand,
         model: f.model,
         win: ['14', '30', 'todo'].includes(f.win) ? f.win : '',
-        day: f.anchor !== today ? f.anchor : '',
       })}
       loading={loading && Boolean(data)}
     >

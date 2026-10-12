@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.38.1',
+    date: '2026-10-12',
+    title: 'Tarjetas de modelo: cifra oficial',
+    changed: [
+      'Tarjetas de modelo: en grande la cantidad oficial producida; abajo el neto sin lo rechazado por Calidad (también en HY y SILO).',
+    ],
+    fixed: [
+      'Al abrir Producción por modelo desde el Centro de reportes ya no se queda en una fecha guardada de otro día.',
+    ],
+  },
+  {
     version: '1.38.0',
     date: '2026-10-12',
     title: 'Tarjetas de modelo compactas',
