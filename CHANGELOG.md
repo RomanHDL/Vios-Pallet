@@ -5,6 +5,9 @@ Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado 
 
 ## [1.38.1] — 2026-10-12
 
+### Fixed
+- Migración única (`delete_pallet_305362`): elimina el pallet 305362 / 305362-S (39 teles EL-32" ya procesadas antes en PalletScan), a petición de Roman. Respaldo guardado aparte.
+
 ### Changed
 - `ModelCard`: número grande = `produced`; neto y rechazados abajo. El enlace de la tarjeta del Centro de reportes ya no manda `day`.
 

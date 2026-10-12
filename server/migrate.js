@@ -225,6 +225,20 @@ SELECT 32, 'EL251043TV16085', '108579', 'EL-43"', 'HY', '["Pantalla Estrellada"]
 WHERE NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'restore_rejection_32')
   AND NOT EXISTS (SELECT 1 FROM rejections WHERE id = 32 OR (serial = 'EL251043TV16085' AND registered_at = '2026-10-08T22:37:00.051Z'::timestamptz));
 INSERT INTO sync_flags (key) VALUES ('restore_rejection_32') ON CONFLICT DO NOTHING;
+
+-- 2026-10-12 (Roman: "elimina ese pallet"): el pallet 305362 (EL-32" HY, 39 teles, entrada y salida del 12-oct) eran
+-- teles ya procesadas antes en PalletScan. Se borra entrada + salida + piezas, una sola vez y solo si es ese mismo
+-- pallet (creado el 12-oct). Respaldo de sus datos guardado aparte.
+DELETE FROM pallet_items WHERE pallet_id IN ('305362', '305362-S')
+  AND NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'delete_pallet_305362')
+  AND EXISTS (SELECT 1 FROM pallets WHERE id = '305362' AND created_at >= '2026-10-12T00:00:00Z' AND created_at < '2026-10-13T00:00:00Z');
+DELETE FROM pallet_missing WHERE pallet_id IN ('305362', '305362-S')
+  AND NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'delete_pallet_305362')
+  AND EXISTS (SELECT 1 FROM pallets WHERE id = '305362' AND created_at >= '2026-10-12T00:00:00Z' AND created_at < '2026-10-13T00:00:00Z');
+DELETE FROM pallets WHERE id IN ('305362-S', '305362')
+  AND NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'delete_pallet_305362')
+  AND EXISTS (SELECT 1 FROM pallets p WHERE p.id = '305362' AND p.created_at >= '2026-10-12T00:00:00Z' AND p.created_at < '2026-10-13T00:00:00Z');
+INSERT INTO sync_flags (key) VALUES ('delete_pallet_305362') ON CONFLICT DO NOTHING;
 `
 
 export async function migrate() {
