@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.39.0',
+    date: '2026-10-12',
+    title: 'Producción: modelos y pantalla completa',
+    added: [
+      'Producción: arriba del número grande, 5 tarjetas al mismo nivel, una por modelo (pulgadas), con sus piezas del turno y su desglose HY / SILO.',
+      'Producción: botón "Pantalla completa" para la tele de la línea.',
+    ],
+  },
+  {
     version: '1.38.1',
     date: '2026-10-12',
     title: 'Tarjetas de modelo: cifra oficial',

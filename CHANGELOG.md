@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.39.0] — 2026-10-12
+
+### Added
+- `ProduccionHome`: `ModelRow` (modelos activos del catálogo, piezas del turno por marca vía `/dashboard/brand`) y pantalla completa (Fullscreen API).
+
 ## [1.38.1] — 2026-10-12
 
 ### Fixed
