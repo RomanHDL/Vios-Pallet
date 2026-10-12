@@ -2,6 +2,18 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.34.0',
+    date: '2026-10-11',
+    title: 'Permisos de administrador y Calidad en celular',
+    added: [
+      'Administrador: en el detalle de un pallet de entrada, cada tele tiene "Mover a otro pallet" y "Eliminar del pallet", aunque el pallet esté cerrado (si su salida está cerrada, primero hay que reabrirla). Al moverla conserva su fecha de escaneo.',
+    ],
+    changed: [
+      'Solo los administradores pueden eliminar rechazos de Calidad (Entrada, Salida, Producción por línea y supervisores ya no).',
+    ],
+    fixed: ['Calidad en celular: los filtros y el botón Nuevo rechazo ya no quedan cargados a la derecha.'],
+  },
+  {
     version: '1.33.0',
     date: '2026-10-10',
     title: 'Administración rediseñada',

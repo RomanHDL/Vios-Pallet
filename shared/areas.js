@@ -19,7 +19,8 @@ const CALIDAD = (p) => p === '/calidad' || p.startsWith('/calidad/')
 export function areaAllowsPage(area, path) {
   if (!isArea(area)) return true
   if (area === 'entrada') return path === '/pallets/entrada' || PALLET.test(path) || CALIDAD(path)
-  if (area === 'salida') return path === '/pallets/salida' || SALIDA.test(path) || PALLET.test(path) || CALIDAD(path)
+  if (area === 'salida')
+    return path === '/pallets/salida' || SALIDA.test(path) || PALLET.test(path) || CALIDAD(path)
   return path === '/pallets/lineas'
 }
 
@@ -28,7 +29,8 @@ export function areaAllowsWrite(area, method, path) {
   if (!isArea(area)) return true
   if (path.startsWith('/auth/')) return true
   const m = method.toUpperCase()
-  const quality = (m === 'POST' && path === '/rejections') || (m === 'DELETE' && /^\/rejections\/\d+$/.test(path))
+  // Calidad en las areas: registrar rechazos (borrarlos es solo del administrador).
+  const quality = m === 'POST' && path === '/rejections'
   const items = path.match(/^\/pallets\/([^/]+)\/items(\/[^/]+)?$/)
   if (area === 'entrada')
     return (

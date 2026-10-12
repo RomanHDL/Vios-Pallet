@@ -136,10 +136,14 @@ r.get('/pallets/:id', requireAuth(), async (req, res) => {
       const found = await rows(sql`
         select i.code, x.id as pallet_id, x.type, x.status, i.scanned_at
         from pallet_items i join pallets x on x.id = i.pallet_id
-        where i.code in (${sql.join(missing.map((c) => sql`${c}`), sql`, `)})
+        where i.code in (${sql.join(
+          missing.map((c) => sql`${c}`),
+          sql`, `,
+        )})
           and x.id <> ${p.id} and x.id <> ${p.linked_pallet_id}
         order by i.scanned_at desc`)
-      for (const f of found) (out.missingElsewhere[f.code] ||= []).push({ id: f.pallet_id, type: f.type, status: f.status })
+      for (const f of found)
+        (out.missingElsewhere[f.code] ||= []).push({ id: f.pallet_id, type: f.type, status: f.status })
     }
     out.missingReasons = await rows(sql`
       select m.code, m.reason, m.noted_at, ${userName(sql`m.noted_by`)} as noted_by_name
@@ -157,7 +161,8 @@ export function exitReportBlock(p, entrada) {
   if (!p) return 'Pallet no encontrado.'
   if (p.type !== 'salida') return 'El reporte es de salida: este pallet es de entrada.'
   if (p.status !== 'cerrado') return 'La salida sigue abierta. El reporte se imprime al cerrarla.'
-  if (!p.closed_at || Number.isNaN(new Date(p.closed_at).getTime())) return 'La salida no tiene fecha y hora de cierre.'
+  if (!p.closed_at || Number.isNaN(new Date(p.closed_at).getTime()))
+    return 'La salida no tiene fecha y hora de cierre.'
   if (!entrada) return 'No se encontró el pallet de entrada de esta salida.'
   return null
 }
@@ -165,10 +170,14 @@ export function exitReportBlock(p, entrada) {
 r.get('/pallets/:id/report', requireAuth(), async (req, res) => {
   const id = clean(req.params.id, 20)
   const [p] = await rows(sql`select * from pallets where id = ${id}`)
-  const [entrada] = p?.linked_pallet_id ? await rows(sql`select * from pallets where id = ${p.linked_pallet_id}`) : []
+  const [entrada] = p?.linked_pallet_id
+    ? await rows(sql`select * from pallets where id = ${p.linked_pallet_id}`)
+    : []
   const block = exitReportBlock(p, entrada)
   if (block) return res.status(p ? 409 : 404).json({ error: block, palletId: id })
-  const items = await rows(sql`select code, scanned_at, different from pallet_items where pallet_id = ${id} order by scanned_at, code`)
+  const items = await rows(
+    sql`select code, scanned_at, different from pallet_items where pallet_id = ${id} order by scanned_at, code`,
+  )
   const rec = await reconciliation({ id: p.id, linkedPalletId: p.linked_pallet_id })
   const reasons = await rows(sql`select code, reason from pallet_missing where pallet_id = ${id}`)
   res.json({
@@ -178,7 +187,10 @@ r.get('/pallets/:id/report', requireAuth(), async (req, res) => {
     different: items.filter((i) => i.different).map((i) => i.code),
     expected: rec.expected,
     extras: rec.extras,
-    missing: rec.missing.map((code) => ({ code, reason: reasons.find((x) => x.code === code)?.reason || null })),
+    missing: rec.missing.map((code) => ({
+      code,
+      reason: reasons.find((x) => x.code === code)?.reason || null,
+    })),
   })
 })
 
@@ -194,9 +206,15 @@ r.post('/pallets/entrada', requireAuth(), async (req, res) => {
   }
   const model = clean(req.body?.model, 40)
   const brand = clean(req.body?.brand, 20)
-  const [m] = await db.select().from(models).where(and(eq(models.code, model), eq(models.active, true)))
+  const [m] = await db
+    .select()
+    .from(models)
+    .where(and(eq(models.code, model), eq(models.active, true)))
   if (!m) throw bad('Selecciona un modelo válido.')
-  const [b] = await db.select().from(brands).where(and(eq(brands.code, brand), eq(brands.active, true)))
+  const [b] = await db
+    .select()
+    .from(brands)
+    .where(and(eq(brands.code, brand), eq(brands.active, true)))
   if (!b) throw bad('Selecciona una marca válida.')
   const [p] = await db
     .insert(pallets)
@@ -212,19 +230,24 @@ r.post('/pallets/salida', requireAuth(), async (req, res) => {
   const entrada = await getPallet(entradaId)
   if (!entrada) throw notFound(`No existe el pallet de entrada ${entradaId}.`)
   if (entrada.type !== 'entrada') throw bad('Ese ID no es un pallet de entrada.')
-  if (entrada.status !== 'cerrado') throw conflict(`El pallet ${entradaId} sigue abierto en Entrada. Ciérralo primero.`)
+  if (entrada.status !== 'cerrado')
+    throw conflict(`El pallet ${entradaId} sigue abierto en Entrada. Ciérralo primero.`)
   const id = `${entradaId}-S`
   // Linea de la salida (opcional; la produccion por linea sale de Produccion por linea -> escaneo TV + caja).
   const lineName = clean(req.body?.line, 40)
   let line = null
   if (lineName) {
-    const [l] = await db.select().from(lines).where(and(eq(lines.name, lineName), eq(lines.active, true)))
+    const [l] = await db
+      .select()
+      .from(lines)
+      .where(and(eq(lines.name, lineName), eq(lines.active, true)))
     if (!l) throw bad('Elige una línea válida.')
     line = l.name
   }
   const existing = await getPallet(id)
   if (existing) {
-    if (existing.status === 'cerrado') throw conflict(`La salida ${id} ya está cerrada.`, { pallet: existing })
+    if (existing.status === 'cerrado')
+      throw conflict(`La salida ${id} ya está cerrada.`, { pallet: existing })
     if (!existing.line && line) {
       const [upd] = await db.update(pallets).set({ line }).where(eq(pallets.id, id)).returning()
       return res.json({ pallet: upd, resumed: true })
@@ -293,9 +316,15 @@ async function addItem(req, res, p, c) {
   // "Agregar tele diferente": se acepta cualquier prefijo y queda marcada (no es error del proceso).
   const different = req.body?.different === true || Boolean(hit?.different)
   if (!different && !hit) {
-    const [m] = await db.select().from(models).where(eq(models.code, p.model || ''))
+    const [m] = await db
+      .select()
+      .from(models)
+      .where(eq(models.code, p.model || ''))
     if (m && !c.startsWith(m.prefix))
-      throw bad(`El serial debe empezar con ${m.prefix} (modelo ${m.code}).`, { prefix: m.prefix, wrongPrefix: true })
+      throw bad(`El serial debe empezar con ${m.prefix} (modelo ${m.code}).`, {
+        prefix: m.prefix,
+        wrongPrefix: true,
+      })
     if (!m && !/^(EL|J0)/.test(c)) throw bad('El serial debe empezar con EL o J0.', { wrongPrefix: true })
   }
   const extra = p.type === 'salida' && !hit
@@ -406,6 +435,92 @@ r.post('/pallets/:id/remove-duplicate', requireAuth(SUPERVISOR), async (req, res
   await db.update(pallets).set({ itemCount: n }).where(eq(pallets.id, p.id))
   if (s) await db.update(pallets).set({ expectedItemCount: n }).where(eq(pallets.id, s.id))
   res.json({ code: c, count: n, belongsTo: other.pallet_id })
+})
+
+// Administrador (2026-10-11, Roman: "que los administradores puedan eliminar teles y poner teles en otros pallets
+// id"): quitar o mover una tele de un pallet de ENTRADA, abierto o cerrado. Si su salida ya esta cerrada no se toca
+// (la produccion ya se conto): hay que reabrir la salida primero. Al quitarla de la entrada tambien sale de su
+// salida abierta (piezas, faltantes y piezas esperadas se recalculan).
+async function entradaForAdmin(id) {
+  const p = await getPallet(clean(id, 20))
+  if (!p) throw notFound('Pallet no encontrado.')
+  if (p.type !== 'entrada') throw bad('Solo se quitan o mueven teles de un pallet de entrada.')
+  const [s] = await db.select().from(pallets).where(eq(pallets.linkedPalletId, p.id))
+  if (s && s.status !== 'abierto') throw conflict(`La salida ${s.id} ya está cerrada. Reábrela primero.`)
+  return { p, s }
+}
+
+async function recount(tx, entradaId, salida) {
+  const [{ n }] = (
+    await tx.execute(sql`select count(*)::int n from pallet_items where pallet_id = ${entradaId}`)
+  ).rows
+  await tx.update(pallets).set({ itemCount: n }).where(eq(pallets.id, entradaId))
+  if (salida) {
+    const [{ m }] = (
+      await tx.execute(sql`select count(*)::int m from pallet_items where pallet_id = ${salida.id}`)
+    ).rows
+    const [{ f }] = (
+      await tx.execute(sql`select count(*)::int f from pallet_missing where pallet_id = ${salida.id}`)
+    ).rows
+    await tx
+      .update(pallets)
+      .set({ itemCount: m, expectedItemCount: n, missingCount: f })
+      .where(eq(pallets.id, salida.id))
+  }
+  return n
+}
+
+r.post('/pallets/:id/admin/remove-item', requireAuth([]), async (req, res) => {
+  const { p, s } = await entradaForAdmin(req.params.id)
+  const c = code(req.body?.code)
+  return withCodeLock(c, async () => {
+    const [own] = await rows(sql`select 1 as ok from pallet_items where pallet_id = ${p.id} and code = ${c}`)
+    if (!own) throw notFound(`${c} no está en el pallet ${p.id}.`)
+    const n = await db.transaction(async (tx) => {
+      await tx.delete(palletItems).where(and(eq(palletItems.palletId, p.id), eq(palletItems.code, c)))
+      if (s) {
+        await tx.delete(palletItems).where(and(eq(palletItems.palletId, s.id), eq(palletItems.code, c)))
+        await tx.delete(palletMissing).where(and(eq(palletMissing.palletId, s.id), eq(palletMissing.code, c)))
+      }
+      return recount(tx, p.id, s)
+    })
+    res.json({ code: c, count: n })
+  })
+})
+
+r.post('/pallets/:id/admin/move-item', requireAuth([]), async (req, res) => {
+  const { p, s } = await entradaForAdmin(req.params.id)
+  const c = code(req.body?.code)
+  const toId = clean(req.body?.to, 20)
+  if (!toId) throw bad('Escribe el pallet ID destino.')
+  if (toId === p.id) throw bad('La tele ya está en ese pallet.')
+  const { p: t, s: ts } = await entradaForAdmin(toId)
+  return withCodeLock(c, async () => {
+    const [item] = await db
+      .select()
+      .from(palletItems)
+      .where(and(eq(palletItems.palletId, p.id), eq(palletItems.code, c)))
+    if (!item) throw notFound(`${c} no está en el pallet ${p.id}.`)
+    const [dup] = await rows(sql`select 1 as ok from pallet_items where pallet_id = ${t.id} and code = ${c}`)
+    if (dup) throw conflict(`${c} ya está en el pallet ${t.id}.`)
+    const out = await db.transaction(async (tx) => {
+      await tx.delete(palletItems).where(and(eq(palletItems.palletId, p.id), eq(palletItems.code, c)))
+      if (s) {
+        await tx.delete(palletItems).where(and(eq(palletItems.palletId, s.id), eq(palletItems.code, c)))
+        await tx.delete(palletMissing).where(and(eq(palletMissing.palletId, s.id), eq(palletMissing.code, c)))
+      }
+      // Conserva cuando y quien la escaneo (la fecha cuenta para el dia de produccion de la entrada).
+      await tx.insert(palletItems).values({
+        palletId: t.id,
+        code: c,
+        different: item.different,
+        scannedBy: item.scannedBy,
+        scannedAt: item.scannedAt,
+      })
+      return { from: await recount(tx, p.id, s), to: await recount(tx, t.id, ts) }
+    })
+    res.json({ code: c, from: p.id, to: t.id, count: out.from, toCount: out.to })
+  })
 })
 
 r.post('/pallets/:id/reopen', requireAuth(SUPERVISOR), async (req, res) => {

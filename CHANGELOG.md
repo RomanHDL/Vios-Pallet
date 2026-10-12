@@ -3,6 +3,18 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.34.0] — 2026-10-11
+
+### Added
+- `POST /pallets/:id/admin/remove-item` y `POST /pallets/:id/admin/move-item` (solo admin, entradas abiertas o cerradas; bloqueado si la salida está cerrada). Quitan la tele también de la salida abierta y recalculan `item_count`, `expected_item_count`, `missing_count`. Mover conserva `scanned_at`/`scanned_by`/`different`.
+- `ScannedList` acepta `actions(it)`; `PalletDetail` muestra Mover / Eliminar para admin.
+
+### Changed
+- `DELETE /rejections/:id`: solo admin (`requireAuth([])`); `areas.js` ya no permite borrar rechazos a las áreas.
+
+### Fixed
+- `CalidadAdmin`: filtros a todo lo ancho en celular.
+
 ## [1.33.0] — 2026-10-10
 
 ### Added

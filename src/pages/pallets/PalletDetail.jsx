@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  ArrowRightLeft,
   CheckCircle2,
   ListChecks,
   PackagePlus,
@@ -52,7 +53,9 @@ export default function PalletDetail() {
   const navigate = useNavigate()
   const toast = useToast()
   const { data, error, loading, reload } = useApi(`/pallets/${encodeURIComponent(id)}`)
-  const [dialog, setDialog] = useState(null) // reopen | delete
+  const [dialog, setDialog] = useState(null) // reopen | delete | item-remove | item-move
+  const [itemCode, setItemCode] = useState(null)
+  const [moveTo, setMoveTo] = useState('')
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState(null)
   const [confirmText, setConfirmText] = useState('')
@@ -86,6 +89,37 @@ export default function PalletDetail() {
     try {
       await api(`/pallets/${p.id}/reopen`, { method: 'POST' })
       toast(`Pallet ${p.id} reabierto`)
+      setDialog(null)
+      reload(true)
+    } catch (e) {
+      setActionError(e)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Administrador: quitar o mover una tele de una entrada (si su salida no esta cerrada).
+  const canEditItems = isAdmin && p.type === 'entrada' && (!salida || isOpen(salida))
+  const openItem = (d, c) => {
+    setActionError(null)
+    setItemCode(c)
+    setMoveTo('')
+    setDialog(d)
+  }
+  const itemAction = async () => {
+    setBusy(true)
+    setActionError(null)
+    try {
+      if (dialog === 'item-remove') {
+        await api(`/pallets/${p.id}/admin/remove-item`, { method: 'POST', body: { code: itemCode } })
+        toast(`${itemCode} quitada del pallet ${p.id}`, 'warn')
+      } else {
+        const r = await api(`/pallets/${p.id}/admin/move-item`, {
+          method: 'POST',
+          body: { code: itemCode, to: moveTo.trim() },
+        })
+        toast(`${itemCode} movida al pallet ${r.to}`)
+      }
       setDialog(null)
       reload(true)
     } catch (e) {
@@ -230,7 +264,40 @@ export default function PalletDetail() {
                   tone={salida?.missingCount ? 'red' : 'default'}
                 />
               </div>
-              <ScannedList items={items} />
+              {isAdmin && salida && !isOpen(salida) && (
+                <p className="rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-[13px] text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                  Para quitar o mover teles de este pallet, primero reabre su salida {salida.id}.
+                </p>
+              )}
+              <ScannedList
+                items={items}
+                actions={
+                  canEditItems
+                    ? (it) => (
+                        <span className="flex shrink-0 gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openItem('item-move', it.code)}
+                            className="grid h-10 w-10 place-items-center rounded-xl text-muted-foreground hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-500/10"
+                            aria-label={`Mover ${it.code} a otro pallet`}
+                            title="Mover a otro pallet"
+                          >
+                            <ArrowRightLeft className="h-[18px] w-[18px]" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openItem('item-remove', it.code)}
+                            className="grid h-10 w-10 place-items-center rounded-xl text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
+                            aria-label={`Eliminar ${it.code} del pallet`}
+                            title="Eliminar del pallet"
+                          >
+                            <Trash2 className="h-[18px] w-[18px]" />
+                          </button>
+                        </span>
+                      )
+                    : undefined
+                }
+              />
             </div>
           ) : (
             <SalidaReconciliation
@@ -242,6 +309,59 @@ export default function PalletDetail() {
           )}
         </div>
       </div>
+
+      <Dialog
+        open={dialog === 'item-remove' || dialog === 'item-move'}
+        onClose={() => !busy && setDialog(null)}
+        title={dialog === 'item-move' ? 'Mover tele a otro pallet' : 'Eliminar tele del pallet'}
+        footer={
+          <>
+            <Button variant="outline" onClick={() => setDialog(null)} disabled={busy}>
+              Cancelar
+            </Button>
+            {dialog === 'item-move' ? (
+              <Button loading={busy} disabled={!/^\d{6}$/.test(moveTo.trim())} onClick={itemAction}>
+                <ArrowRightLeft className="h-4 w-4" /> Mover
+              </Button>
+            ) : (
+              <Button variant="danger" loading={busy} onClick={itemAction}>
+                <Trash2 className="h-4 w-4" /> Eliminar
+              </Button>
+            )}
+          </>
+        }
+      >
+        <div className="space-y-3 text-[14px]">
+          <p className="rounded-xl bg-muted px-3 py-2 font-mono text-[15px] font-bold">{itemCode}</p>
+          {dialog === 'item-move' ? (
+            <>
+              <label className="block">
+                <span className="label">Pallet ID destino (entrada)</span>
+                <input
+                  value={moveTo}
+                  onChange={(e) => setMoveTo(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  inputMode="numeric"
+                  placeholder="6 dígitos"
+                  className="field font-mono"
+                  autoComplete="off"
+                />
+              </label>
+              <p className="text-[12.5px] text-muted-foreground">
+                Sale de {p.id}
+                {salida ? ` y de su salida ${salida.id}` : ''} y entra al pallet destino con su fecha de
+                escaneo original. Si la salida del destino ya está cerrada, no se puede.
+              </p>
+            </>
+          ) : (
+            <p className="text-[13px] text-muted-foreground">
+              Se quita del pallet {p.id}
+              {salida ? ` y de su salida ${salida.id} (las piezas esperadas se recalculan)` : ''}. No se puede
+              deshacer, pero se puede volver a escanear.
+            </p>
+          )}
+          <ErrorBox error={actionError} />
+        </div>
+      </Dialog>
 
       <Dialog
         open={dialog === 'reopen'}

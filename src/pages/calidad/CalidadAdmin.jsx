@@ -158,12 +158,12 @@ function RangeButton({ from, to, onPick, today }) {
     return () => document.removeEventListener('pointerdown', close)
   }, [open])
   return (
-    <div ref={box} className="relative">
+    <div ref={box} className="relative col-span-2 sm:col-span-1">
       <button
         type="button"
         onClick={() => setOpen((x) => !x)}
         aria-expanded={open}
-        className="inline-flex h-10 items-center gap-2 rounded-xl border bg-card px-3 text-[13px] font-semibold hover:bg-muted"
+        className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border bg-card px-3 text-[13px] font-semibold hover:bg-muted sm:w-auto"
       >
         <CalendarDays className="h-4 w-4 text-muted-foreground" />
         {from
@@ -173,7 +173,7 @@ function RangeButton({ from, to, onPick, today }) {
           : 'Todo el historial'}
       </button>
       {open && (
-        <div className="absolute right-0 z-30 mt-2 w-[min(92vw,300px)] space-y-3 rounded-xl border bg-card p-3 shadow-lg">
+        <div className="absolute left-0 z-30 mt-2 sm:left-auto sm:right-0 w-[min(92vw,300px)] space-y-3 rounded-xl border bg-card p-3 shadow-lg">
           <p className="text-[12.5px] font-bold">Rango de fechas (fecha de turno)</p>
           <label className="block text-[12px] text-muted-foreground">
             Desde
@@ -285,7 +285,8 @@ export default function CalidadAdmin() {
   )
 
   const canAdd = canDo(user, ['calidad', 'supervisor'])
-  const canDelete = canDo(user, ['supervisor'])
+  // Borrar rechazos: solo administradores (2026-10-11; el servidor tambien lo exige).
+  const canDelete = user?.role === 'admin'
 
   const remove = async () => {
     setDeleting(true)
@@ -319,7 +320,7 @@ export default function CalidadAdmin() {
             </p>
           </div>
         </div>
-        <div className="ml-auto flex min-w-0 flex-col items-end gap-1.5">
+        <div className="flex w-full min-w-0 flex-col gap-1.5 sm:ml-auto sm:w-auto sm:items-end">
           <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             {updatedAt ? `Actualizado ${fmtAgo(updatedAt)}` : 'Cargando…'}
@@ -332,8 +333,8 @@ export default function CalidadAdmin() {
               <RotateCw className={cn('h-3.5 w-3.5', cur.loading && 'animate-spin')} />
             </button>
           </span>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <fieldset aria-label="Periodo" className="inline-flex rounded-xl bg-muted p-1">
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:justify-end">
+            <fieldset aria-label="Periodo" className="col-span-2 flex rounded-xl bg-muted p-1 sm:inline-flex">
               {PRESETS.map((p) => (
                 <button
                   key={p.value}
@@ -341,7 +342,7 @@ export default function CalidadAdmin() {
                   onClick={() => setPreset(p.value)}
                   aria-pressed={preset === p.value}
                   className={cn(
-                    'whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-semibold transition',
+                    'flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-[13px] font-semibold transition sm:flex-none',
                     preset === p.value
                       ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground',
@@ -362,6 +363,7 @@ export default function CalidadAdmin() {
             />
             <Select
               label="Marca"
+              className="w-full sm:w-auto"
               value={brand}
               onChange={setBrand}
               options={[
@@ -371,6 +373,7 @@ export default function CalidadAdmin() {
             />
             <Select
               label="Modelo"
+              className="w-full sm:w-auto"
               value={model}
               onChange={setModel}
               options={[
@@ -381,7 +384,7 @@ export default function CalidadAdmin() {
             {canAdd && (
               <Link
                 to="/calidad/nuevo"
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-[13.5px] font-bold text-primary-foreground shadow-sm hover:bg-primary/90"
+                className="col-span-2 inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-[13.5px] font-bold text-primary-foreground shadow-sm hover:bg-primary/90 sm:col-span-1"
               >
                 <Plus className="h-4 w-4" /> Nuevo rechazo
               </Link>

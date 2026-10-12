@@ -5,7 +5,16 @@ import { Badge, Button, Card, CardHeader, Dialog, Empty } from '@/components/ui'
 import { fmtInt, fmtTime } from '@/lib/utils'
 import { SearchBox } from './shared'
 
-export function ScannedList({ items, title = 'Piezas escaneadas', onRemove, extras, highlight, className }) {
+// `actions(it)`: botones extra por pieza (administrador en el detalle del pallet).
+export function ScannedList({
+  items,
+  title = 'Piezas escaneadas',
+  onRemove,
+  actions,
+  extras,
+  highlight,
+  className,
+}) {
   const [q, setQ] = useState('')
   const shown = useMemo(() => {
     const t = q.trim().toUpperCase()
@@ -56,6 +65,7 @@ export function ScannedList({ items, title = 'Piezas escaneadas', onRemove, extr
                   </span>
                 </span>
                 {isExtra && <Badge tone="amber">Extra</Badge>}
+                {actions?.(it)}
                 {onRemove && (
                   <button
                     type="button"

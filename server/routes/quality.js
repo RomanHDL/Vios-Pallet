@@ -69,7 +69,9 @@ r.post('/rejections', requireAuth(['supervisor', 'calidad']), async (req, res) =
   res.status(201).json({ rejection: row })
 })
 
-r.delete('/rejections/:id', requireAuth(['supervisor']), async (req, res) => {
+// Borrar un rechazo: solo administradores (2026-10-11, Roman: "que los otros usuarios no puedan eliminar eso de
+// calidad, solo los administradores").
+r.delete('/rejections/:id', requireAuth([]), async (req, res) => {
   const [row] = await db
     .delete(rejections)
     .where(eq(rejections.id, Number(req.params.id)))
