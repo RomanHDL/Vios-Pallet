@@ -72,7 +72,7 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
   const [{ first }] = await rows(sql`
     select least(
       (select min(i.scanned_at) from pallet_items i join pallets p on p.id = i.pallet_id
-        where p.type = 'salida' and p.status = 'cerrado'),
+        where p.type = 'salida'),
       (select min(registered_at) from production)) as first`)
   const firstDay = first ? shiftOf(new Date(first)).shiftDate : null
 

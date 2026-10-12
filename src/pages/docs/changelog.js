@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.36.0',
+    date: '2026-10-12',
+    title: 'La producción cuenta al escanear la salida',
+    changed: [
+      'Cada tele cuenta como producida en cuanto se escanea en su salida, aunque la salida siga abierta (antes contaba hasta "Conciliar y cerrar"). Los pallets de HY y SILO se siguen contando cuando la salida se cierra.',
+    ],
+  },
+  {
     version: '1.35.0',
     date: '2026-10-12',
     title: 'Producción por modelo: filtro por modelo',

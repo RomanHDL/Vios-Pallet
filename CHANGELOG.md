@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.36.0] — 2026-10-12
+
+### Changed
+- `PRODUCED`: piezas de salidas abiertas y cerradas (antes solo cerradas). La exclusión de teles repetidas aplica a entradas sin ninguna salida. Columna `closed`: los conteos de pallets (`brandSplit`, `palletsByDay`, `palletsByDayModel`) siguen siendo solo de salidas cerradas. `producedInfo` y el primer día de plan usan cualquier salida.
+
 ## [1.35.0] — 2026-10-12
 
 ### Added
