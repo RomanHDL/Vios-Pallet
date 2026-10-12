@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.37.0',
+    date: '2026-10-12',
+    title: 'Detalle de HY y SILO en Inicio',
+    added: [
+      'Inicio: al tocar HY o SILO se abre el detalle del turno separado por modelo, con cada pallet (ID, salida abierta o cerrada, piezas) y sus teles; las escaneadas en Producción por línea aparecen aparte. "Abrir" lleva al pallet.',
+    ],
+  },
+  {
     version: '1.36.0',
     date: '2026-10-12',
     title: 'La producción cuenta al escanear la salida',

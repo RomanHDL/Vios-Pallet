@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Dialog } from '@/components/ui'
 import { useApi } from '@/lib/hooks'
 import { useCatalogs, useSession } from '@/lib/session'
 import { cn, fmtAgo, fmtInt, fmtYmd } from '@/lib/utils'
@@ -116,13 +117,16 @@ function shiftState(pace) {
   }
 }
 
-function BrandTile({ b }) {
+function BrandTile({ b, onOpen }) {
   const silo = b.brand === 'SILO'
   const ic = silo ? 'text-violet-500' : 'text-blue-500'
   return (
-    <div
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label={`Ver pallets y teles de ${b.brand}`}
       className={cn(
-        'min-w-0 rounded-xl border px-4 py-3',
+        'group min-w-0 rounded-xl border px-4 py-3 text-left outline-none transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/40',
         silo
           ? 'border-violet-100 bg-violet-50/70 dark:border-violet-500/20 dark:bg-violet-500/10'
           : 'border-blue-100 bg-blue-50/70 dark:border-blue-500/20 dark:bg-blue-500/10',
@@ -130,11 +134,14 @@ function BrandTile({ b }) {
     >
       <p
         className={cn(
-          'text-[13px] font-extrabold',
+          'flex items-center text-[13px] font-extrabold',
           silo ? 'text-violet-700 dark:text-violet-300' : 'text-blue-700 dark:text-blue-300',
         )}
       >
         {b.brand}
+        <span className="ml-auto inline-flex items-center gap-0.5 text-[11.5px] font-semibold opacity-70 group-hover:opacity-100">
+          Ver detalle <ChevronRight className="h-3.5 w-3.5" />
+        </span>
       </p>
       <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1">
         <span className="inline-flex items-baseline gap-1.5">
@@ -148,11 +155,113 @@ function BrandTile({ b }) {
           <span className="text-[13px] text-muted-foreground">pallet{b.pallets === 1 ? '' : 's'}</span>
         </span>
       </div>
-    </div>
+    </button>
+  )
+}
+
+// Detalle de una marca en el turno (tocar HY o SILO): por modelo, cada pallet con sus teles.
+function BrandDetail({ brand, onClose }) {
+  const { data, error, loading } = useApi('/dashboard/brand', { query: { brand }, skip: !brand })
+  const [open, setOpen] = useState({})
+  const silo = brand === 'SILO'
+  return (
+    <Dialog open={Boolean(brand)} onClose={onClose} title={`${brand || ''} · producción del turno`} wide>
+      {loading && !data ? (
+        <p className="py-8 text-center text-[13.5px] text-muted-foreground">Cargando…</p>
+      ) : error ? (
+        <p className="py-6 text-center text-[13.5px] text-red-600">{error.message}</p>
+      ) : data && !data.models.length ? (
+        <p className="py-8 text-center text-[13.5px] text-muted-foreground">
+          Sin piezas de {brand} en este turno.
+        </p>
+      ) : data ? (
+        <div className="space-y-4">
+          <p className="text-[13px] text-muted-foreground">
+            {shiftLabel(data.shift)} · {fmtYmd(data.shiftDate)} ·{' '}
+            <b className="text-foreground">{fmtInt(data.total)}</b> piezas
+          </p>
+          {data.models.map((m) => (
+            <section key={m.model} className="overflow-hidden rounded-xl border">
+              <div
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2.5',
+                  silo ? 'bg-violet-50/70 dark:bg-violet-500/10' : 'bg-blue-50/70 dark:bg-blue-500/10',
+                )}
+              >
+                <span className="text-[15px] font-extrabold">{m.model}</span>
+                <span className="tabular ml-auto text-[14px] font-bold">{fmtInt(m.pieces)} pzs</span>
+              </div>
+              <ul className="divide-y">
+                {m.groups.map((g) => {
+                  const key = `${m.model}|${g.salidaId || g.kind}`
+                  const isOpen = open[key]
+                  return (
+                    <li key={key}>
+                      <div className="flex items-center gap-3 px-4 py-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setOpen((o) => ({ ...o, [key]: !o[key] }))}
+                          disabled={!g.serials.length}
+                          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                          aria-expanded={Boolean(isOpen)}
+                        >
+                          <ChevronRight
+                            className={cn(
+                              'h-4 w-4 shrink-0 transition',
+                              isOpen && 'rotate-90',
+                              !g.serials.length && 'opacity-0',
+                            )}
+                          />
+                          {g.kind === 'pallet' ? (
+                            <span className="min-w-0">
+                              <span className="font-mono text-[14px] font-bold">
+                                {g.entradaId || g.salidaId}
+                              </span>
+                              <span className="ml-2 text-[12px] text-muted-foreground">
+                                salida {g.status === 'cerrado' ? 'cerrada' : 'abierta'}
+                                {g.palletBrand && g.palletBrand !== brand ? ` · pallet ${g.palletBrand}` : ''}
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="text-[14px] font-semibold">
+                              {g.kind === 'linea' ? 'Escaneadas en Producción por línea' : 'Ajuste manual'}
+                            </span>
+                          )}
+                        </button>
+                        <span className="tabular shrink-0 text-[14px] font-extrabold">
+                          {fmtInt(g.pieces)} pzs
+                        </span>
+                        {g.kind === 'pallet' && (
+                          <Link
+                            to={`/pallets/${g.salidaId}`}
+                            onClick={onClose}
+                            className="shrink-0 rounded-lg border px-2.5 py-1 text-[12px] font-semibold hover:bg-muted"
+                          >
+                            Abrir
+                          </Link>
+                        )}
+                      </div>
+                      {isOpen && (
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-1 bg-muted/30 px-10 py-2.5 font-mono text-[12.5px] sm:grid-cols-2">
+                          {g.serials.map((sn) => (
+                            <span key={sn}>{sn}</span>
+                          ))}
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      ) : null}
+    </Dialog>
   )
 }
 
 function ProductionCard({ data }) {
+  const [detail, setDetail] = useState(null)
   const pct = pctOf(data.produced, data.goal)
   const p = data.pace
   const brands = ['HY', 'SILO'].map(
@@ -211,7 +320,7 @@ function ProductionCard({ data }) {
       <div className="min-w-0 space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           {brands.map((b) => (
-            <BrandTile key={b.brand} b={b} />
+            <BrandTile key={b.brand} b={b} onOpen={() => setDetail(b.brand)} />
           ))}
         </div>
         {p && (
@@ -250,6 +359,7 @@ function ProductionCard({ data }) {
           </div>
         )}
       </div>
+      <BrandDetail brand={detail} onClose={() => setDetail(null)} />
     </section>
   )
 }

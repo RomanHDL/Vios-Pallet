@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.37.0] — 2026-10-12
+
+### Added
+- `GET /dashboard/brand?brand=`: piezas del turno actual de una marca (`shiftOutput`) agrupadas por modelo y pallet, con seriales. `Home`: `BrandTile` abre `BrandDetail`.
+
 ## [1.36.0] — 2026-10-12
 
 ### Changed

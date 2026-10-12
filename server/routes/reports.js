@@ -385,6 +385,54 @@ r.get('/reports/pallets', requireAuth(), async (req, res) => {
   })
 })
 
+// Inicio -> tocar HY o SILO (2026-10-12, Roman: "quiero ver que pallet es y sus teles... si trabajan en otro modelo
+// verlo tambien, no todo junto"): piezas producidas del turno actual de esa marca, por modelo y por pallet, con sus
+// series. Mismo conteo que la tarjeta (shiftOutput, una vez por serial, con ajustes).
+r.get('/dashboard/brand', requireAuth(), async (req, res) => {
+  const brand = clean(req.query.brand, 20)
+  const { shiftDate, shift } = shiftOf()
+  const list = (await shiftOutput(shiftDate, shift)).filter((x) => x.brand === brand)
+  const ids = [...new Set(list.map((x) => x.pallet).filter(Boolean))]
+  const info = ids.length
+    ? await rows(
+        sql`select id, status, linked_pallet_id, model, brand from pallets where id in (${sql.join(
+          ids.map((id) => sql`${id}`),
+          sql`, `,
+        )})`,
+      )
+    : []
+  const models = new Map()
+  for (const x of list) {
+    const m = x.model || 'Sin modelo'
+    if (!models.has(m)) models.set(m, new Map())
+    const key = x.pallet || (String(x.serial).startsWith('AJUSTE-') ? '__ajuste' : '__linea')
+    const g = models.get(m)
+    if (!g.has(key)) g.set(key, [])
+    g.get(key).push({ serial: x.serial, at: x.at })
+  }
+  const out = [...models].map(([model, groups]) => ({
+    model,
+    pieces: [...groups.values()].reduce((a, v) => a + v.length, 0),
+    groups: [...groups].map(([key, items]) => {
+      const p = info.find((x) => x.id === key)
+      return {
+        kind: key === '__linea' ? 'linea' : key === '__ajuste' ? 'ajuste' : 'pallet',
+        salidaId: p?.id || null,
+        entradaId: p?.linked_pallet_id || null,
+        status: p?.status || null,
+        palletBrand: p?.brand || null,
+        pieces: items.length,
+        serials:
+          key === '__ajuste'
+            ? []
+            : items.sort((a, b) => String(a.at).localeCompare(String(b.at))).map((i) => i.serial),
+      }
+    }),
+  }))
+  out.sort((a, b) => b.pieces - a.pieces)
+  res.json({ shiftDate, shift, brand, total: list.length, models: out })
+})
+
 // Inicio: resumen del turno actual.
 r.get('/dashboard', requireAuth(), async (_req, res) => {
   const { shiftDate, shift } = shiftOf()
