@@ -392,42 +392,47 @@ r.get('/dashboard/brand', requireAuth(), async (req, res) => {
   const brand = clean(req.query.brand, 20)
   const { shiftDate, shift } = shiftOf()
   const list = (await shiftOutput(shiftDate, shift)).filter((x) => x.brand === brand)
-  const ids = [...new Set(list.map((x) => x.pallet).filter(Boolean))]
-  const info = ids.length
-    ? await rows(
-        sql`select id, status, linked_pallet_id, model, brand from pallets where id in (${sql.join(
-          ids.map((id) => sql`${id}`),
+  // Cada tele va con SU pallet aunque haya contado primero por el escaneo en linea (2026-10-12: "dice 21 en pallet
+  // pero 6 en produccion y en el pallet dice 27"): su salida si tiene, si no su entrada.
+  const codes = list.filter((x) => !String(x.serial).startsWith('AJUSTE-')).map((x) => x.serial)
+  const where = codes.length
+    ? await rows(sql`
+        select distinct on (i.code) i.code, p.id, p.type, p.status, p.linked_pallet_id, p.brand
+        from pallet_items i join pallets p on p.id = i.pallet_id
+        where i.code in (${sql.join(
+          codes.map((c) => sql`${c}`),
           sql`, `,
-        )})`,
-      )
+        )})
+        order by i.code, (p.type = 'salida') desc, i.scanned_at desc`)
     : []
+  const palletOf = new Map(where.map((w) => [w.code, w]))
   const models = new Map()
   for (const x of list) {
     const m = x.model || 'Sin modelo'
     if (!models.has(m)) models.set(m, new Map())
-    const key = x.pallet || (String(x.serial).startsWith('AJUSTE-') ? '__ajuste' : '__linea')
+    const w = palletOf.get(x.serial)
+    const key = String(x.serial).startsWith('AJUSTE-') ? '__ajuste' : w ? w.id : '__linea'
     const g = models.get(m)
-    if (!g.has(key)) g.set(key, [])
-    g.get(key).push({ serial: x.serial, at: x.at })
+    if (!g.has(key)) g.set(key, { pallet: w || null, items: [] })
+    g.get(key).items.push({ serial: x.serial, at: x.at, viaLine: !x.pallet })
   }
   const out = [...models].map(([model, groups]) => ({
     model,
-    pieces: [...groups.values()].reduce((a, v) => a + v.length, 0),
-    groups: [...groups].map(([key, items]) => {
-      const p = info.find((x) => x.id === key)
-      return {
-        kind: key === '__linea' ? 'linea' : key === '__ajuste' ? 'ajuste' : 'pallet',
-        salidaId: p?.id || null,
-        entradaId: p?.linked_pallet_id || null,
-        status: p?.status || null,
-        palletBrand: p?.brand || null,
-        pieces: items.length,
-        serials:
-          key === '__ajuste'
-            ? []
-            : items.sort((a, b) => String(a.at).localeCompare(String(b.at))).map((i) => i.serial),
-      }
-    }),
+    pieces: [...groups.values()].reduce((a, v) => a + v.items.length, 0),
+    groups: [...groups].map(([key, { pallet: w, items }]) => ({
+      kind: key === '__linea' ? 'linea' : key === '__ajuste' ? 'ajuste' : 'pallet',
+      palletId: w?.id || null,
+      type: w?.type || null,
+      entradaId: w ? (w.type === 'salida' ? w.linked_pallet_id : w.id) : null,
+      status: w?.status || null,
+      palletBrand: w?.brand || null,
+      pieces: items.length,
+      viaLine: items.filter((i) => i.viaLine).length,
+      serials:
+        key === '__ajuste'
+          ? []
+          : items.sort((a, b) => String(a.at).localeCompare(String(b.at))).map((i) => i.serial),
+    })),
   }))
   out.sort((a, b) => b.pieces - a.pieces)
   res.json({ shiftDate, shift, brand, total: list.length, models: out })

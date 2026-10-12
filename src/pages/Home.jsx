@@ -193,7 +193,7 @@ function BrandDetail({ brand, onClose }) {
               </div>
               <ul className="divide-y">
                 {m.groups.map((g) => {
-                  const key = `${m.model}|${g.salidaId || g.kind}`
+                  const key = `${m.model}|${g.palletId || g.kind}`
                   const isOpen = open[key]
                   return (
                     <li key={key}>
@@ -215,16 +215,21 @@ function BrandDetail({ brand, onClose }) {
                           {g.kind === 'pallet' ? (
                             <span className="min-w-0">
                               <span className="font-mono text-[14px] font-bold">
-                                {g.entradaId || g.salidaId}
+                                {g.entradaId || g.palletId}
                               </span>
                               <span className="ml-2 text-[12px] text-muted-foreground">
-                                salida {g.status === 'cerrado' ? 'cerrada' : 'abierta'}
+                                {g.type === 'entrada'
+                                  ? 'sin salida'
+                                  : `salida ${g.status === 'cerrado' ? 'cerrada' : 'abierta'}`}
+                                {g.viaLine
+                                  ? ` · ${g.viaLine} escaneada${g.viaLine === 1 ? '' : 's'} en línea`
+                                  : ''}
                                 {g.palletBrand && g.palletBrand !== brand ? ` · pallet ${g.palletBrand}` : ''}
                               </span>
                             </span>
                           ) : (
                             <span className="text-[14px] font-semibold">
-                              {g.kind === 'linea' ? 'Escaneadas en Producción por línea' : 'Ajuste manual'}
+                              {g.kind === 'linea' ? 'Escaneadas en línea (sin pallet)' : 'Ajuste manual'}
                             </span>
                           )}
                         </button>
@@ -233,7 +238,7 @@ function BrandDetail({ brand, onClose }) {
                         </span>
                         {g.kind === 'pallet' && (
                           <Link
-                            to={`/pallets/${g.salidaId}`}
+                            to={`/pallets/${g.palletId}`}
                             onClick={onClose}
                             className="shrink-0 rounded-lg border px-2.5 py-1 text-[12px] font-semibold hover:bg-muted"
                           >

@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.37.1',
+    date: '2026-10-12',
+    title: 'Detalle de HY y SILO por pallet',
+    fixed: [
+      'En el detalle de HY / SILO cada tele aparece en su pallet aunque se haya escaneado primero en Producción por línea (antes salían aparte); se indica cuántas pasaron por línea.',
+    ],
+  },
+  {
     version: '1.37.0',
     date: '2026-10-12',
     title: 'Detalle de HY y SILO en Inicio',
