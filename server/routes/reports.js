@@ -178,7 +178,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     dailyMap.set(k, (dailyMap.get(k) || 0) + h.pieces)
   }
   const historyBrand = await rows(sql`
-    select date, model, brand, sum(pieces)::int as pieces from production_history
+    select date, model, brand, sum(pieces)::int as pieces, sum(rejected)::int as rejected from production_history
     where ${brandQ ? sql`brand = ${brandQ}` : sql`true`} group by 1, 2, 3`)
   for (const h of historyBrand) {
     brandRow(h.date, h.brand).pieces += h.pieces
@@ -201,11 +201,20 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
     return { shift_date, model, n }
   })
   const modelOf = new Map(produced.map((x) => [x.serial, x.model]))
+  const brandOfSerial = new Map(produced.map((x) => [x.serial, x.brand]))
   const rejectedSerials = await rows(sql`select distinct serial from rejections`)
   const rejectedIn = []
+  // Rechazados por modelo y marca (2026-10-12: "abajo de cada modelo HY y lo procesado sin lo rechazado").
+  const rejBrand = new Map()
+  const addRej = (model, brand, n) => {
+    const k = `${model}|${brand}`
+    rejBrand.set(k, (rejBrand.get(k) || 0) + n)
+  }
+  for (const h of historyBrand) if (h.rejected) addRej(h.model, h.brand, h.rejected)
   for (const { serial } of rejectedSerials) {
     const m = modelOf.get(serial)
     if (!m) continue
+    addRej(m, brandOfSerial.get(serial), 1)
     const row = rejectedIn.find((x) => x.model === m)
     if (row) row.n++
     else rejectedIn.push({ model: m, n: 1 })
@@ -261,6 +270,7 @@ r.get('/reports/models', requireAuth(), async (req, res) => {
       pct: target ? net / target : null,
       remaining: Math.max(0, target - net),
       brands: splitOf(m.code),
+      rejectedBrands: Object.fromEntries(BRANDS.map((b) => [b, rejBrand.get(`${m.code}|${b}`) || 0])),
     }
   })
   const totals = byDay.map((x) => x.total)

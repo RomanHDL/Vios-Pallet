@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.38.0',
+    date: '2026-10-12',
+    title: 'Tarjetas de modelo compactas',
+    changed: [
+      'Producción por modelo: las 5 tarjetas de modelo van en una sola fila y más chicas; abajo de cada modelo, HY y SILO procesado sin contar lo rechazado por Calidad.',
+    ],
+  },
+  {
     version: '1.37.1',
     date: '2026-10-12',
     title: 'Detalle de HY y SILO por pallet',

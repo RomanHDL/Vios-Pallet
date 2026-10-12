@@ -127,65 +127,64 @@ function DayPanel({ data, day, setDay, today }) {
   )
 }
 
+// Tarjeta compacta (2026-10-12, Roman: "que esten chicos, las 5 en el mismo lugar, y abajo de cada modelo HY y SILO
+// procesado sin contar lo rechazado de calidad"). Neto = producido - rechazados; HY / SILO tambien netos.
 function ModelCard({ m }) {
+  const net = (b) => Math.max(0, (m.brands?.[b] || 0) - (m.rejectedBrands?.[b] || 0))
   return (
-    <Card className="p-4 sm:p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Modelo
-          </div>
-          <div className="truncate text-[20px] font-extrabold leading-tight tracking-tight">{m.code}</div>
-        </div>
-        <span className="tabular shrink-0 text-[22px] font-extrabold text-primary">
-          {m.target ? fmtPct(m.pct) : '—'}
-        </span>
-      </div>
-      <div className="mt-3 flex items-baseline gap-1.5">
-        <span className="tabular text-[28px] font-extrabold leading-none">{fmtInt(m.net)}</span>
-        <span className="text-[13.5px] font-semibold text-muted-foreground">
-          {m.target ? `/ ${fmtInt(m.target)} objetivo` : 'neto · sin objetivo'}
-        </span>
-      </div>
-      <Progress value={m.pct} tone={pctTone(m.pct)} className="mt-3" />
-      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
-        <div className="flex justify-between gap-2">
-          <dt className="text-muted-foreground">Objetivo MTY</dt>
-          <dd className="tabular font-semibold">{fmtInt(m.targetMty)}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt className="text-muted-foreground">Objetivo Texas</dt>
-          <dd className="tabular font-semibold">{fmtInt(m.targetTexas)}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt className="text-muted-foreground">Producido</dt>
-          <dd className="tabular font-semibold">{fmtInt(m.produced)}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt className="text-blue-600 dark:text-blue-300">HY</dt>
-          <dd className="tabular font-semibold">{fmtInt(m.brands?.HY || 0)}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt className="text-violet-600 dark:text-violet-300">SILO</dt>
-          <dd className="tabular font-semibold">{fmtInt(m.brands?.SILO || 0)}</dd>
-        </div>
-        <div className="flex justify-between gap-2">
-          <dt className="text-muted-foreground">Rechazados</dt>
-          <dd className={cn('tabular font-semibold', m.rejected && 'text-red-600 dark:text-red-400')}>
-            {m.rejected ? `−${fmtInt(m.rejected)}` : 0}
-          </dd>
-        </div>
-      </dl>
-      <div className="mt-3 flex items-center justify-between rounded-xl bg-muted/60 px-3 py-2 text-[13px]">
-        <span className="font-semibold text-muted-foreground">Faltan</span>
+    <Card className="flex min-w-0 flex-col p-3.5">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="truncate text-[13px] font-extrabold text-primary">{m.code}</span>
         <span
           className={cn(
-            'tabular text-[15px] font-extrabold',
+            'tabular text-[12.5px] font-bold',
+            m.target ? 'text-foreground' : 'text-muted-foreground',
+          )}
+        >
+          {m.target ? fmtPct(m.pct) : 'sin objetivo'}
+        </span>
+      </div>
+      <p className="tabular mt-0.5 text-[26px] font-extrabold leading-tight">{fmtInt(m.net)}</p>
+      <p className="text-[11.5px] text-muted-foreground">
+        neto{m.rejected ? ` (−${fmtInt(m.rejected)} rechazadas)` : ''}
+      </p>
+      <Progress value={m.pct} tone={pctTone(m.pct)} className="mt-2 h-1.5" />
+      <div className="mt-1 flex justify-between text-[11.5px] text-muted-foreground">
+        <span>Obj. {fmtInt(m.target)}</span>
+        <span
+          className={cn(
+            'tabular font-semibold',
             m.target && !m.remaining && 'text-emerald-600 dark:text-emerald-400',
           )}
         >
-          {!m.target ? '—' : m.remaining ? fmtInt(m.remaining) : 'Objetivo cumplido'}
+          {!m.target ? '' : m.remaining ? `faltan ${fmtInt(m.remaining)}` : 'cumplido'}
         </span>
+      </div>
+      <div className="mt-2.5 grid grid-cols-2 gap-1.5 border-t pt-2.5">
+        {['HY', 'SILO'].map((b) => (
+          <div
+            key={b}
+            className={cn(
+              'rounded-lg px-2 py-1.5',
+              b === 'SILO' ? 'bg-violet-50 dark:bg-violet-500/10' : 'bg-blue-50 dark:bg-blue-500/10',
+            )}
+          >
+            <p
+              className={cn(
+                'text-[10.5px] font-bold',
+                b === 'SILO' ? 'text-violet-700 dark:text-violet-300' : 'text-blue-700 dark:text-blue-300',
+              )}
+            >
+              {b}
+            </p>
+            <p className="tabular text-[15px] font-extrabold leading-tight">{fmtInt(net(b))}</p>
+            {m.rejectedBrands?.[b] > 0 && (
+              <p className="text-[10px] text-red-600 dark:text-red-400">
+                −{fmtInt(m.rejectedBrands[b])} rech.
+              </p>
+            )}
+          </div>
+        ))}
       </div>
     </Card>
   )
@@ -344,7 +343,7 @@ export default function ReporteModelos() {
           </div>
 
           {models.length > 0 && (
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
               {models.map((m) => (
                 <ModelCard key={m.code} m={m} />
               ))}
