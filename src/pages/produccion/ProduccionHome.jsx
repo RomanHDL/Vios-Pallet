@@ -221,22 +221,24 @@ export default function ProduccionHome() {
               </div>
             </div>
 
-            {/* Produccion por hora */}
-            <Card className="px-3 pb-3 pt-4 sm:px-5">
-              <div className="flex items-center justify-between px-1">
-                <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground">
-                  Producción por hora
-                </h2>
-                <Link
-                  to="/hora-por-hora"
-                  className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-primary hover:underline"
-                >
-                  Hora x Hora <ChevronRight className="h-4 w-4" />
-                </Link>
-              </div>
-              <HourlyChart slots={built.slots} className="mt-2 h-[240px] sm:h-[300px]" />
-              <HourlyLegend className="mt-1 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[12.5px] font-semibold text-muted-foreground" />
-            </Card>
+            {/* Produccion por hora (no en pantalla completa: ahi solo modelos, numero y las 4 tarjetas) */}
+            {!full && (
+              <Card className="px-3 pb-3 pt-4 sm:px-5">
+                <div className="flex items-center justify-between px-1">
+                  <h2 className="text-[13px] font-bold uppercase tracking-wide text-muted-foreground">
+                    Producción por hora
+                  </h2>
+                  <Link
+                    to="/hora-por-hora"
+                    className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-primary hover:underline"
+                  >
+                    Hora x Hora <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+                <HourlyChart slots={built.slots} className="mt-2 h-[240px] sm:h-[300px]" />
+                <HourlyLegend className="mt-1 flex flex-wrap justify-center gap-x-5 gap-y-1.5 text-[12.5px] font-semibold text-muted-foreground" />
+              </Card>
+            )}
           </>
         )
       )}

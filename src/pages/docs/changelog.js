@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.39.1',
+    date: '2026-10-12',
+    title: 'Pantalla completa más limpia',
+    changed: [
+      'Producción en pantalla completa: solo modelos, número grande y las 4 tarjetas (sin la gráfica por hora).',
+    ],
+  },
+  {
     version: '1.39.0',
     date: '2026-10-12',
     title: 'Producción: modelos y pantalla completa',
