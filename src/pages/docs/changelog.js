@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.41.1',
+    date: '2026-10-13',
+    title: 'Detalle de HY / SILO: un renglón por pallet',
+    fixed: [
+      'En el detalle de HY / SILO, un pallet con teles en entrada y en salida aparece en un solo renglón.',
+    ],
+  },
+  {
     version: '1.41.0',
     date: '2026-10-13',
     title: 'La producción cuenta el día en que se trabaja',

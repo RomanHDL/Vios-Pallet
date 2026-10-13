@@ -421,9 +421,16 @@ r.get('/dashboard/brand', requireAuth(), async (req, res) => {
     const m = x.model || 'Sin modelo'
     if (!models.has(m)) models.set(m, new Map())
     const w = palletOf.get(x.serial)
-    const key = String(x.serial).startsWith('AJUSTE-') ? '__ajuste' : w ? w.id : '__linea'
+    const key = String(x.serial).startsWith('AJUSTE-')
+      ? '__ajuste'
+      : w
+        ? w.type === 'salida'
+          ? w.linked_pallet_id
+          : w.id
+        : '__linea'
     const g = models.get(m)
     if (!g.has(key)) g.set(key, { pallet: w || null, items: [] })
+    else if (w?.type === 'salida') g.get(key).pallet = w
     g.get(key).items.push({ serial: x.serial, at: x.at, viaLine: !x.pallet })
   }
   const out = [...models].map(([model, groups]) => ({
