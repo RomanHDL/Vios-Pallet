@@ -6,7 +6,7 @@ Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado 
 ## [1.41.0] — 2026-10-13
 
 ### Changed
-- `PRODUCED`: `at` = `scanned_at` del escaneo de salida (se quita la atribución al día de creación de la entrada).
+- `PRODUCED`: desde 2026-10-13 07:00 MTY, `at` = `scanned_at` de la salida; lo anterior conserva la atribución al día de la entrada (no se mueven días cuadrados).
 
 ## [1.40.1] — 2026-10-12
 

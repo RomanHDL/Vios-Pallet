@@ -6,7 +6,7 @@ export const CHANGELOG = [
     date: '2026-10-13',
     title: 'La producción cuenta el día en que se trabaja',
     changed: [
-      'Cada tele cuenta como producida el día y turno en que se escanea en la salida o en Producción por línea, aunque la entrada del pallet sea de otro día (antes se mandaba al día de la entrada). Sigue contando una sola vez, en su primer escaneo.',
+      'Desde el Turno 1 del 13 de octubre, cada tele cuenta como producida el día y turno en que se escanea en la salida o en Producción por línea, aunque la entrada del pallet sea de otro día. Los días anteriores no cambian. Sigue contando una sola vez, en su primer escaneo.',
     ],
   },
   {
