@@ -28,16 +28,13 @@ const shiftDay = (col) => sql`((${col} at time zone 'America/Monterrey') - inter
 const PRODUCED = sql`(
   select * from (
     select i.code as serial,
-      case when e.id is not null and ${shiftDay(sql`e.created_at`)} <> ${shiftDay(sql`i.scanned_at`)}
-        then (case when ${shiftDay(sql`ei.scanned_at`)} = ${shiftDay(sql`e.created_at`)} then ei.scanned_at
-          else e.created_at end)
-        else i.scanned_at end as at,
+      -- 2026-10-13 (Roman, opcion B): cada tele cuenta el dia en que se escanea en la salida (o en linea), aunque
+      -- la entrada del pallet sea de otro dia. Antes se mandaba al dia de la entrada (regla del 2026-10-08).
+      i.scanned_at as at,
       coalesce(pl.model, p.model) as model, coalesce(pl.brand, p.brand) as brand, p.id as pallet,
       p.brand as pallet_brand, p.status = 'cerrado' as closed
     from pallet_items i join pallets p on p.id = i.pallet_id
-    left join pallets e on e.id = p.linked_pallet_id and e.type = 'entrada'
-    left join pallet_items ei on ei.pallet_id = e.id and ei.code = i.code
-    left join lateral (
+        left join lateral (
       select pr.model, pr.brand from production pr where pr.serial = i.code order by pr.registered_at limit 1
     ) pl on true
     where p.type = 'salida'

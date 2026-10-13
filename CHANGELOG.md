@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.41.0] — 2026-10-13
+
+### Changed
+- `PRODUCED`: `at` = `scanned_at` del escaneo de salida (se quita la atribución al día de creación de la entrada).
+
 ## [1.40.1] — 2026-10-12
 
 ### Changed
