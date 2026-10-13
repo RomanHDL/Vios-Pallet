@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.40.0',
+    date: '2026-10-12',
+    title: 'Captura de Producción por modelo',
+    added: [
+      'Producción por modelo: botón "Captura" que descarga una imagen (PNG) con el día, los indicadores, las tarjetas de modelo y la gráfica de producción diaria, sin menú, filtros ni tabla.',
+    ],
+  },
+  {
     version: '1.39.1',
     date: '2026-10-12',
     title: 'Pantalla completa más limpia',

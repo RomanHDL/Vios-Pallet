@@ -1,8 +1,10 @@
 import { projectProduction } from '@shared/projection.js'
 import { todayPlant } from '@shared/shift.js'
+import { toPng } from 'html-to-image'
 import {
   Award,
   CalendarCheck,
+  Camera,
   Factory,
   Gauge,
   Info,
@@ -11,7 +13,7 @@ import {
   Tv,
   XCircle,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { BrandSplit } from '@/components/BrandSplit'
 import {
   Card,
@@ -79,7 +81,7 @@ function DayPanel({ data, day, setDay, today }) {
           value={day}
           max={today}
           onChange={(e) => e.target.value && setDay(e.target.value)}
-          className="field h-10 w-[160px] text-[14px]"
+          className="no-print field h-10 w-[160px] text-[14px]"
           aria-label="Día"
         />
       </div>
@@ -279,13 +281,50 @@ export default function ReporteModelos() {
   const days = useMemo(() => [...(data?.byDay || [])].reverse(), [data])
   const colTotal = (code) => (data?.byDay || []).reduce((a, d) => a + (d[code] || 0), 0)
 
+  // Captura de pantalla (2026-10-12, Roman): solo el dia, los indicadores, las tarjetas de modelo y la grafica
+  // (sin menu, filtros ni tabla). Se descarga como PNG; los controles marcados no-print no salen.
+  const shotRef = useRef(null)
+  const [shooting, setShooting] = useState(false)
+  const capture = async () => {
+    if (!shotRef.current) return
+    setShooting(true)
+    try {
+      await new Promise((r) => setTimeout(r, 60))
+      const bg = getComputedStyle(document.body).backgroundColor || '#f4f6fa'
+      const url = await toPng(shotRef.current, {
+        pixelRatio: 2,
+        backgroundColor: bg,
+        cacheBust: true,
+        filter: (n) => !n.classList?.contains('no-print'),
+      })
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `produccion-por-modelo_${day}${brand ? `_${brand}` : ''}${model ? `_${model.replace(/"/g, '')}` : ''}.png`
+      a.click()
+    } finally {
+      setShooting(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader
         back={<BackLink to="/reportes" label="Reportes" />}
         title="Producción por modelo"
         subtitle={`VIOS ${brand || 'HY / SILO'}${model ? ` · ${model}` : ''} · acumulado contra objetivo`}
-        actions={<BrandControl value={brand} onChange={setBrand} />}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={capture}
+              disabled={!data || shooting}
+              className="no-print inline-flex h-10 items-center gap-2 rounded-xl border bg-card px-3.5 text-[13.5px] font-semibold hover:bg-muted disabled:opacity-60"
+            >
+              <Camera className="h-4 w-4" /> {shooting ? 'Generando…' : 'Captura'}
+            </button>
+            <BrandControl value={brand} onChange={setBrand} />
+          </div>
+        }
       />
 
       {modelButtons.length > 0 && (
@@ -305,103 +344,116 @@ export default function ReporteModelos() {
         <Spinner />
       ) : data ? (
         <>
-          <DayPanel data={data} day={day} setDay={setDay} today={today} />
+          <div ref={shotRef} className={cn('space-y-5', shooting && 'bg-background p-5')}>
+            {shooting && (
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-[22px] font-extrabold tracking-tight">
+                  Producción por modelo · VIOS {brand || 'HY / SILO'}
+                  {model ? ` · ${model}` : ''}
+                </h2>
+                <span className="text-[13px] text-muted-foreground">
+                  MI Technologies · {fmtYmd(day)} {day.slice(0, 4)}
+                </span>
+              </div>
+            )}
+            <DayPanel data={data} day={day} setDay={setDay} today={today} />
 
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-            <Stat
-              label="Producido"
-              value={fmtInt(t.produced)}
-              icon={Factory}
-              tone="blue"
-              hint="Total acumulado"
-            />
-            <Stat
-              label="Rechazados"
-              value={fmtInt(t.rejected)}
-              icon={XCircle}
-              tone={t.rejected ? 'red' : 'default'}
-              hint="Producidos y rechazados"
-            />
-            <Stat
-              label="Neto"
-              value={fmtInt(t.net)}
-              icon={PackageCheck}
-              tone="green"
-              hint="Producido − rechazados"
-            />
-            <Stat
-              label="Promedio / día"
-              value={fmtInt(t.avgPerDay)}
-              icon={Gauge}
-              hint={`Meta del día ${fmtInt(t.capacity)}`}
-            />
-            <Stat
-              label="Mejor día"
-              value={fmtInt(t.bestDay)}
-              icon={Award}
-              tone="amber"
-              hint="Piezas en un día"
-            />
-            <Stat
-              label="Días"
-              value={fmtInt(t.daysWithProduction)}
-              icon={CalendarCheck}
-              hint="Con producción"
-            />
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+              <Stat
+                label="Producido"
+                value={fmtInt(t.produced)}
+                icon={Factory}
+                tone="blue"
+                hint="Total acumulado"
+              />
+              <Stat
+                label="Rechazados"
+                value={fmtInt(t.rejected)}
+                icon={XCircle}
+                tone={t.rejected ? 'red' : 'default'}
+                hint="Producidos y rechazados"
+              />
+              <Stat
+                label="Neto"
+                value={fmtInt(t.net)}
+                icon={PackageCheck}
+                tone="green"
+                hint="Producido − rechazados"
+              />
+              <Stat
+                label="Promedio / día"
+                value={fmtInt(t.avgPerDay)}
+                icon={Gauge}
+                hint={`Meta del día ${fmtInt(t.capacity)}`}
+              />
+              <Stat
+                label="Mejor día"
+                value={fmtInt(t.bestDay)}
+                icon={Award}
+                tone="amber"
+                hint="Piezas en un día"
+              />
+              <Stat
+                label="Días"
+                value={fmtInt(t.daysWithProduction)}
+                icon={CalendarCheck}
+                hint="Con producción"
+              />
+            </div>
+
+            {models.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+                {models.map((m) => (
+                  <ModelCard key={m.code} m={m} />
+                ))}
+              </div>
+            )}
+
+            <Card>
+              <CardHeader
+                icon={LineChart}
+                title="Producción diaria"
+                subtitle="Total de piezas por día y proyección de los próximos 5 días hábiles"
+              />
+              <div className="no-print flex flex-wrap items-center justify-between gap-2 px-4 pt-3 sm:px-5">
+                <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS} />
+                <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={showProj}
+                    onChange={(e) => setShowProj(e.target.checked)}
+                    className="h-4 w-4 rounded accent-[hsl(var(--primary))]"
+                  />
+                  Mostrar proyección
+                </label>
+              </div>
+              <div className="px-2 pb-3 pt-2 sm:px-4">
+                {points.length ? (
+                  <TrendChart
+                    points={points}
+                    projection={data.projection}
+                    showProjection={showProj}
+                    today={today}
+                    reference={{ value: t.capacity, label: 'Meta del día' }}
+                    height={340}
+                  />
+                ) : (
+                  <Empty icon={LineChart} title="Todavía no hay producción" />
+                )}
+              </div>
+              <Legend
+                className="border-t px-4 py-3 sm:px-5"
+                items={[
+                  { label: 'Real', color: 'hsl(var(--primary))' },
+                  ...(showProj && data.projection.length
+                    ? [{ label: 'Proyección', color: '#d97706', dashed: true }]
+                    : []),
+                  { label: 'Meta del día', color: '#10b981', dashed: true },
+                  { label: 'Hoy', color: '#ef4444', dashed: true },
+                ]}
+              />
+            </Card>
           </div>
-
-          {models.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-              {models.map((m) => (
-                <ModelCard key={m.code} m={m} />
-              ))}
-            </div>
-          )}
-
-          <Card>
-            <CardHeader
-              icon={LineChart}
-              title="Producción diaria"
-              subtitle="Total de piezas por día y proyección de los próximos 5 días hábiles"
-            />
-            <div className="no-print flex flex-wrap items-center justify-between gap-2 px-4 pt-3 sm:px-5">
-              <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS} />
-              <label className="inline-flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={showProj}
-                  onChange={(e) => setShowProj(e.target.checked)}
-                  className="h-4 w-4 rounded accent-[hsl(var(--primary))]"
-                />
-                Mostrar proyección
-              </label>
-            </div>
-            <div className="px-2 pb-3 pt-2 sm:px-4">
-              {points.length ? (
-                <TrendChart
-                  points={points}
-                  projection={data.projection}
-                  showProjection={showProj}
-                  today={today}
-                  reference={{ value: t.capacity, label: 'Meta del día' }}
-                  height={340}
-                />
-              ) : (
-                <Empty icon={LineChart} title="Todavía no hay producción" />
-              )}
-            </div>
-            <Legend
-              className="border-t px-4 py-3 sm:px-5"
-              items={[
-                { label: 'Real', color: 'hsl(var(--primary))' },
-                ...(showProj && data.projection.length
-                  ? [{ label: 'Proyección', color: '#d97706', dashed: true }]
-                  : []),
-                { label: 'Meta del día', color: '#10b981', dashed: true },
-                { label: 'Hoy', color: '#ef4444', dashed: true },
-              ]}
-            />
-          </Card>
 
           <Card>
             <CardHeader
