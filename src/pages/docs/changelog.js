@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.40.1',
+    date: '2026-10-12',
+    title: 'Copiar captura para WhatsApp',
+    changed: [
+      'Producción por modelo: "Copiar captura" copia la imagen al portapapeles para pegarla en WhatsApp con Ctrl + V; el botón de al lado la descarga como PNG.',
+    ],
+  },
+  {
     version: '1.40.0',
     date: '2026-10-12',
     title: 'Captura de Producción por modelo',

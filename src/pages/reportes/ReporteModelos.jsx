@@ -1,10 +1,11 @@
 import { projectProduction } from '@shared/projection.js'
 import { todayPlant } from '@shared/shift.js'
-import { toPng } from 'html-to-image'
+import { toBlob } from 'html-to-image'
 import {
   Award,
   CalendarCheck,
   Camera,
+  Download,
   Factory,
   Gauge,
   Info,
@@ -28,6 +29,7 @@ import {
   Table,
   Td,
   Th,
+  useToast,
 } from '@/components/ui'
 import { useApi } from '@/lib/hooks'
 import { cn, fmtInt, fmtPct, fmtYmd } from '@/lib/utils'
@@ -285,25 +287,54 @@ export default function ReporteModelos() {
   // (sin menu, filtros ni tabla). Se descarga como PNG; los controles marcados no-print no salen.
   const shotRef = useRef(null)
   const [shooting, setShooting] = useState(false)
-  const capture = async () => {
-    if (!shotRef.current) return
+  const toast = useToast()
+  const fileName = `produccion-por-modelo_${day}${brand ? `_${brand}` : ''}${model ? `_${model.replace(/"/g, '')}` : ''}.png`
+  // Genera la imagen (con el titulo que solo aparece mientras se captura).
+  const render = async () => {
     setShooting(true)
     try {
-      await new Promise((r) => setTimeout(r, 60))
-      const bg = getComputedStyle(document.body).backgroundColor || '#f4f6fa'
-      const url = await toPng(shotRef.current, {
+      await new Promise((r) => setTimeout(r, 80))
+      return await toBlob(shotRef.current, {
         pixelRatio: 2,
-        backgroundColor: bg,
+        backgroundColor: getComputedStyle(document.body).backgroundColor || '#f4f6fa',
         cacheBust: true,
         filter: (n) => !n.classList?.contains('no-print'),
       })
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `produccion-por-modelo_${day}${brand ? `_${brand}` : ''}${model ? `_${model.replace(/"/g, '')}` : ''}.png`
-      a.click()
     } finally {
       setShooting(false)
     }
+  }
+  const download = (blob) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = fileName
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 2000)
+  }
+  // Copiar al portapapeles para pegar (Ctrl+V) en WhatsApp. El ClipboardItem se crea al instante con la promesa
+  // de la imagen (asi lo permiten Chrome, Edge y Safari). Si el navegador no deja copiar, se descarga.
+  const copyShot = async () => {
+    if (!shotRef.current) return
+    const blobP = render()
+    try {
+      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined')
+        throw new Error('sin portapapeles')
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobP })])
+      toast('Captura copiada: pégala en WhatsApp con Ctrl + V')
+    } catch {
+      const blob = await blobP.catch(() => null)
+      if (blob) {
+        download(blob)
+        toast('Tu navegador no deja copiar imágenes: se descargó la captura', 'warn')
+      } else toast('No se pudo generar la captura', 'error')
+    }
+  }
+  const downloadShot = async () => {
+    if (!shotRef.current) return
+    const blob = await render().catch(() => null)
+    if (blob) download(blob)
+    else toast('No se pudo generar la captura', 'error')
   }
 
   return (
@@ -314,14 +345,26 @@ export default function ReporteModelos() {
         subtitle={`VIOS ${brand || 'HY / SILO'}${model ? ` · ${model}` : ''} · acumulado contra objetivo`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={capture}
-              disabled={!data || shooting}
-              className="no-print inline-flex h-10 items-center gap-2 rounded-xl border bg-card px-3.5 text-[13.5px] font-semibold hover:bg-muted disabled:opacity-60"
-            >
-              <Camera className="h-4 w-4" /> {shooting ? 'Generando…' : 'Captura'}
-            </button>
+            <div className="no-print inline-flex overflow-hidden rounded-xl border bg-card">
+              <button
+                type="button"
+                onClick={copyShot}
+                disabled={!data || shooting}
+                className="inline-flex h-10 items-center gap-2 px-3.5 text-[13.5px] font-semibold hover:bg-muted disabled:opacity-60"
+              >
+                <Camera className="h-4 w-4" /> {shooting ? 'Generando…' : 'Copiar captura'}
+              </button>
+              <button
+                type="button"
+                onClick={downloadShot}
+                disabled={!data || shooting}
+                aria-label="Descargar captura"
+                title="Descargar captura (PNG)"
+                className="grid h-10 w-10 place-items-center border-l hover:bg-muted disabled:opacity-60"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+            </div>
             <BrandControl value={brand} onChange={setBrand} />
           </div>
         }
