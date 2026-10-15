@@ -2,6 +2,7 @@ import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Factory, History, Packa
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MenuCard } from '@/components/MenuCard'
+import { CameraScan, CameraToggle, canUseCamera } from '@/components/Scanner'
 import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Spinner } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
@@ -147,11 +148,14 @@ function FindSerial() {
   const [busy, setBusy] = useState(false)
   const [res, setRes] = useState(null)
   const [error, setError] = useState(null)
+  const [camera, setCamera] = useState(false)
 
-  const submit = async (e) => {
-    e.preventDefault()
-    const c = q.trim()
+  // `code`: lo leido con la camara del celular (se busca solo).
+  const submit = async (e, code) => {
+    e?.preventDefault()
+    const c = (code ?? q).trim()
     if (!c) return
+    if (code) setQ(code)
     setBusy(true)
     setError(null)
     try {
@@ -177,10 +181,18 @@ function FindSerial() {
           autoCapitalize="characters"
           className="field min-w-0 flex-1 font-mono uppercase placeholder:font-sans placeholder:normal-case"
         />
+        {canUseCamera && (
+          <CameraToggle open={camera} onClick={() => setCamera((c) => !c)} className="h-auto self-stretch border" />
+        )}
         <Button type="submit" loading={busy} disabled={!q.trim()} className="shrink-0">
           Buscar
         </Button>
       </form>
+      {camera && (
+        <div className="px-4 pb-4 sm:px-5">
+          <CameraScan once onCode={(c) => submit(null, c)} onClose={() => setCamera(false)} />
+        </div>
+      )}
       <ErrorBox error={error} className="mx-4 mb-4" />
       {res && (
         <div className="border-t">

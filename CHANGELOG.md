@@ -3,6 +3,21 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.45.0] — 2026-10-15
+
+### Added
+- Escaneo con cámara en cualquier celular (a petición explícita del usuario: "que también lo pueda escanear cuando tenga
+  el celular"). `src/components/Scanner.jsx`: el botón de cámara ya no depende de `BarcodeDetector` (solo Chrome
+  Android); si no existe (iPhone/Safari) usa `@zxing/browser` 0.2.1 + `@zxing/library` 0.23.0, cargados con
+  `import()` solo al abrir la cámara (JS puro, sin servicios externos). Formatos: Code 128, Code 39, QR, EAN-13,
+  Data Matrix, ITF. Probado con cámara simulada en Edge (sin `BarcodeDetector`): lee y registra el código.
+- `CameraToggle` / `CameraScan` exportados; "Buscar serial" de Control de Pallet y Reportes los usa (`once`: lee,
+  cierra y busca solo).
+
+### Changed
+- `CameraScan` lee `onCode` por ref (antes reiniciaba la cámara en cada render) y muestra el último código leído.
+  Con la cámara abierta el `Scanner` no recupera el foco (no abre el teclado del celular encima).
+
 ## [1.44.0] — 2026-10-15
 
 ### Added

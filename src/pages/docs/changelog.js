@@ -2,6 +2,18 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.45.0',
+    date: '2026-10-15',
+    title: 'Escanear con la cámara del celular (también iPhone)',
+    added: [
+      'Todos los campos de escaneo (Entrada, Salida, Producción por línea, Calidad) tienen el botón de cámara en cualquier celular, también iPhone/Safari: se toca el ícono de cámara, se apunta al código de barras y se registra solo, igual que con la pistola. La cámara sigue abierta para escanear seguido.',
+      '"Buscar serial" (Control de Pallet y Reportes) también tiene cámara: lee el serial y busca en automático.',
+    ],
+    changed: [
+      'Con la cámara abierta el campo ya no toma el foco solo, para que no salga el teclado encima de la cámara. Abajo de la cámara se ve el último código leído.',
+    ],
+  },
+  {
     version: '1.44.0',
     date: '2026-10-15',
     title: 'Historial con filtros por marca, modelo y pulgadas; neto en Producción por modelo',

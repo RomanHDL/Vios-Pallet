@@ -40,6 +40,7 @@ import {
   usePeriod,
   useUrlInit,
 } from './common'
+import { CameraScan, CameraToggle, canUseCamera } from '@/components/Scanner'
 import { PalletProgress } from './PalletProgress'
 
 const TILE_TONE = {
@@ -124,10 +125,13 @@ function SerialSearch({ initial = '' }) {
   const [err, setErr] = useState(null)
   const [busy, setBusy] = useState(false)
   const box = useRef(null)
-  const search = async (e) => {
+  const [camera, setCamera] = useState(false)
+  // `scanned`: lo leido con la camara del celular (se busca solo).
+  const search = async (e, scanned) => {
     e?.preventDefault()
-    const code = q.trim()
+    const code = (scanned ?? q).trim()
     if (!code) return
+    if (scanned) setQ(scanned)
     setBusy(true)
     setErr(null)
     try {
@@ -157,11 +161,19 @@ function SerialSearch({ initial = '' }) {
           autoComplete="off"
           className="min-w-0 flex-1 font-mono"
         />
+        {canUseCamera && (
+          <CameraToggle open={camera} onClick={() => setCamera((c) => !c)} className="h-auto self-stretch border" />
+        )}
         <Button type="submit" loading={busy} disabled={!q.trim()} className="shrink-0">
           {!busy && <Search className="h-4 w-4" />}
           <span className="hidden sm:inline">Buscar</span>
         </Button>
       </form>
+      {camera && (
+        <div className="px-4 pb-4 sm:px-5">
+          <CameraScan once onCode={(c) => search(null, c)} onClose={() => setCamera(false)} />
+        </div>
+      )}
       <ErrorBox error={err} className="mx-4 mb-4 sm:mx-5" />
       {res && (
         <div className="border-t">
