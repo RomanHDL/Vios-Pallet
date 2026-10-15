@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ScanSerialButton } from '@/components/Scanner'
 import { Button, Card, Dialog, Empty, ErrorBox, Input, Spinner, useToast } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
@@ -303,6 +304,7 @@ export default function PalletsAdmin({ FindSerial }) {
           <HeaderLink to="/pallets/historial" icon={History}>
             Historial
           </HeaderLink>
+          <ScanSerialButton />
         </div>
       </div>
 

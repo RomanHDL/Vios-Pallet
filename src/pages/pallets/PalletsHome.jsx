@@ -1,8 +1,8 @@
 import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Factory, History, PackageOpen, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MenuCard } from '@/components/MenuCard'
-import { CameraScan, CameraToggle, canUseCamera } from '@/components/Scanner'
+import { CameraScan, CameraToggle, canUseCamera, SCAN_SERIAL_EVENT, ScanSerialButton } from '@/components/Scanner'
 import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Spinner } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
@@ -40,6 +40,7 @@ function PalletsOperativo() {
             <Link to="/pallets/historial" className="inline-flex h-11 items-center gap-2 rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted">
               <History className="h-[18px] w-[18px]" /> Historial
             </Link>
+            <ScanSerialButton />
           </>
         }
       />
@@ -149,6 +150,18 @@ function FindSerial() {
   const [res, setRes] = useState(null)
   const [error, setError] = useState(null)
   const [camera, setCamera] = useState(false)
+  const box = useRef(null)
+  // Boton "Escanear serial" del encabezado: abre la camara aqui y trae la vista al buscador.
+  useEffect(() => {
+    const open = () => {
+      setRes(null)
+      setError(null)
+      setCamera(true)
+      box.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    }
+    window.addEventListener(SCAN_SERIAL_EVENT, open)
+    return () => window.removeEventListener(SCAN_SERIAL_EVENT, open)
+  }, [])
 
   // `code`: lo leido con la camara del celular (se busca solo).
   const submit = async (e, code) => {
@@ -169,7 +182,7 @@ function FindSerial() {
   }
 
   return (
-    <Card className="self-start">
+    <Card ref={box} className="scroll-mt-24 self-start">
       <CardHeader icon={Search} title="Buscar serial" subtitle="¿En qué pallet está una pieza?" />
       <form onSubmit={submit} className="flex gap-2 p-4 sm:px-5">
         <input

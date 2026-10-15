@@ -82,6 +82,22 @@ export const Scanner = forwardRef(function Scanner(
   )
 })
 
+// "Escanear serial" del encabezado de Control de Pallet (2026-10-15, a peticion explicita del usuario: "a
+// lado derecho del boton de historial, ese boton de escanear serial es muy importante"): avisa a "Buscar
+// serial" de la misma pagina (FindSerial) que abra su camara.
+export const SCAN_SERIAL_EVENT = 'vios:scan-serial'
+export function ScanSerialButton() {
+  return (
+    <button
+      type="button"
+      onClick={() => window.dispatchEvent(new Event(SCAN_SERIAL_EVENT))}
+      className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-[14.5px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+    >
+      <ScanLine className="h-[18px] w-[18px]" /> Escanear serial
+    </button>
+  )
+}
+
 // Boton de camara (mismo icono en todos los campos de escaneo).
 export function CameraToggle({ open, onClick, disabled, className }) {
   return (

@@ -3,6 +3,14 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.46.0] — 2026-10-15
+
+### Added
+- Botón "Escanear serial" (`ScanSerialButton`, `src/components/Scanner.jsx`) a la derecha de Historial en Control de
+  Pallet (vista de administrador y operativa). A petición explícita del usuario ("ese botón de escanear serial es muy
+  importante"). Lanza el evento `vios:scan-serial`; "Buscar serial" (`FindSerial`) abre su cámara y se lleva la
+  vista al buscador.
+
 ## [1.45.0] — 2026-10-15
 
 ### Added

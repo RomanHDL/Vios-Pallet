@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.46.0',
+    date: '2026-10-15',
+    title: 'Botón "Escanear serial" junto a Historial',
+    added: [
+      'Control de Pallet: botón azul "Escanear serial" a la derecha de Historial. Abre la cámara de "Buscar serial", lee el serial y muestra en qué pallet está, sin tener que bajar al buscador.',
+    ],
+  },
+  {
     version: '1.45.0',
     date: '2026-10-15',
     title: 'Escanear con la cámara del celular (también iPhone)',
