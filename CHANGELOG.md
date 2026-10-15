@@ -3,6 +3,12 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.42.0] — 2026-10-15
+
+### Fixed
+- `palletsByDay` / `palletsByDayModel` / `brandSplit` (pallets): cada salida cerrada cuenta una vez, en la fecha/turno de su `closed_at` (columna `close_at` en `PRODUCED`). Antes un pallet escaneado en dos días contaba en los dos. Aplica a Producción por modelo, Reporte del día, Inicio y Hora x Hora. Salidas abiertas: 0 pallets hasta cerrarse.
+- Las piezas no cambian: siguen en la fecha de escaneo.
+
 ## [1.41.1] — 2026-10-13
 
 ### Fixed

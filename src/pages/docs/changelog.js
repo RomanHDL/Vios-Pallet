@@ -2,6 +2,16 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.42.0',
+    date: '2026-10-15',
+    title: 'Cada pallet cuenta una sola vez, el día que se cierra',
+    fixed: [
+      'Los pallets por día y por turno (Producción por modelo, Reporte del día, Inicio y Hora x Hora) cuentan cada pallet una sola vez, el día y turno en que se cerró su salida. Antes, un pallet escaneado en dos días contaba en los dos.',
+      'Las piezas no cambian: cuentan el día en que se escanearon. Ejemplo: 25 teles el 14 y 2 el 15, salida cerrada el 15 → 14: 25 piezas; 15: 2 piezas y 1 pallet.',
+      'Mientras la salida siga abierta, el pallet todavía no cuenta.',
+    ],
+  },
+  {
     version: '1.41.1',
     date: '2026-10-13',
     title: 'Detalle de HY / SILO: un renglón por pallet',

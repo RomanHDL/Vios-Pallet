@@ -64,6 +64,7 @@ const SECTIONS = [
     icon: BarChart3,
     title: 'Reportes',
     steps: [
+      'Cómo se cuenta cada día: las piezas cuentan el día que se escanearon; el pallet cuenta una sola vez, el día que se cerró su salida. Ejemplo: un pallet con 25 teles escaneadas el 14 y 2 el 15, cerrado el 15: el 14 suma 25 piezas, el 15 suma 2 piezas y 1 pallet. Mientras la salida siga abierta, el pallet todavía no cuenta.',
       'Reporte del día: Plan, Real, Delta (Real − Plan; rojo = faltó) y Recovery (plan + lo que faltó en el turno anterior), por turno y por línea. Se puede imprimir.',
       'Producción por modelo: producido, rechazado y neto contra los objetivos MTY y Texas, con gráfica diaria y proyección de 5 días hábiles.',
       'Personal y productividad: producción del turno (una vez por serial) entre las personas del turno. Cada área de trabajo (Entrada, Producción por línea, Salida) que escaneó algo en el turno cuenta como 1 persona; también se ven las piezas que escaneó cada área.',
