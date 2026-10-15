@@ -1,9 +1,9 @@
-import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Factory, History, PackageOpen, Search } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { ArrowDownToLine, ArrowUpFromLine, ChevronRight, Factory, History, PackageOpen, ScanLine } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { MenuCard } from '@/components/MenuCard'
-import { CameraScan, CameraToggle, canUseCamera, SCAN_SERIAL_EVENT, ScanSerialButton } from '@/components/Scanner'
-import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Spinner } from '@/components/ui'
+import { CameraScan, CameraToggle, canUseCamera } from '@/components/Scanner'
+import { Badge, Button, Card, CardHeader, Dialog, Empty, ErrorBox, PageHeader, Spinner } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
 import { useSession } from '@/lib/session'
@@ -15,7 +15,7 @@ import { StatusBadge, TypeBadge, normPallet, resumePath } from './shared'
 // la vista operativa de siempre, sin cambios.
 export default function PalletsHome() {
   const { user } = useSession()
-  if (user?.role === 'admin') return <PalletsAdmin FindSerial={FindSerial} />
+  if (user?.role === 'admin') return <PalletsAdmin ScanSerial={ScanSerialAction} />
   return <PalletsOperativo />
 }
 
@@ -40,7 +40,7 @@ function PalletsOperativo() {
             <Link to="/pallets/historial" className="inline-flex h-11 items-center gap-2 rounded-xl border border-input bg-card px-4 text-[14.5px] font-semibold hover:bg-muted">
               <History className="h-[18px] w-[18px]" /> Historial
             </Link>
-            <ScanSerialButton />
+            <ScanSerialAction />
           </>
         }
       />
@@ -66,7 +66,7 @@ function PalletsOperativo() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+      <div className="grid gap-6">
         <Card className="overflow-hidden">
           <CardHeader icon={PackageOpen} title="Pallets abiertos" subtitle="Toca uno para seguir escaneando" />
           {open.loading && !open.data ? (
@@ -84,7 +84,6 @@ function PalletsOperativo() {
             </div>
           )}
         </Card>
-        <FindSerial />
       </div>
     </div>
   )
@@ -142,28 +141,38 @@ function OpenColumn({ title, items }) {
   )
 }
 
-// Busca en que pallets esta un serial.
-function FindSerial() {
+// "Escanear serial" (2026-10-15, a peticion explicita del usuario: "debe ser solo uno y quiero que sea el de
+// historial, el de arriba"): UN solo boton junto a Historial que abre una ventana con la camara (abierta de
+// una vez si el equipo tiene camara), el campo para escribir o escanear con pistola, y en que pallet esta.
+// Reemplaza la tarjeta "Buscar serial" que estaba abajo.
+export function ScanSerialAction() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-[14.5px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+      >
+        <ScanLine className="h-[18px] w-[18px]" /> Escanear serial
+      </button>
+      <Dialog open={open} onClose={() => setOpen(false)} title="Escanear serial">
+        {open && <FindSerial onPick={() => setOpen(false)} />}
+      </Dialog>
+    </>
+  )
+}
+
+// Busca en que pallets esta un serial (dentro de la ventana de "Escanear serial").
+function FindSerial({ onPick }) {
   const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [busy, setBusy] = useState(false)
   const [res, setRes] = useState(null)
   const [error, setError] = useState(null)
-  const [camera, setCamera] = useState(false)
-  const box = useRef(null)
-  // Boton "Escanear serial" del encabezado: abre la camara aqui y trae la vista al buscador.
-  useEffect(() => {
-    const open = () => {
-      setRes(null)
-      setError(null)
-      setCamera(true)
-      box.current?.scrollIntoView({ block: 'start', behavior: 'smooth' })
-    }
-    window.addEventListener(SCAN_SERIAL_EVENT, open)
-    return () => window.removeEventListener(SCAN_SERIAL_EVENT, open)
-  }, [])
+  const [camera, setCamera] = useState(canUseCamera)
 
-  // `code`: lo leido con la camara del celular (se busca solo).
+  // `code`: lo leido con la camara (se busca solo).
   const submit = async (e, code) => {
     e?.preventDefault()
     const c = (code ?? q).trim()
@@ -182,9 +191,10 @@ function FindSerial() {
   }
 
   return (
-    <Card ref={box} className="scroll-mt-24 self-start">
-      <CardHeader icon={Search} title="Buscar serial" subtitle="¿En qué pallet está una pieza?" />
-      <form onSubmit={submit} className="flex gap-2 p-4 sm:px-5">
+    <div className="space-y-3">
+      <p className="text-[13.5px] text-muted-foreground">¿En qué pallet está una pieza?</p>
+      {camera && <CameraScan once onCode={(c) => submit(null, c)} onClose={() => setCamera(false)} />}
+      <form onSubmit={submit} className="flex gap-2">
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -192,6 +202,7 @@ function FindSerial() {
           autoComplete="off"
           spellCheck={false}
           autoCapitalize="characters"
+          autoFocus={!canUseCamera}
           className="field min-w-0 flex-1 font-mono uppercase placeholder:font-sans placeholder:normal-case"
         />
         {canUseCamera && (
@@ -201,23 +212,21 @@ function FindSerial() {
           Buscar
         </Button>
       </form>
-      {camera && (
-        <div className="px-4 pb-4 sm:px-5">
-          <CameraScan once onCode={(c) => submit(null, c)} onClose={() => setCamera(false)} />
-        </div>
-      )}
-      <ErrorBox error={error} className="mx-4 mb-4" />
+      <ErrorBox error={error} />
       {res && (
-        <div className="border-t">
-          <p className="px-4 pt-3 font-mono text-[13px] font-semibold text-muted-foreground sm:px-5">{res.code}</p>
+        <div className="overflow-hidden rounded-2xl border">
+          <p className="px-4 pt-3 font-mono text-[13px] font-semibold text-muted-foreground">{res.code}</p>
           {res.matches.length ? (
             <ul className="divide-y">
               {res.matches.map((m) => (
                 <li key={m.pallet_id}>
                   <button
                     type="button"
-                    onClick={() => navigate(`/pallets/${m.pallet_id}`)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/60 sm:px-5"
+                    onClick={() => {
+                      onPick?.()
+                      navigate(`/pallets/${m.pallet_id}`)
+                    }}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/60"
                   >
                     <span className="min-w-0 flex-1">
                       <span className="flex flex-wrap items-center gap-2">
@@ -235,10 +244,10 @@ function FindSerial() {
               ))}
             </ul>
           ) : (
-            <p className="px-4 pb-4 pt-1 text-[13.5px] text-muted-foreground sm:px-5">No está en ningún pallet.</p>
+            <p className="px-4 pb-4 pt-1 text-[13.5px] text-muted-foreground">No está en ningún pallet.</p>
           )}
         </div>
       )}
-    </Card>
+    </div>
   )
 }

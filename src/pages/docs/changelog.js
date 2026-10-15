@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.47.0',
+    date: '2026-10-15',
+    title: '"Escanear serial" en un solo lugar',
+    changed: [
+      'Control de Pallet: el buscador de serial ahora es SOLO el botón "Escanear serial" de arriba (junto a Historial). Abre una ventana con la cámara ya abierta, el campo para escribir o escanear con pistola y en qué pallet está la pieza; tocar el pallet lo abre. Se quitó la tarjeta "Buscar serial" de abajo para no tenerlo duplicado.',
+    ],
+  },
+  {
     version: '1.46.0',
     date: '2026-10-15',
     title: 'Botón "Escanear serial" junto a Historial',

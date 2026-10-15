@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ScanSerialButton } from '@/components/Scanner'
 import { Button, Card, Dialog, Empty, ErrorBox, Input, Spinner, useToast } from '@/components/ui'
 import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
@@ -270,7 +269,7 @@ function FlowNode({ stage, n, last }) {
   )
 }
 
-export default function PalletsAdmin({ FindSerial }) {
+export default function PalletsAdmin({ ScanSerial }) {
   const [shift, setShift] = useState('')
   const [tab, setTab] = useState('entrada')
   const [onlyDetained, setOnlyDetained] = useState(false)
@@ -304,7 +303,7 @@ export default function PalletsAdmin({ FindSerial }) {
           <HeaderLink to="/pallets/historial" icon={History}>
             Historial
           </HeaderLink>
-          <ScanSerialButton />
+          <ScanSerial />
         </div>
       </div>
 
@@ -385,7 +384,6 @@ export default function PalletsAdmin({ FindSerial }) {
         </Card>
 
         <div className="min-w-0 space-y-5">
-          <FindSerial />
           <Card className="p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div className="flex min-w-0 items-start gap-3">

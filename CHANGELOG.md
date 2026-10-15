@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.47.0] — 2026-10-15
+
+### Changed
+- Un solo "Escanear serial" (a petición explícita del usuario: "no debes duplicarlo, debe ser solo uno y quiero que sea
+  el de historial, el de arriba"). `ScanSerialAction` (`src/pages/pallets/PalletsHome.jsx`): botón junto a Historial
+  que abre un `Dialog` con `FindSerial` (cámara abierta de una vez si hay, campo manual / pistola, resultados). Se
+  quitó la tarjeta "Buscar serial" de Control de Pallet (vista admin y operativa) y el evento `vios:scan-serial`.
+  "Buscar serial" de Reportes no cambia.
+
 ## [1.46.0] — 2026-10-15
 
 ### Added
