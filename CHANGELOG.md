@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.44.0] — 2026-10-15
+
+### Added
+- `GET /pallets`: filtros `brand` (código exacto, HY/SILO), `model` (código exacto, p. ej. `EL-43"`) e `inches` (número del código del modelo, `substring(model from '([0-9]{2,3})')`). Server-side, se combinan con `type`/`missing`/`from`/`to`/`q`.
+- Historial de pallets: selects Marca / Modelo / Pulgadas (de `/catalogs`, incluye inactivos; pulgadas derivadas de los códigos de modelo). Elegir pulgadas acota la lista de modelos.
+
+### Changed
+- Producción por modelo (`ModelCard`): número grande = neto (`m.net`); renglón "N piezas totales − R rechazadas de Calidad = X neto" siempre visible. HY/SILO: grande = neto, pequeño "total − rechazadas = neto".
+
 ## [1.43.0] — 2026-10-15
 
 ### Added

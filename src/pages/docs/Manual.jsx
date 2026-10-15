@@ -27,6 +27,7 @@ const SECTIONS = [
       'Toca "Conciliar y cerrar". Cada pieza faltante necesita un motivo (Dañada, No llegó, Rechazo de calidad, etc.).',
       'Reporte de salida: cuando la salida ya está cerrada, en su detalle (o en el de su entrada) aparece "Imprimir reporte de salida": hoja vertical con datos de entrada y salida, seriales en 3 columnas, faltantes y firmas de Calidad, Producción y Almacén. Mientras la salida no se registre, el botón dice "Disponible al registrar la salida" y no se puede imprimir. Un supervisor puede reabrir un pallet; solo el administrador puede eliminarlo.',
       '"Buscar serial" te dice en qué pallet está una pieza.',
+      'Historial de pallets: filtra por Tipo, fechas, ID, Marca (HY/SILO), Modelo y Pulgadas (32, 43, 50…). Los filtros se combinan entre sí y el número de resultados cuenta solo lo filtrado; incluye los pallets de PalletScan (PS-…).',
       'Producción por línea (botón en Pallets): elige Marca (HY/SILO) → Modelo → Línea y escanea el serial de la TV y luego el de la caja (deben coincidir). Abajo se ve cada línea con sus piezas, personas y piezas por persona; "Editar personal" captura las personas. Estos escaneos también suman a la producción del turno.',
     ],
   },
@@ -66,7 +67,7 @@ const SECTIONS = [
     steps: [
       'Cómo se cuenta cada día: las piezas cuentan el día que se escanearon; el pallet cuenta una sola vez, el día que se cerró su salida. Ejemplo: un pallet con 25 teles escaneadas el 14 y 2 el 15, cerrado el 15: el 14 suma 25 piezas, el 15 suma 2 piezas y 1 pallet. Mientras la salida siga abierta, el pallet todavía no cuenta.',
       'Reporte del día: Plan, Real, Delta (Real − Plan; rojo = faltó) y Recovery (plan + lo que faltó en el turno anterior), por turno y por línea. Se puede imprimir.',
-      'Producción por modelo: producido, rechazado y neto contra los objetivos MTY y Texas, con gráfica diaria y proyección de 5 días hábiles.',
+      'Producción por modelo: producido, rechazado y neto contra los objetivos MTY y Texas, con gráfica diaria y proyección de 5 días hábiles. En cada modelo el número grande es el NETO; abajo: "piezas totales − rechazadas de Calidad = neto" (igual en HY y SILO). El porcentaje y lo que falta se calculan con el neto.',
       'Los pallets de PalletScan (14 sep – 2 oct: EL-32" HY y EL-43" SILO) están cargados en VIOS como pallets reales, con sus teles, fechas y horas originales (creados por "PalletScan"). Se buscan y abren como cualquier pallet y cuentan en todos los reportes; cada tele cuenta una sola vez. En Reporte del día esos días muestran lo procesado sin plan.',
       'Personal y productividad: producción del turno (una vez por serial) entre las personas del turno. Cada área de trabajo (Entrada, Producción por línea, Salida) que escaneó algo en el turno cuenta como 1 persona; también se ven las piezas que escaneó cada área.',
       'Dashboard de pallets: estado de cada pallet (escaneando, sin salida, en proceso, con faltantes, consolidado). En "Progreso visual de pallets" cada salida iniciada se ve como una tarima que se llena conforme escanean; los pendientes van primero y no se ocultan, los consolidados rotan cada 10 s.',

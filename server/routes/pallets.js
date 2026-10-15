@@ -85,9 +85,10 @@ async function withCodeLock(key, fn) {
   }
 }
 
-// Lista / historial. Filtros: type, status, missing=1, q (id), from/to (YYYY-MM-DD, fecha de creacion en MTY).
+// Lista / historial. Filtros: type, status, missing=1, q (id), from/to (YYYY-MM-DD, fecha de creacion en MTY),
+// brand (HY/SILO), model (codigo exacto, p. ej. EL-43"), inches (32/43/50: el numero del codigo del modelo).
 r.get('/pallets', requireAuth(), async (req, res) => {
-  const { type, status, missing, q, from, to } = req.query
+  const { type, status, missing, q, from, to, brand, model, inches } = req.query
   const limit = Math.min(500, Number(req.query.limit) || 200)
   const conds = [sql`true`]
   if (type === 'entrada' || type === 'salida') conds.push(sql`p.type = ${type}`)
@@ -96,6 +97,9 @@ r.get('/pallets', requireAuth(), async (req, res) => {
   if (q) conds.push(sql`p.id ilike ${`%${clean(q, 20)}%`}`)
   if (isYmd(from)) conds.push(sql`(p.created_at at time zone 'America/Monterrey')::date >= ${from}::date`)
   if (isYmd(to)) conds.push(sql`(p.created_at at time zone 'America/Monterrey')::date <= ${to}::date`)
+  if (brand) conds.push(sql`p.brand = ${clean(brand, 20).toUpperCase()}`)
+  if (model) conds.push(sql`p.model = ${clean(model, 40)}`)
+  if (/^\d{2,3}$/.test(String(inches || ''))) conds.push(sql`substring(p.model from '([0-9]{2,3})') = ${String(inches)}`)
   const list = await rows(sql`
     select p.*, ${userName(sql`p.created_by`)} as created_by_name,
            ${userName(sql`p.closed_by`)} as closed_by_name,

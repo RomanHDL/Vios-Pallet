@@ -133,6 +133,7 @@ function DayPanel({ data, day, setDay, today }) {
 
 // Tarjeta compacta (2026-10-12, Roman: "que esten chicos, las 5 en el mismo lugar, y abajo de cada modelo HY y SILO
 // procesado sin contar lo rechazado de calidad"). Neto = producido - rechazados; HY / SILO tambien netos.
+// 2026-10-15 (Roman): el numero grande es el NETO y abajo el desglose "totales − rechazadas de Calidad = neto".
 function ModelCard({ m }) {
   const net = (b) => Math.max(0, (m.brands?.[b] || 0) - (m.rejectedBrands?.[b] || 0))
   return (
@@ -148,16 +149,13 @@ function ModelCard({ m }) {
           {m.target ? fmtPct(m.pct) : 'sin objetivo'}
         </span>
       </div>
-      <p className="tabular mt-0.5 text-[26px] font-extrabold leading-tight">{fmtInt(m.produced)}</p>
-      <p className="text-[11.5px] text-muted-foreground">
-        {m.rejected ? (
-          <>
-            neto <b className="tabular text-foreground">{fmtInt(m.net)}</b>{' '}
-            <span className="text-red-600 dark:text-red-400">(−{fmtInt(m.rejected)} rechazadas)</span>
-          </>
-        ) : (
-          'producidas · sin rechazos'
-        )}
+      <p className="tabular mt-0.5 text-[26px] font-extrabold leading-tight">{fmtInt(m.net)}</p>
+      <p className="tabular text-[11.5px] leading-snug text-muted-foreground">
+        {fmtInt(m.produced)} piezas totales{' '}
+        <span className={cn(m.rejected > 0 && 'text-red-600 dark:text-red-400')}>
+          − {fmtInt(m.rejected || 0)} rechazadas{m.rejected > 0 ? ' de Calidad' : ''}
+        </span>{' '}
+        = <b className="text-foreground">{fmtInt(m.net)} neto</b>
       </p>
       <Progress value={m.pct} tone={pctTone(m.pct)} className="mt-2 h-1.5" />
       <div className="mt-1 flex justify-between text-[11.5px] text-muted-foreground">
@@ -188,13 +186,14 @@ function ModelCard({ m }) {
             >
               {b}
             </p>
-            <p className="tabular text-[15px] font-extrabold leading-tight">{fmtInt(m.brands?.[b] || 0)}</p>
-            {m.rejectedBrands?.[b] > 0 && (
-              <p className="text-[10px] text-muted-foreground">
-                neto <b className="text-foreground">{fmtInt(net(b))}</b>{' '}
-                <span className="text-red-600 dark:text-red-400">(−{fmtInt(m.rejectedBrands[b])})</span>
-              </p>
-            )}
+            <p className="tabular text-[15px] font-extrabold leading-tight">{fmtInt(net(b))}</p>
+            <p className="tabular text-[10px] leading-tight text-muted-foreground">
+              {fmtInt(m.brands?.[b] || 0)}{' '}
+              <span className={cn(m.rejectedBrands?.[b] > 0 && 'text-red-600 dark:text-red-400')}>
+                − {fmtInt(m.rejectedBrands?.[b] || 0)}
+              </span>{' '}
+              = <b className="text-foreground">{fmtInt(net(b))}</b>
+            </p>
           </div>
         ))}
       </div>

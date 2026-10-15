@@ -2,6 +2,17 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.44.0',
+    date: '2026-10-15',
+    title: 'Historial con filtros por marca, modelo y pulgadas; neto en Producción por modelo',
+    added: [
+      'Historial de pallets: nuevos filtros Marca (HY / SILO), Modelo y Pulgadas (32, 43, 50…). Se combinan con Tipo, fechas e ID, y el número de resultados cuenta solo lo filtrado. También aplican a los pallets de PalletScan.',
+    ],
+    changed: [
+      'Producción por modelo: el número grande de cada modelo ahora es el NETO. Abajo se ve el desglose "piezas totales − rechazadas de Calidad = neto" (aunque haya 0 rechazadas). HY y SILO también muestran el neto grande con "totales − rechazadas = neto".',
+    ],
+  },
+  {
     version: '1.43.0',
     date: '2026-10-15',
     title: 'Los pallets de PalletScan ya están en VIOS',

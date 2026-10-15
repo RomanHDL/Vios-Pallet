@@ -1,9 +1,10 @@
 import { ChevronRight, History, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { addDays, todayPlant } from '@shared/shift.js'
-import { Badge, Card, Empty, ErrorBox, Field, Input, PageHeader, Segmented, Spinner, Table, Td, Th } from '@/components/ui'
+import { Badge, Card, Empty, ErrorBox, Field, Input, PageHeader, Segmented, Select, Spinner, Table, Td, Th } from '@/components/ui'
 import { useApi } from '@/lib/hooks'
+import { useSession } from '@/lib/session'
 import { fmtDateTime, fmtInt } from '@/lib/utils'
 import { BackLink, StatusBadge, TypeBadge, normPallet, useDebounced } from './shared'
 
@@ -14,6 +15,9 @@ const FILTERS = [
   { value: 'faltantes', label: 'Con faltantes' },
 ]
 
+// Pulgadas = el numero del codigo del modelo (EL-32" -> 32, J0-43" -> 43). Igual que el filtro del servidor.
+const inchesOf = (model) => String(model || '').match(/(\d{2,3})/)?.[1] || ''
+
 export default function PalletHistory() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState('todos')
@@ -21,6 +25,27 @@ export default function PalletHistory() {
   const [to, setTo] = useState(() => todayPlant())
   const [q, setQ] = useState('')
   const dq = useDebounced(q.trim(), 350)
+  const [brand, setBrand] = useState('')
+  const [model, setModel] = useState('')
+  const [inches, setInches] = useState('')
+
+  // Catalogos completos (incluye inactivos: el historial puede tener pallets de modelos ya dados de baja).
+  const { catalogs } = useSession()
+  const brandList = useMemo(() => (catalogs?.brands || []).map((b) => b.code), [catalogs])
+  const modelList = useMemo(() => (catalogs?.models || []).map((m) => m.code), [catalogs])
+  const inchList = useMemo(
+    () => [...new Set(modelList.map(inchesOf).filter(Boolean))].sort((a, b) => Number(a) - Number(b)),
+    [modelList],
+  )
+  const modelOptions = inches ? modelList.filter((m) => inchesOf(m) === inches) : modelList
+  const changeInches = (v) => {
+    setInches(v)
+    if (v && model && inchesOf(model) !== v) setModel('')
+  }
+  const changeModel = (v) => {
+    setModel(v)
+    if (v && inches && inchesOf(v) !== inches) setInches('')
+  }
 
   const query = {
     type: filter === 'entrada' || filter === 'salida' ? filter : filter === 'faltantes' ? 'salida' : undefined,
@@ -28,6 +53,9 @@ export default function PalletHistory() {
     from,
     to,
     q: dq,
+    brand: brand || undefined,
+    model: model || undefined,
+    inches: inches || undefined,
   }
   const { data, error, loading } = useApi('/pallets', { query })
   const list = (data?.pallets || []).map(normPallet)
@@ -38,7 +66,7 @@ export default function PalletHistory() {
       <PageHeader back={<BackLink />} title="Historial de pallets" subtitle="Entradas y salidas registradas" />
 
       <Card className="mb-4 p-4 sm:p-5">
-        <div className="grid gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 lg:grid-cols-[auto_1fr] lg:items-end">
           <div>
             <span className="label">Tipo</span>
             <Segmented value={filter} onChange={setFilter} options={FILTERS} className="w-full sm:w-auto" />
@@ -64,6 +92,38 @@ export default function PalletHistory() {
               </div>
             </Field>
           </div>
+        </div>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Field label="Marca">
+            <Select value={brand} onChange={(e) => setBrand(e.target.value)} className="min-w-0">
+              <option value="">Todas</option>
+              {brandList.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Modelo" className="order-last col-span-2 sm:order-none sm:col-span-1">
+            <Select value={model} onChange={(e) => changeModel(e.target.value)} className="min-w-0">
+              <option value="">Todos</option>
+              {modelOptions.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Pulgadas">
+            <Select value={inches} onChange={(e) => changeInches(e.target.value)} className="min-w-0">
+              <option value="">Todas</option>
+              {inchList.map((n) => (
+                <option key={n} value={n}>
+                  {n}"
+                </option>
+              ))}
+            </Select>
+          </Field>
         </div>
       </Card>
 
