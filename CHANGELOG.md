@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.50.0] — 2026-10-15
+
+### Changed
+- Cámara sin UPC/EAN (a petición explícita del usuario: "que bloquee todo escaneo menos el serial number").
+  `CameraScan` ya no pide `ean_13` (nativo) ni `EAN_13` (zxing) y descarta con `isProductCode` cualquier código de
+  solo dígitos de 8 o 12–14 (UPC-A/E, EAN-8/13, GTIN-14); con varios códigos en la imagen toma el que no es de
+  producto. Aviso "Ese es el UPC: apunta al SERIAL NUMBER". Probado con cámara simulada (etiqueta Hyundai UPC +
+  serial): lee solo `EL251043TV16824`; solo UPC no lee nada. La pistola no cambia.
+
 ## [1.49.0] — 2026-10-15
 
 ### Changed

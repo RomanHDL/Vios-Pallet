@@ -10,7 +10,12 @@ const hasDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window
 export const canUseCamera =
   typeof navigator !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia)
 
-const FORMATS = ['code_128', 'code_39', 'qr_code', 'ean_13', 'data_matrix', 'itf']
+// 2026-10-15 (a peticion explicita del usuario: "que bloquee todo escaneo menos el serial number"): sin
+// UPC / EAN (codigo de producto de la caja). Ademas se ignora cualquier codigo que sea solo numeros de 8 o
+// 12-14 digitos (UPC-A / UPC-E / EAN-8 / EAN-13 / GTIN-14), aunque venga en otro formato. Los IDs de pallet
+// (6 digitos) y los seriales (letras y numeros, p. ej. EL251043TV16824) si pasan.
+const FORMATS = ['code_128', 'code_39', 'qr_code', 'data_matrix', 'itf']
+export const isProductCode = (code) => /^(\d{8}|\d{12,14})$/.test(String(code || '').trim())
 
 export const Scanner = forwardRef(function Scanner(
   { onScan, placeholder = 'Escanea o escribe el código', label, disabled, busy, status, autoFocus = true, keepFocus = true, className },
@@ -112,6 +117,7 @@ export function CameraScan({ onCode, onClose, once = false }) {
   onCloseRef.current = onClose
   const [error, setError] = useState(null)
   const [last, setLast] = useState('')
+  const [skipped, setSkipped] = useState(false)
 
   useEffect(() => {
     let stop = false
@@ -123,6 +129,11 @@ export function CameraScan({ onCode, onClose, once = false }) {
     const handle = (raw) => {
       const c = String(raw || '').trim()
       if (stop || !c) return
+      if (isProductCode(c)) {
+        setSkipped(true)
+        return
+      }
+      setSkipped(false)
       // Evita leer el mismo codigo varias veces seguidas.
       if (c === lastCode && Date.now() - lastAt < 2500) return
       lastCode = c
@@ -153,7 +164,9 @@ export function CameraScan({ onCode, onClose, once = false }) {
             if (stop) return
             try {
               const codes = await native.detect(v)
-              handle(codes[0]?.rawValue)
+              // Si en la imagen salen UPC y serial, se toma el serial.
+              const pick = codes.find((x) => !isProductCode(x.rawValue)) || codes[0]
+              handle(pick?.rawValue)
             } catch {
               /* frame sin codigo */
             }
@@ -173,7 +186,6 @@ export function CameraScan({ onCode, onClose, once = false }) {
           BarcodeFormat.CODE_128,
           BarcodeFormat.CODE_39,
           BarcodeFormat.QR_CODE,
-          BarcodeFormat.EAN_13,
           BarcodeFormat.DATA_MATRIX,
           BarcodeFormat.ITF,
         ])
@@ -209,7 +221,11 @@ export function CameraScan({ onCode, onClose, once = false }) {
           <div className="pointer-events-none absolute inset-x-8 top-1/2 h-0.5 -translate-y-1/2 bg-red-500/80 shadow-[0_0_12px_rgba(239,68,68,.9)]" />
           <p className="pointer-events-none absolute inset-x-0 bottom-2 text-center">
             <span className="rounded-full bg-black/70 px-3 py-1 font-mono text-[12.5px] font-semibold text-white">
-              {last ? `Leído: ${last}` : 'Apunta al código de barras'}
+              {skipped
+                ? 'Ese es el UPC: apunta al SERIAL NUMBER'
+                : last
+                  ? `Leído: ${last}`
+                  : 'Apunta al código de barras'}
             </span>
           </p>
         </div>

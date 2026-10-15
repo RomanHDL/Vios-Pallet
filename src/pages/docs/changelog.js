@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.50.0',
+    date: '2026-10-15',
+    title: 'La cámara ignora el UPC',
+    changed: [
+      'Al escanear con la cámara del celular ya no se lee el UPC / código de producto de la caja (solo números de 8 o 12 a 14 dígitos): solo el SERIAL NUMBER (letras y números) y los ID de pallet. Si en la imagen salen los dos, toma el serial.',
+    ],
+  },
+  {
     version: '1.49.0',
     date: '2026-10-15',
     title: 'Buscar serial directo junto a Historial',
