@@ -147,6 +147,8 @@ CREATE TABLE IF NOT EXISTS hourly_goals (
 ALTER TABLE pallets ADD COLUMN IF NOT EXISTS line text;
 -- Pieza de otro modelo/prefijo agregada a proposito ("tele diferente"), identificada en listas y reportes.
 ALTER TABLE pallet_items ADD COLUMN IF NOT EXISTS different boolean NOT NULL DEFAULT false;
+-- Origen del pallet: 'vios' (escaneado en VIOS) o 'palletscan' (importado de PalletScan, 2026-10-15).
+ALTER TABLE pallets ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'vios';
 -- Historico de PalletScan (antes de VIOS, 2026-09-11 a 2026-10-02), capturado de su reporte "Produccion VIOS-HY / MTY"
 -- (2026-10-08, pedido de Roman). Solo alimenta Reportes -> Produccion por modelo y se suma a lo de VIOS.
 -- rejected = rechazados de Calidad en PalletScan por modelo (se anotan en el ultimo dia de ese modelo).
@@ -159,7 +161,12 @@ CREATE TABLE IF NOT EXISTS production_history (
   source text NOT NULL DEFAULT 'PalletScan',
   PRIMARY KEY (date, model, brand)
 );
-INSERT INTO production_history (date, model, brand, pieces, rejected) VALUES
+-- Marcas de cargas unicas de datos (para no repetirlas en cada arranque).
+CREATE TABLE IF NOT EXISTS sync_flags (key text PRIMARY KEY, done_at timestamptz NOT NULL DEFAULT now());
+-- 2026-10-15: ya no se vuelve a insertar despues de la importacion de pallets reales de PalletScan
+-- (server/importPalletScan.js, flag 'import_palletscan'), que reemplaza estos renglones.
+INSERT INTO production_history (date, model, brand, pieces, rejected)
+SELECT * FROM (VALUES
   ('2026-09-11', 'EL-32"', 'HY', 79, 0),
   ('2026-09-14', 'EL-32"', 'HY', 100, 0),
   ('2026-09-15', 'EL-32"', 'HY', 171, 0),
@@ -172,9 +179,9 @@ INSERT INTO production_history (date, model, brand, pieces, rejected) VALUES
   ('2026-09-25', 'EL-32"', 'HY', 262, 32),
   ('2026-10-01', 'EL-43"', 'SILO', 125, 0),
   ('2026-10-02', 'EL-43"', 'SILO', 261, 6)
+) AS v(date, model, brand, pieces, rejected)
+WHERE NOT EXISTS (SELECT 1 FROM sync_flags WHERE key = 'import_palletscan')
 ON CONFLICT DO NOTHING;
--- Marcas de cargas unicas de datos (para no repetirlas en cada arranque).
-CREATE TABLE IF NOT EXISTS sync_flags (key text PRIMARY KEY, done_at timestamptz NOT NULL DEFAULT now());
 -- Rechazos historicos de la hoja "MTY - VIOS/HY" (Google Sheets, 14 al 24 Sep 2026), capturados 2026-10-08 a
 -- peticion de Roman. Se insertan una sola vez (source = 'historico'); si se borran a mano no se vuelven a crear.
 ALTER TABLE rejections ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'vios';

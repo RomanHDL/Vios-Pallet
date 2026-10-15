@@ -2,6 +2,21 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.43.0',
+    date: '2026-10-15',
+    title: 'Los pallets de PalletScan ya están en VIOS',
+    added: [
+      'Los 78 pallets de PalletScan (14 sep – 2 oct) están en VIOS como pallets reales: entradas y salidas con sus 6,040 escaneos, fechas y horas originales, creados por "PalletScan". EL-32" HY: 29 pallets y 2,630 teles; EL-43" SILO: 10 pallets y 389 teles.',
+      'Se buscan, abren e imprimen como cualquier pallet y cuentan en Producción por modelo, Reporte del día, Hora x Hora y Dashboard de pallets. Cada tele cuenta una sola vez.',
+      'Los rechazos de PalletScan que no estaban en VIOS se agregaron (etiqueta "PalletScan" en Calidad).',
+    ],
+    changed: [
+      'Producción por modelo ya no usa el histórico capturado a mano de PalletScan: ahora cuenta las teles reales de sus pallets.',
+      'El pallet 443527 (re-escaneado en VIOS el 7 de octubre con las mismas teles) queda con su escaneo original de PalletScan del 2 de octubre. El 141452 de PalletScan (otras teles) aparece como PS-141452.',
+      'En Reporte del día, los días de PalletScan muestran lo procesado sin plan.',
+    ],
+  },
+  {
     version: '1.42.0',
     date: '2026-10-15',
     title: 'Cada pallet cuenta una sola vez, el día que se cierra',

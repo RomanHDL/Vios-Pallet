@@ -39,6 +39,7 @@ const SOURCES = [
   { value: '', label: 'Todos los registros' },
   { value: 'vios', label: 'Registrados en VIOS' },
   { value: 'historico', label: 'Históricos (hoja)' },
+  { value: 'palletscan', label: 'Importados de PalletScan' },
   { value: 'prod', label: 'En producción' },
 ]
 
@@ -578,6 +579,7 @@ export default function CalidadAdmin() {
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="break-all font-mono text-[13.5px] font-bold">{r.serial}</span>
                           {r.source === 'historico' && <Badge tone="gray">Histórico</Badge>}
+                          {r.source === 'palletscan' && <Badge tone="gray">PalletScan</Badge>}
                           {r.in_production && (
                             <Badge tone="amber" dot>
                               En producción
@@ -602,7 +604,9 @@ export default function CalidadAdmin() {
                         <p className="mt-0.5 text-[11.5px] text-muted-foreground">
                           {r.source === 'historico'
                             ? `Hoja MTY · ${fmtYmd(r.shift_date)}`
-                            : `${r.registered_by_name || '—'} · ${fmtDateTime(r.registered_at)} · ${r.shift}`}
+                            : r.source === 'palletscan'
+                              ? `PalletScan · ${fmtDateTime(r.registered_at)} · ${r.shift}`
+                              : `${r.registered_by_name || '—'} · ${fmtDateTime(r.registered_at)} · ${r.shift}`}
                         </p>
                       </div>
                       {canDelete && (

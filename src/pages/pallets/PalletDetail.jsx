@@ -152,6 +152,7 @@ export default function PalletDetail() {
             <span className="mt-1 flex flex-wrap items-center gap-2">
               <TypeBadge type={p.type} />
               <StatusBadge status={p.status} />
+              {p.source === 'palletscan' && <Badge tone="gray">PalletScan</Badge>}
               {p.type === 'salida' && p.missingCount > 0 && (
                 <Badge tone="red">{p.missingCount} faltantes</Badge>
               )}

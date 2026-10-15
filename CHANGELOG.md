@@ -3,6 +3,21 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.43.0] — 2026-10-15
+
+### Added
+- Importación única de PalletScan (`server/importPalletScan.js`, flag `import_palletscan`, datos en `server/imports/palletscan-import.json`, descarga de solo lectura del Firestore `palletscan-mi`): 78 pallets (39 entradas + 39 salidas, todos cerrados) y 6,040 piezas con sus fechas/horas originales, `pallets.source = 'palletscan'`, usuario inactivo `PalletScan`. EL-32" HY 14–25 sep (29 pallets, 2,630 teles) y EL-43" SILO 1–2 oct (10 pallets, 389 teles). Faltantes de 445791-S en `pallet_missing`.
+- Rechazos de PalletScan (`source = 'palletscan'`) solo de seriales sin rechazo previo en VIOS: 9 en la base actual. Filtro y etiqueta en Calidad.
+- Etiqueta "PalletScan" en el detalle del pallet.
+
+### Changed
+- `production_history`: se borran los 12 renglones de PalletScan (ya los cubren los pallets reales) y el `INSERT` del arranque ya no los vuelve a crear. Los 79 del 11-sep y 100 del 14-sep eran seriales de relleno (`HIST-L0914-…`) = las 179 teles de 505427, 766694 y 8 de 157868 que no pasaron por línea.
+- Pallet que VIOS ya tenía con las mismas teles (443527, re-escaneado el 7-oct): se queda el escaneo de PalletScan (2-oct) y se borra la copia de VIOS, como 305362. Pallet con el mismo ID y otras teles (141452): el de PalletScan entra como `PS-141452` / `PS-141452-S`.
+- `/reports/day`: la meta automática empieza con el primer escaneo de salida de VIOS (sin PalletScan); los días de PalletScan van sin plan.
+
+### Fixed
+- Normalización: `El260232tv21248` (minúsculas en la entrada 431202) = `EL260232TV21248`; 103874-S `item_count` 95 (PalletScan decía 103).
+
 ## [1.42.0] — 2026-10-15
 
 ### Fixed

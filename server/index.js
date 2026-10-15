@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import express from 'express'
 import { areaAllowsWrite } from '../shared/areas.js'
 import { readUser } from './auth.js'
+import { importPalletScan } from './importPalletScan.js'
 import { migrate } from './migrate.js'
 import authRoutes from './routes/auth.js'
 import catalogRoutes from './routes/catalogs.js'
@@ -18,6 +19,8 @@ import { HttpError } from './util.js'
 
 await migrate()
 await ensureSeed()
+// Carga unica de los pallets reales de PalletScan (despues del seed: no debe contar como usuario para el admin inicial).
+await importPalletScan()
 
 const app = express()
 app.disable('x-powered-by')

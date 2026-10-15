@@ -68,11 +68,12 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
     const g = goals.filter((x) => x.shift === s && x.shift_date <= d).at(-1)
     return { goal: g ? g.goal : DEFAULT_DAILY_GOAL, captured: Boolean(g) }
   }
-  // La meta automatica solo cuenta desde el primer dia con produccion (antes la app no se usaba).
+  // La meta automatica solo cuenta desde el primer dia con produccion (antes la app no se usaba). Los pallets
+  // importados de PalletScan (2026-10-15) no la adelantan: sus dias se muestran con lo procesado y sin plan.
   const [{ first }] = await rows(sql`
     select least(
       (select min(i.scanned_at) from pallet_items i join pallets p on p.id = i.pallet_id
-        where p.type = 'salida'),
+        where p.type = 'salida' and p.source <> 'palletscan'),
       (select min(registered_at) from production)) as first`)
   const firstDay = first ? shiftOf(new Date(first)).shiftDate : null
 
@@ -83,7 +84,7 @@ r.get('/reports/day', requireAuth(), async (req, res) => {
       const g = goalOf(d, s)
       let plan = 0
       if (s === 'T1' && isWorkday(d) && firstDay && d >= firstDay) plan = g.goal
-      else if (processed > 0) plan = g.goal
+      else if (processed > 0 && firstDay && d >= firstDay) plan = g.goal
       if (!plan && !processed) continue
       shifts.push({
         shiftDate: d,

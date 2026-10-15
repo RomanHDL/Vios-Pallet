@@ -31,6 +31,7 @@ export function normPallet(p) {
     closedAt: g('closedAt', 'closed_at'),
     createdByName: p.created_by_name ?? null,
     closedByName: p.closed_by_name ?? null,
+    source: p.source ?? 'vios', // 'palletscan' = importado de PalletScan (2026-10-15)
   }
 }
 

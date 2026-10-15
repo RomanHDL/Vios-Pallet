@@ -11,14 +11,14 @@ const TABLE_INFO = {
   models: 'Modelos de TV, prefijo obligatorio del serial y objetivos MTY/Texas.',
   brands: 'Marcas (HY, SILO).',
   defects: 'Catálogo de defectos de Calidad.',
-  pallets: 'Pallets de entrada (6 dígitos) y salida (ID-S). linked_pallet_id de una salida = id de su entrada; line = línea elegida al iniciar la salida.',
+  pallets: 'Pallets de entrada (6 dígitos) y salida (ID-S). linked_pallet_id de una salida = id de su entrada; line = línea elegida al iniciar la salida. source = vios | palletscan (importado de PalletScan por server/importPalletScan.js, datos en server/imports/palletscan-import.json, flag import_palletscan).',
   pallet_items: 'Piezas escaneadas por pallet. PK (pallet_id, code). different = "tele diferente" (otro prefijo, agregada a propósito).',
   pallet_missing: 'Motivo de cada pieza faltante al conciliar una salida.',
   production: 'Producto terminado. serial único. shift_date + shift = turno.',
-  rejections: 'Rechazos de Calidad. defects = arreglo JSON. in_production = el serial ya se había producido (salida cerrada o registro histórico). source = vios | historico (hoja MTY - VIOS/HY).',
+  rejections: 'Rechazos de Calidad. defects = arreglo JSON. in_production = el serial ya se había producido (salida cerrada o registro histórico). source = vios | historico (hoja MTY - VIOS/HY) | palletscan (rechazos de PalletScan sin rechazo previo del serial).',
   staffing: 'Personas por línea y turno.',
   plans: 'Plan (materiales disponibles) por línea y turno. Sin registro = meta de la línea.',
-  production_history: 'Histórico de PalletScan (antes de VIOS) por día, modelo y marca; solo lo usa Producción por modelo.',
+  production_history: 'Histórico de PalletScan por día, modelo y marca; solo lo usa Producción por modelo. Desde 1.43.0 vacío: sus renglones los reemplazan los pallets reales importados de PalletScan.',
   hourly_goals: "Meta del turno (scope 'total', 765 por defecto). La última captura (shift_date <=) sigue vigente.",
 }
 
