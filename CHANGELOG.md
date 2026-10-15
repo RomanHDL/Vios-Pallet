@@ -3,6 +3,15 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.48.0] — 2026-10-15
+
+### Changed
+- `src/pages/pallets/ScanSerial.jsx` (nuevo, sale de `PalletsHome.jsx`): `ScanSerialAction` + `FindSerial`. A petición
+  explícita del usuario ("que sea como antes: si es escáner nomás se escanea, pero si tengo celular le doy clic al
+  botón"): la cámara ya no se abre sola; el campo tiene el foco (pistola + Enter) y la cámara se abre con su botón.
+- Reportes → Dashboard de pallets: fuera la tarjeta `SerialSearch` ("quítalo también de reportes"); `ScanSerialAction`
+  en el encabezado. `?q=` (Centro de reportes → "Buscar serial") abre la ventana y busca solo.
+
 ## [1.47.0] — 2026-10-15
 
 ### Changed

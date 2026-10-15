@@ -1,7 +1,5 @@
 import {
   AlertTriangle,
-  ArrowDownToLine,
-  ArrowUpFromLine,
   CheckCircle2,
   ChevronRight,
   Loader2,
@@ -9,26 +7,22 @@ import {
   Package,
   PackageX,
   ScanBarcode,
-  Search,
   Timer,
 } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Badge,
-  Button,
   Card,
   CardHeader,
   Empty,
   ErrorBox,
-  Input,
   PageHeader,
   Spinner,
   Table,
   Td,
   Th,
 } from '@/components/ui'
-import { api } from '@/lib/api'
 import { useApi } from '@/lib/hooks'
 import { cn, fmtDateTime, fmtInt } from '@/lib/utils'
 import {
@@ -40,7 +34,7 @@ import {
   usePeriod,
   useUrlInit,
 } from './common'
-import { CameraScan, CameraToggle, canUseCamera } from '@/components/Scanner'
+import { ScanSerialAction } from '../pallets/ScanSerial'
 import { PalletProgress } from './PalletProgress'
 
 const TILE_TONE = {
@@ -119,105 +113,6 @@ function StateBadge({ state }) {
   )
 }
 
-function SerialSearch({ initial = '' }) {
-  const [q, setQ] = useState(initial)
-  const [res, setRes] = useState(null)
-  const [err, setErr] = useState(null)
-  const [busy, setBusy] = useState(false)
-  const box = useRef(null)
-  const [camera, setCamera] = useState(false)
-  // `scanned`: lo leido con la camara del celular (se busca solo).
-  const search = async (e, scanned) => {
-    e?.preventDefault()
-    const code = (scanned ?? q).trim()
-    if (!code) return
-    if (scanned) setQ(scanned)
-    setBusy(true)
-    setErr(null)
-    try {
-      setRes(await api(`/pallets/find/${encodeURIComponent(code)}`))
-    } catch (e2) {
-      setErr(e2)
-      setRes(null)
-    } finally {
-      setBusy(false)
-    }
-  }
-  // Desde el Centro de reportes ("Buscar serial"): se busca solo (una vez al abrir) y se lleva la vista al buscador.
-  useEffect(() => {
-    if (!initial) return
-    box.current?.scrollIntoView({ block: 'center' })
-    search()
-  }, [])
-  return (
-    <Card ref={box}>
-      <CardHeader icon={Search} title="Buscar serial" subtitle="¿En qué pallet está una pieza?" />
-      <form onSubmit={search} className="flex gap-2 p-4 sm:p-5">
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Escanea o escribe el serial"
-          autoCapitalize="characters"
-          autoComplete="off"
-          className="min-w-0 flex-1 font-mono"
-        />
-        {canUseCamera && (
-          <CameraToggle open={camera} onClick={() => setCamera((c) => !c)} className="h-auto self-stretch border" />
-        )}
-        <Button type="submit" loading={busy} disabled={!q.trim()} className="shrink-0">
-          {!busy && <Search className="h-4 w-4" />}
-          <span className="hidden sm:inline">Buscar</span>
-        </Button>
-      </form>
-      {camera && (
-        <div className="px-4 pb-4 sm:px-5">
-          <CameraScan once onCode={(c) => search(null, c)} onClose={() => setCamera(false)} />
-        </div>
-      )}
-      <ErrorBox error={err} className="mx-4 mb-4 sm:mx-5" />
-      {res && (
-        <div className="border-t">
-          {res.matches.length ? (
-            <ul className="divide-y">
-              {res.matches.map((m) => (
-                <li key={m.pallet_id}>
-                  <Link
-                    to={`/pallets/${m.pallet_id}`}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 sm:px-5"
-                  >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-accent-foreground">
-                      {m.type === 'salida' ? (
-                        <ArrowUpFromLine className="h-4 w-4" />
-                      ) : (
-                        <ArrowDownToLine className="h-4 w-4" />
-                      )}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block font-mono text-[14px] font-bold">{m.pallet_id}</span>
-                      <span className="block truncate text-[12px] text-muted-foreground">
-                        {m.type === 'salida' ? 'Salida' : 'Entrada'} · {m.model || '—'} {m.brand || ''} ·{' '}
-                        {fmtDateTime(m.scanned_at)}
-                      </span>
-                    </span>
-                    <Badge tone={m.status === 'abierto' ? 'blue' : 'gray'}>
-                      {m.status === 'abierto' ? 'Abierto' : 'Cerrado'}
-                    </Badge>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-4 py-4 text-[13.5px] text-muted-foreground sm:px-5">
-              El serial <b className="font-mono text-foreground">{res.code}</b> no está en ningún pallet.
-            </p>
-          )}
-        </div>
-      )}
-    </Card>
-  )
-}
-
 function PiecesCell({ x }) {
   return (
     <span className="tabular whitespace-nowrap">
@@ -282,11 +177,16 @@ export default function ReportePallets() {
         title="Dashboard de pallets"
         subtitle={`Entrada → salida · ${periodText(p.from, p.to)}${p.isToday ? ' · se actualiza cada 30 s' : ''}`}
         actions={
+          <>
+          {/* 2026-10-15: un solo "Escanear serial" (antes tarjeta "Buscar serial"); ?q= del Centro de
+              reportes abre la ventana y busca solo. */}
+          <ScanSerialAction initial={serial} />
           <Card className="flex w-full flex-col gap-3 p-2.5 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-6">
             <PeriodControls p={p} options={['hoy', 'semana', 'rango']} />
             <BrandControl value={brand} onChange={setBrand} />
             {model && <FilterChip label={`Modelo ${model}`} onClear={() => setModel('')} />}
           </Card>
+          </>
         }
       />
 
@@ -494,7 +394,6 @@ export default function ReportePallets() {
             </Card>
 
             <div className="min-w-0 space-y-5">
-              <SerialSearch initial={serial} />
               <Card className="p-4 sm:p-5">
                 <h3 className="text-[14px] font-bold">Estados</h3>
                 <ul className="mt-3 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[13px] text-muted-foreground">

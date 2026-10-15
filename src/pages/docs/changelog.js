@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.48.0',
+    date: '2026-10-15',
+    title: '"Escanear serial" como antes: pistola directo, cámara con un toque',
+    changed: [
+      'La ventana de "Escanear serial" ya no abre la cámara sola: el campo queda listo para la pistola (escaneas y busca). En el celular tocas el botón de cámara.',
+      'Reportes → Dashboard de pallets: se quitó la tarjeta "Buscar serial"; ahora tiene el mismo botón "Escanear serial" arriba. "Buscar serial" del Centro de reportes abre esa ventana y busca solo.',
+    ],
+  },
+  {
     version: '1.47.0',
     date: '2026-10-15',
     title: '"Escanear serial" en un solo lugar',

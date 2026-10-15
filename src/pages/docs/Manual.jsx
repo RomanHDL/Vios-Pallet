@@ -26,7 +26,7 @@ const SECTIONS = [
       '"Piezas pendientes" (botón amarillo en la salida) abre la lista de las piezas de la entrada que aún no salen, con buscador. Si una pieza está en otro pallet se ve "Está en: …"; si es una tele repetida de otro pallet, un supervisor puede tocar "Quitar de la entrada".',
       'Toca "Conciliar y cerrar". Cada pieza faltante necesita un motivo (Dañada, No llegó, Rechazo de calidad, etc.).',
       'Reporte de salida: cuando la salida ya está cerrada, en su detalle (o en el de su entrada) aparece "Imprimir reporte de salida": hoja vertical con datos de entrada y salida, seriales en 3 columnas, faltantes y firmas de Calidad, Producción y Almacén. Mientras la salida no se registre, el botón dice "Disponible al registrar la salida" y no se puede imprimir. Un supervisor puede reabrir un pallet; solo el administrador puede eliminarlo.',
-      '"Buscar serial" te dice en qué pallet está una pieza.',
+      '"Escanear serial" (botón azul junto a Historial) te dice en qué pallet está una pieza: escanea con la pistola o, en el celular, toca la cámara.',
       'Historial de pallets: filtra por Tipo, fechas, ID, Marca (HY/SILO), Modelo y Pulgadas (32, 43, 50…). Los filtros se combinan entre sí y el número de resultados cuenta solo lo filtrado; incluye los pallets de PalletScan (PS-…).',
       'Producción por línea (botón en Pallets): elige Marca (HY/SILO) → Modelo → Línea y escanea el serial de la TV y luego el de la caja (deben coincidir). Abajo se ve cada línea con sus piezas, personas y piezas por persona; "Editar personal" captura las personas. Estos escaneos también suman a la producción del turno.',
     ],
