@@ -2,6 +2,12 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.48.1',
+    date: '2026-10-15',
+    title: 'El botón se llama "Buscar serial"',
+    changed: ['El botón azul junto a Historial (y su ventana) ahora dice "Buscar serial". Funciona igual.'],
+  },
+  {
     version: '1.48.0',
     date: '2026-10-15',
     title: '"Escanear serial" como antes: pistola directo, cámara con un toque',

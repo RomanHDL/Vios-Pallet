@@ -22,9 +22,9 @@ export function ScanSerialAction({ initial = '' }) {
         onClick={() => setOpen(true)}
         className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-4 text-[14.5px] font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
       >
-        <ScanLine className="h-[18px] w-[18px]" /> Escanear serial
+        <ScanLine className="h-[18px] w-[18px]" /> Buscar serial
       </button>
-      <Dialog open={open} onClose={() => setOpen(false)} title="Escanear serial">
+      <Dialog open={open} onClose={() => setOpen(false)} title="Buscar serial">
         {open && <FindSerial initial={initial} onPick={() => setOpen(false)} />}
       </Dialog>
     </>

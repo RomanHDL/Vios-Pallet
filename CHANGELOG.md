@@ -3,6 +3,11 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.48.1] — 2026-10-15
+
+### Changed
+- `ScanSerialAction`: el botón y el título de la ventana dicen "Buscar serial" (a petición explícita del usuario).
+
 ## [1.48.0] — 2026-10-15
 
 ### Changed
