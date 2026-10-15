@@ -2,6 +2,14 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.49.0',
+    date: '2026-10-15',
+    title: 'Buscar serial directo junto a Historial',
+    changed: [
+      'Se quitó el botón "Buscar serial": el campo de serial, el botón de cámara y "Buscar" están directo arriba, a un lado de Historial (Control de Pallet y Dashboard de pallets). Con la pistola escaneas en el campo; en el celular tocas la cámara. La cámara y el resultado se abren justo debajo; tocar el pallet lo abre.',
+    ],
+  },
+  {
     version: '1.48.1',
     date: '2026-10-15',
     title: 'El botón se llama "Buscar serial"',

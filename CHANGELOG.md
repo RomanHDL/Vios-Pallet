@@ -3,6 +3,13 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.49.0] — 2026-10-15
+
+### Changed
+- `ScanSerialAction` sin botón ni `Dialog` (a petición explícita del usuario: "quita el botón ... y lo que tiene dentro
+  déjalo ahí afuera a un lado de Historial"): campo + cámara + Buscar directo en el encabezado; cámara y resultados
+  en un panel flotante debajo del campo (con cerrar). Foco automático solo con puntero fino (computadora/pistola).
+
 ## [1.48.1] — 2026-10-15
 
 ### Changed
