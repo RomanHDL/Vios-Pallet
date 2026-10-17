@@ -2,6 +2,15 @@
 // de package.json.
 export const CHANGELOG = [
   {
+    version: '1.51.0',
+    date: '2026-10-17',
+    title: 'Nueva pantalla de entrada',
+    changed: [
+      'La pantalla de entrada tiene nuevo diseño, igual que las otras apps de MI (Centro de Calidad, Centro de Trabajo, Cubicaje): en la computadora, panel azul con la foto de pallets a la izquierda y las 4 áreas a la derecha; en el celular, banda azul arriba y las tarjetas debajo, grandes para tocarlas con facilidad.',
+      'Se entra igual que antes: Entrada, Salida y Producción por línea entran con un solo toque (la tarjeta muestra que está entrando). Admin abre ahí mismo el usuario y la contraseña (con botón para ver la contraseña) y "Volver a las áreas" para regresar.',
+    ],
+  },
+  {
     version: '1.50.0',
     date: '2026-10-15',
     title: 'La cámara ignora el UPC',

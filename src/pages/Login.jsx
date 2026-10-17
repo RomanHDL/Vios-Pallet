@@ -1,18 +1,23 @@
 import {
+  AlertTriangle,
   ArrowDownToLine,
+  ArrowLeft,
   ArrowRight,
   ArrowUpFromLine,
   BarChart3,
-  ChevronLeft,
+  Eye,
+  EyeOff,
   Factory,
+  Loader2,
   Lock,
   ShieldCheck,
+  User,
   Users,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, ErrorBox } from '@/components/ui'
 import { useSession } from '@/lib/session'
+import { CHANGELOG } from '@/pages/docs/changelog'
 
 // Entrada (2026-10-07, a peticion explicita del usuario: "que nomas le des clic en entrar y de volada"):
 // boton "Entrar" con la cuenta compartida Planta. Despues ("quiero que quites el login... que solo sea un
@@ -21,7 +26,12 @@ import { useSession } from '@/lib/session'
 // limitada a su area (shared/areas.js); Admin pide la contrasena del administrador y ve todo.
 // 2026-10-10: rediseno "Centro de operaciones" (imagen de referencia de Roman, laptop + celular). Solo visual: la
 // logica de los 4 accesos y del formulario de admin es la misma. La foto de pallets es un recorte de esa imagen.
+// 2026-10-17 (v1.51.0): rediseno en la familia de logins MI (Centro de Calidad / Centro de Trabajo / Cubicaje):
+// panel azul con la foto a la izquierda (>= lg) y panel claro con las tarjetas de area a la derecha. En celular la
+// foto es una banda arriba y las tarjetas se enciman. Solo visual: mismos handlers (enter / login), Planta = un clic,
+// Admin pide usuario + contrasena. La foto es UN solo <img> (banda en celular, panel en PC).
 const ADMIN_FORM = new URLSearchParams(window.location.search).has('admin')
+const VERSION = CHANGELOG[0]?.version
 
 const SHORTCUTS = [
   {
@@ -30,9 +40,8 @@ const SHORTCUTS = [
     hint: 'Registrar pallets recibidos',
     to: '/pallets/entrada',
     icon: ArrowDownToLine,
-    tile: 'bg-[#e3edff] text-[#2563eb]',
-    arrow: 'bg-[#e3edff] text-[#2563eb]',
-    ring: 'hover:border-[#2563eb]/35 focus-visible:ring-[#2563eb]/40',
+    tile: 'bg-[#e3edff] text-[#2563eb] dark:bg-blue-500/15 dark:text-blue-300',
+    ring: 'hover:border-[#2563eb]/40 focus-visible:ring-[#2563eb]/40',
   },
   {
     key: 'salida',
@@ -40,9 +49,8 @@ const SHORTCUTS = [
     hint: 'Confirmar pallets despachados',
     to: '/pallets/salida',
     icon: ArrowUpFromLine,
-    tile: 'bg-[#efe8ff] text-[#7c3aed]',
-    arrow: 'bg-[#efe8ff] text-[#7c3aed]',
-    ring: 'hover:border-[#7c3aed]/35 focus-visible:ring-[#7c3aed]/40',
+    tile: 'bg-[#efe8ff] text-[#7c3aed] dark:bg-violet-500/15 dark:text-violet-300',
+    ring: 'hover:border-[#7c3aed]/40 focus-visible:ring-[#7c3aed]/40',
   },
   {
     key: 'lineas',
@@ -50,58 +58,87 @@ const SHORTCUTS = [
     hint: 'Escanear TV y caja',
     to: '/pallets/lineas',
     icon: Factory,
-    tile: 'bg-[#d6f6f0] text-[#0d9488]',
-    arrow: 'bg-[#d6f6f0] text-[#0d9488]',
-    ring: 'hover:border-[#14b8a6]/40 focus-visible:ring-[#14b8a6]/40',
+    tile: 'bg-[#d6f6f0] text-[#0d9488] dark:bg-teal-500/15 dark:text-teal-300',
+    ring: 'hover:border-[#14b8a6]/45 focus-visible:ring-[#14b8a6]/40',
   },
   {
     key: 'admin',
     title: 'Admin',
     hint: 'Panel administrativo',
     icon: ShieldCheck,
-    tile: 'bg-[#e8edf4] text-[#334155]',
-    arrow: 'bg-[#e8edf4] text-[#334155]',
-    ring: 'hover:border-[#475569]/35 focus-visible:ring-[#475569]/40',
+    tile: 'bg-[#e8edf4] text-[#334155] dark:bg-slate-500/20 dark:text-slate-200',
+    ring: 'hover:border-[#475569]/40 focus-visible:ring-[#475569]/40',
+    locked: true,
   },
 ]
 
 const FEATURES = [
-  { icon: BarChart3, text: ['Proceso', 'confiable'] },
-  { icon: ShieldCheck, text: ['Información', 'en tiempo real'] },
-  { icon: Users, text: ['Operación', 'más eficiente'] },
+  { icon: BarChart3, text: 'Proceso confiable' },
+  { icon: ShieldCheck, text: 'Información en tiempo real' },
+  { icon: Users, text: 'Operación más eficiente' },
 ]
 
-function Logo({ className = 'h-10 w-10' }) {
-  return <img src="/favicon.svg" alt="" className={`${className} rounded-xl`} />
+function Logo({ className = 'h-12 w-12' }) {
+  return (
+    <span
+      className={`grid shrink-0 place-items-center rounded-2xl bg-white shadow-[0_8px_24px_-8px_rgba(5,20,45,0.55)] ${className}`}
+    >
+      <img src="/favicon.svg" alt="" className="h-[70%] w-[70%] rounded-lg" />
+    </span>
+  )
 }
 
-function AreaCard({ s, index, busy, going, onClick }) {
+// Aviso de error (rojo suave, solido para que se lea tambien encima de la foto en celular).
+function Alert({ error }) {
+  return (
+    <div aria-live="polite">
+      {error && (
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13.5px] font-medium text-red-700 shadow-sm dark:border-red-500/40 dark:bg-red-950 dark:text-red-200"
+        >
+          <AlertTriangle className="mt-px h-[18px] w-[18px] shrink-0" />
+          <span>{error.message || String(error)}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AreaCard({ s, busy, going, onClick }) {
   const Icon = s.icon
+  const loading = going === s.key
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={busy}
-      style={{ animationDelay: `${120 + index * 60}ms` }}
-      className={`group flex w-full items-center gap-3 rounded-[20px] border border-white bg-white px-3.5 py-4 min-[380px]:gap-4 min-[380px]:px-4 text-left shadow-[0_10px_30px_-12px_rgba(15,35,80,0.28)] outline-none transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_-14px_rgba(15,35,80,0.35)] focus-visible:ring-4 disabled:opacity-60 motion-safe:animate-rise motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:gap-5 sm:rounded-[22px] sm:px-6 sm:py-6 lg:py-7 ${s.ring}`}
+      aria-busy={loading || undefined}
+      aria-label={`${s.title}: ${s.hint}${s.locked ? ' (pide contraseña)' : ''}`}
+      className={`group flex min-h-[76px] w-full items-center gap-3.5 rounded-2xl border bg-card px-4 py-3 text-left text-card-foreground shadow-[0_10px_28px_-14px_rgba(15,35,80,0.35)] outline-none transition duration-200 hover:shadow-[0_16px_36px_-14px_rgba(15,35,80,0.4)] focus-visible:ring-4 disabled:cursor-not-allowed motion-safe:hover:-translate-y-0.5 sm:gap-4 sm:px-5 lg:min-h-[88px] ${s.ring} ${busy && !loading ? 'opacity-50' : ''}`}
     >
       <span
-        className={`grid h-12 w-12 shrink-0 place-items-center rounded-2xl min-[380px]:h-14 min-[380px]:w-14 sm:h-[68px] sm:w-[68px] sm:rounded-[18px] ${s.tile}`}
+        className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl sm:h-14 sm:w-14 sm:rounded-2xl ${s.tile}`}
       >
-        <Icon className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={2} />
+        <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={2} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[16px] font-extrabold leading-tight min-[380px]:text-[17px] tracking-tight text-[#0f1f3d] sm:text-[21px]">
+        <span className="flex items-center gap-1.5 text-[16.5px] font-extrabold leading-tight tracking-tight sm:text-[18px]">
           {s.title}
+          {s.locked && <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />}
         </span>
-        <span className="mt-1 block text-[12.5px] leading-snug text-slate-500 min-[380px]:text-[13px] sm:text-[15.5px]">
-          {going === s.key ? 'Entrando…' : s.hint}
+        <span className="mt-0.5 block text-[13px] leading-snug text-muted-foreground sm:text-[14px]">
+          {loading ? 'Entrando…' : s.hint}
         </span>
       </span>
       <span
-        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform min-[380px]:h-10 min-[380px]:w-10 duration-200 group-hover:translate-x-1 motion-reduce:group-hover:translate-x-0 sm:h-12 sm:w-12 ${s.arrow}`}
+        className={`grid h-10 w-10 shrink-0 place-items-center rounded-full transition-transform duration-200 motion-safe:group-hover:translate-x-1 ${s.tile}`}
       >
-        <ArrowRight className="h-5 w-5" strokeWidth={2.25} />
+        {loading ? (
+          <Loader2 className="h-5 w-5 animate-spin" strokeWidth={2.25} />
+        ) : (
+          <ArrowRight className="h-5 w-5" strokeWidth={2.25} />
+        )}
       </span>
     </button>
   )
@@ -114,9 +151,11 @@ export default function Login() {
   const [going, setGoing] = useState(null)
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
   const passwordRef = useRef(null)
+  const submitRef = useRef(null)
   useEffect(() => {
     if (withUser) passwordRef.current?.focus()
   }, [withUser])
@@ -155,201 +194,213 @@ export default function Login() {
     })
   }
 
+  // En celular, al abrir el teclado deja visible el boton "Entrar".
+  const keepSubmitVisible = () => {
+    setTimeout(() => submitRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 320)
+  }
+
+  const back = () => {
+    setWithUser(false)
+    setError(null)
+    setShowPassword(false)
+  }
+
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-x-hidden bg-[#eef3fa] text-[#0f1f3d]">
-      {/* Fondo claro inferior con curvas azuladas */}
-      <svg
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] w-full"
-        viewBox="0 0 1440 400"
-        preserveAspectRatio="none"
-      >
-        <path d="M0 220 C 360 120, 760 330, 1440 160 L1440 400 L0 400 Z" fill="#e3ebf7" />
-        <path d="M0 300 C 420 220, 900 380, 1440 260 L1440 400 L0 400 Z" fill="#dae4f3" opacity=".7" />
-      </svg>
-
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0a1a3f_0%,#0d2659_45%,#123a7c_100%)] pb-28 text-white sm:pb-36 lg:pb-44">
-        {/* Foto de pallets: derecha, fundida con el azul */}
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-[78%] sm:w-[62%] lg:w-[52%]">
-          <img
-            src="/img/pallets-hero.webp"
-            alt=""
-            decoding="async"
-            className="h-full w-full object-cover object-[70%_center] opacity-[0.55] [mask-image:linear-gradient(to_right,transparent_0%,black_38%,black_100%),linear-gradient(to_bottom,black_70%,transparent_100%)] [mask-composite:intersect] sm:opacity-80 lg:opacity-95"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none'
-            }}
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#0d2659_0%,rgba(13,38,89,0.55)_30%,rgba(18,58,124,0.12)_70%,rgba(14,165,233,0.10)_100%)]" />
-        </div>
-
-        {/* Arcos cian translucidos */}
+    <div className="flex min-h-dvh flex-col overflow-x-hidden bg-background text-foreground lg:flex-row">
+      {/* PANEL AZUL: banda superior en celular/tablet, panel izquierdo (45%) en PC. Una sola foto. */}
+      <aside className="relative h-44 shrink-0 overflow-hidden bg-[#0D3B66] text-white lg:sticky lg:top-0 lg:h-dvh lg:w-[45%]">
+        <img
+          src="/img/pallets-hero.webp"
+          alt=""
+          decoding="async"
+          fetchPriority="high"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+          }}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_top_right,rgba(13,59,102,0.93)_0%,rgba(16,74,138,0.86)_50%,rgba(21,101,192,0.78)_100%)]" />
         <svg
           aria-hidden="true"
-          className="pointer-events-none absolute -right-24 -top-24 h-[150%] w-[85%] sm:w-[70%] lg:-right-10 lg:w-[62%]"
+          className="pointer-events-none absolute -bottom-40 -right-40 h-[520px] w-[520px] lg:-bottom-56 lg:-right-56 lg:h-[820px] lg:w-[820px]"
           viewBox="0 0 800 800"
           fill="none"
-          preserveAspectRatio="xMidYMid slice"
         >
-          <defs>
-            <linearGradient id="arcA" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#38bdf8" stopOpacity="0" />
-              <stop offset=".45" stopColor="#38bdf8" stopOpacity=".9" />
-              <stop offset="1" stopColor="#22d3ee" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="arcB" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#3b82f6" stopOpacity=".35" />
-              <stop offset="1" stopColor="#22d3ee" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d="M760 40 C 380 60, 160 300, 260 760" stroke="url(#arcA)" strokeWidth="5" />
-          <path
-            d="M800 0 C 360 30, 90 310, 220 800 L 120 800 C -10 330, 300 10, 800 -40 Z"
-            fill="url(#arcB)"
-          />
+          <circle cx="400" cy="400" r="390" stroke="white" strokeOpacity=".07" strokeWidth="2" />
+          <circle cx="400" cy="400" r="300" stroke="white" strokeOpacity=".08" strokeWidth="2" />
+          <circle cx="400" cy="400" r="210" stroke="white" strokeOpacity=".06" strokeWidth="2" />
         </svg>
-        <div className="pointer-events-none absolute -left-40 top-1/3 h-[420px] w-[420px] rounded-full bg-[#1d4ed8]/20 blur-3xl" />
 
-        <div className="relative mx-auto max-w-[1200px] px-4 sm:px-8 lg:px-12">
-          {/* Encabezado */}
-          <header className="flex items-center justify-between gap-3 pt-5 sm:pt-8">
-            <div className="flex items-center gap-3">
-              <Logo className="h-10 w-10 sm:h-11 sm:w-11" />
-              <div>
-                <p className="text-[19px] font-extrabold leading-tight sm:text-[22px]">VIOS Pallet</p>
-                <p className="text-[12px] text-white/70 sm:hidden">MI Technologies · MTY</p>
-              </div>
+        <div className="relative flex h-full flex-col px-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8 lg:px-12 lg:py-10 xl:px-16">
+          <div className="mx-auto flex w-full max-w-lg items-center gap-3 lg:mx-0 lg:max-w-none lg:gap-4">
+            <Logo className="h-11 w-11 lg:h-14 lg:w-14" />
+            <div>
+              <p className="text-[19px] font-extrabold leading-tight lg:text-[22px]">VIOS Pallet</p>
+              <p className="text-[12.5px] text-white/80 lg:text-[14px]">MI Technologies · Monterrey</p>
             </div>
-            <p className="hidden text-[14px] text-white/80 sm:block">MI Technologies · Monterrey</p>
-          </header>
+          </div>
 
-          {/* Titulo */}
-          <div className="pt-8 motion-safe:animate-rise sm:pt-14 lg:pt-16">
-            <h1 className="sm:hidden text-[34px] font-extrabold leading-tight tracking-tight">
-              ¡Bienvenido!
-            </h1>
-            <h1 className="hidden text-[56px] font-extrabold leading-[0.98] tracking-[-0.03em] sm:block lg:text-[84px]">
+          {/* Celular / tablet: invitacion corta dentro de la banda */}
+          <p className="mx-auto mt-4 w-full max-w-lg text-[17px] font-bold leading-snug text-white lg:hidden">
+            {withUser ? 'Acceso de administrador' : 'Selecciona tu área de trabajo'}
+          </p>
+
+          {/* PC: titular, subtitulo y beneficios */}
+          <div className="my-auto hidden max-w-xl py-10 motion-safe:animate-rise lg:block">
+            <h1 className="text-5xl font-extrabold leading-[1.02] tracking-[-0.03em] xl:text-6xl">
               Centro de
               <br />
               <span className="bg-[linear-gradient(90deg,#60a5fa_0%,#38bdf8_45%,#2dd4bf_100%)] bg-clip-text text-transparent">
                 operaciones
               </span>
             </h1>
-            <p className="mt-2 text-[15px] leading-snug text-white/85 sm:mt-4 sm:max-w-none sm:text-[19px] lg:text-[22px]">
-              Selecciona tu área de trabajo <br className="sm:hidden" />
-              para continuar<span className="sm:hidden">.</span>
+            <p className="mt-5 text-[17px] leading-relaxed text-white/85 xl:text-[18px]">
+              Entradas, salidas y producción de pallets VIOS escaneando TV y caja, con información en tiempo
+              real.
             </p>
-
-            {/* Indicadores decorativos */}
-            <ul className="mt-7 hidden flex-wrap items-center gap-y-3 md:flex">
-              {FEATURES.map((f, i) => {
+            <ul className="mt-9 space-y-4">
+              {FEATURES.map((f) => {
                 const Icon = f.icon
                 return (
-                  <li
-                    key={f.text[0]}
-                    className={`flex items-center gap-3 pr-6 ${i > 0 ? 'border-l border-white/15 pl-6' : ''}`}
-                  >
-                    <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/10 text-[#7dd3fc] ring-1 ring-white/10">
+                  <li key={f.text} className="flex items-center gap-4">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/25 bg-white/10 text-white">
                       <Icon className="h-5 w-5" />
                     </span>
-                    <span className="text-[13.5px] leading-tight text-white/85">
-                      {f.text[0]}
-                      <br />
-                      {f.text[1]}
-                    </span>
+                    <span className="text-[15.5px] font-semibold text-white/95">{f.text}</span>
                   </li>
                 )
               })}
             </ul>
           </div>
+
+          <p className="hidden text-[12.5px] text-white/60 lg:block">
+            © MI Technologies, Inc. Solo para uso de la empresa{VERSION ? ` · v${VERSION}` : ''}
+          </p>
         </div>
+      </aside>
 
-        {/* Curva inferior: transicion al fondo claro */}
-        <svg
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full sm:h-24"
-          viewBox="0 0 1440 120"
-          preserveAspectRatio="none"
-        >
-          <path d="M0 70 C 380 130, 980 10, 1440 60 L1440 120 L0 120 Z" fill="#eef3fa" />
-        </svg>
-      </section>
+      {/* PANEL CLARO: tarjetas de area / formulario de admin */}
+      <main className="relative z-10 -mt-10 flex flex-1 flex-col px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:px-8 lg:mt-0 lg:items-center lg:justify-center lg:px-12 lg:py-10">
+        <div className="mx-auto flex w-full max-w-lg flex-1 flex-col lg:flex-none">
+          <div className="hidden lg:block">
+            <p className="text-[12.5px] font-bold uppercase tracking-[0.2em] text-[#1565C0] dark:text-blue-300">
+              Bienvenido
+            </p>
+            <h2 className="mt-2 text-[30px] font-extrabold leading-tight tracking-tight">
+              Selecciona tu área de trabajo
+            </h2>
+            <p className="mt-2 text-[15px] text-muted-foreground">
+              Toca tu área y entras de inmediato. Admin pide contraseña.
+            </p>
+          </div>
 
-      {/* TARJETAS (se enciman con el hero) */}
-      <main className="relative mx-auto flex w-full max-w-[1200px] flex-1 flex-col -mt-20 px-4 sm:-mt-28 sm:px-8 lg:-mt-36 lg:px-12">
-        {!withUser ? (
-          <>
-            <div className="grid gap-3.5 sm:gap-4 lg:grid-cols-2 lg:gap-5">
-              {SHORTCUTS.map((s, i) => (
-                <AreaCard key={s.key} s={s} index={i} busy={busy} going={going} onClick={() => go(s)} />
-              ))}
-            </div>
-            <ErrorBox error={error} className="mt-4" />
-          </>
-        ) : (
-          <form
-            onSubmit={submit}
-            className="mx-auto max-w-md rounded-[22px] bg-white p-6 shadow-[0_18px_40px_-14px_rgba(15,35,80,0.35)] motion-safe:animate-rise sm:p-8"
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setWithUser(false)
-                setError(null)
-              }}
-              className="mb-4 inline-flex items-center gap-1 rounded-md text-[13px] font-semibold text-slate-500 outline-none hover:text-[#0f1f3d] focus-visible:ring-2 focus-visible:ring-[#475569]/40"
-            >
-              <ChevronLeft className="h-4 w-4" /> Volver
-            </button>
-            <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-[#e8edf4] text-[#334155]">
-                <ShieldCheck className="h-6 w-6" />
-              </span>
-              <div>
-                <h2 className="text-[22px] font-extrabold tracking-tight">Administrador</h2>
-                <p className="text-[13.5px] text-slate-500">Escribe la contraseña del administrador.</p>
+          {!withUser ? (
+            <div className="space-y-3 lg:mt-8">
+              <Alert error={error} />
+              <div className="grid gap-3 sm:gap-3.5">
+                {SHORTCUTS.map((s, i) => (
+                  <div
+                    key={s.key}
+                    className="motion-safe:animate-rise"
+                    style={{ animationDelay: `${60 + i * 50}ms` }}
+                  >
+                    <AreaCard s={s} busy={busy} going={going} onClick={() => go(s)} />
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="mt-6 space-y-4">
-              <input
-                type="hidden"
-                value={username}
-                autoComplete="username"
-                readOnly
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <label className="block">
-                <span className="label">Contraseña</span>
-                <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    className="field h-12 pl-10"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    ref={passwordRef}
-                    required
-                  />
+          ) : (
+            <form
+              onSubmit={submit}
+              className="rounded-2xl border bg-card p-5 text-card-foreground shadow-[0_14px_36px_-16px_rgba(15,35,80,0.4)] motion-safe:animate-rise sm:p-7 lg:mt-8"
+            >
+              <div className="flex items-center gap-3">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#e8edf4] text-[#334155] dark:bg-slate-500/20 dark:text-slate-200">
+                  <ShieldCheck className="h-6 w-6" />
+                </span>
+                <div>
+                  <h3 className="text-[20px] font-extrabold tracking-tight">Administrador</h3>
+                  <p className="text-[13.5px] text-muted-foreground">Escribe tu usuario y contraseña.</p>
                 </div>
-              </label>
-              <ErrorBox error={error} />
-              <Button type="submit" size="lg" className="w-full" loading={busy}>
-                Entrar
-              </Button>
-            </div>
-          </form>
-        )}
+              </div>
+              <div className="mt-5 space-y-4">
+                <label className="block">
+                  <span className="label">Usuario</span>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      className="field h-12 pl-10"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      onFocus={keepSubmitVisible}
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      required
+                    />
+                  </div>
+                </label>
+                <label className="block">
+                  <span className="label">Contraseña</span>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      className="field h-12 pl-10 pr-12"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onFocus={keepSubmitVisible}
+                      autoComplete="current-password"
+                      ref={passwordRef}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      aria-pressed={showPassword}
+                      className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/50"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-[18px] w-[18px]" />
+                      ) : (
+                        <Eye className="h-[18px] w-[18px]" />
+                      )}
+                    </button>
+                  </div>
+                </label>
+                <Alert error={error} />
+                <button
+                  ref={submitRef}
+                  type="submit"
+                  disabled={busy}
+                  className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#1565C0] text-[15.5px] font-bold text-white shadow-sm outline-none transition hover:bg-[#0f4f9a] focus-visible:ring-4 focus-visible:ring-[#1565C0]/35 disabled:opacity-70 motion-safe:active:scale-[.99]"
+                >
+                  {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {busy ? 'Entrando…' : 'Entrar'}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={back}
+                className="mx-auto mt-4 flex items-center gap-1.5 rounded-md px-2 py-1 text-[13.5px] font-semibold text-[#1565C0] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-blue-300"
+              >
+                <ArrowLeft className="h-4 w-4" /> Volver a las áreas
+              </button>
+            </form>
+          )}
 
-        {/* Pie */}
-        <footer className="relative mt-auto flex items-center justify-center gap-4 pb-6 pt-8 text-[12.5px] text-slate-500 sm:pt-10 sm:justify-between sm:pb-8 sm:text-[13px]">
-          <span>MI Technologies · Monterrey</span>
-          <span className="hidden h-px flex-1 bg-slate-300/70 sm:block" />
-          <span className="hidden items-center gap-2 font-semibold text-[#0f1f3d] sm:flex">
-            <Logo className="h-5 w-5 rounded-md" /> VIOS Pallet
-          </span>
-        </footer>
+          <footer className="mt-auto pt-8 lg:mt-10">
+            <div className="h-px bg-border" />
+            <p className="pt-4 text-center text-[12.5px] text-muted-foreground">
+              MI Technologies · Monterrey · VIOS Pallet
+            </p>
+            <p className="pt-1 text-center text-[11.5px] text-muted-foreground lg:hidden">
+              © MI Technologies, Inc.{VERSION ? ` · v${VERSION}` : ''}
+            </p>
+          </footer>
+        </div>
       </main>
     </div>
   )

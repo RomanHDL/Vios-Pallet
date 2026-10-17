@@ -3,6 +3,19 @@
 Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), versionado [semver](https://semver.org/lang/es/)
 (`version` de `package.json`). Mantener igual que `src/pages/docs/changelog.js` (se muestra en la app en Ayuda → Cambios).
 
+## [1.51.0] — 2026-10-17
+
+### Changed
+- `src/pages/Login.jsx`: nuevo diseño en la familia de logins MI (Centro de Calidad / Centro de Trabajo / Cubicaje).
+  ≥ lg: panel izquierdo (45%) con la foto de pallets + degradado azul MI (#0D3B66 → #1565C0), arcos sutiles,
+  titular "Centro de operaciones" (mismo degradado azul→verde), 3 beneficios y pie con la versión
+  (`CHANGELOG[0].version`); panel derecho claro con tokens del tema (modo oscuro) y las 4 tarjetas de área.
+  < lg: banda superior h-44 con la foto y las tarjetas encimadas (-mt-10), safe-area de iPhone. Una sola `<img>`
+  para la foto (banda o panel según el ancho). Solo visual: mismos handlers (`enter` para Planta en un clic,
+  `login` para Admin); spinner dentro de la tarjeta y las demás deshabilitadas; error con `aria-live`. Admin:
+  formulario dentro del panel con Usuario (antes oculto, sigue con `admin` por defecto) + Contraseña con
+  mostrar/ocultar y "← Volver a las áreas"; al enfocar un campo se asegura que "Entrar" quede visible.
+
 ## [1.50.0] — 2026-10-15
 
 ### Changed
